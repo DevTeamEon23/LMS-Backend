@@ -2,7 +2,7 @@ from fastapi import Header
 from starlette.exceptions import HTTPException
 
 from config.db_config import n_table_user
-from db_ops import execute_query
+from .db_ops import execute_query
 
 
 def get_user_by_token(token):

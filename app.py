@@ -13,8 +13,8 @@ from fastapi.middleware.gzip import GZipMiddleware
 from config import settings
 from config.logconfig import logger
 
-from routers.auth.auth_api import auth
-from routers.service.service_api import service
+from routers.auth.auth_service_api import auth
+from routers.lms_service.lms_service_api import service
 
 app = FastAPI(title="App-Name", debug=settings.DEBUG, docs_url=settings.DOCS_URL, redoc_url=settings.REDOC_URL,
               openapi_url=settings.OPENAPI_URL)
@@ -57,7 +57,7 @@ app.add_middleware(
 
 # Services Registration
 app.include_router(auth, prefix="/auth")
-app.include_router(service, prefix="/service")
+app.include_router(service, prefix="/lms-service")
 
 
 @app.on_event('startup')

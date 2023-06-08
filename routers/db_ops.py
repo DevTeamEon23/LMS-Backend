@@ -1,0 +1,138 @@
+from time import sleep, time
+
+import pandas as pd
+import sqlalchemy as sql
+import sqlalchemy.exc as sql_exec
+
+from config.db_config import engine_str
+from config.logconfig import logger
+
+execute_retry = True
+pool = sql.create_engine(engine_str, pool_size=3, max_overflow=20, pool_recycle=67, pool_timeout=30, echo=None)
+
+
+def insert_data(table, dict_data, engine_address=None, multi=False, ignore=False, truncate=False, retry=1, wait_period=5):
+    """
+    This is used to insert the data in dict format into the table
+    :param table: SQLAlchemy Table Object
+    :param dict_data: Data to be inserted
+    :param engine_address: Define a custom engine string. Use default if None provided.
+    :param multi: Whether to use multi query or not
+    :param ignore: Use Insert Ignore while insertion
+    :param truncate: Truncate table before insertion
+    :param retry: Insert Retry Number
+    :param wait_period: Time in seconds for retry
+    :return: None
+    """
+    st = time()
+    logger.debug(f'Data Insertion started for {table.name}')
+    # engine_con_str = engine_address if engine_address is not None else engine_str
+    # engine = sql.create_engine(engine_con_str)
+    ins = table.insert()
+
+    with pool.connect() as conn:
+        if truncate:
+            conn.execute(f'TRUNCATE TABLE {table.name}')
+        try:
+            conn.execute(ins, dict_data, multi=multi)
+
+        except sql_exec.OperationalError as e:
+            if retry > 0:
+                logger.info(f"Error for {table.name}: {e}")
+                logger.info(
+                    f'Retrying to insert data in {table.name} after {wait_period} seconds')
+                sleep(wait_period)
+                insert_data(table=table, dict_data=dict_data, engine_address=engine_address, multi=multi, ignore=ignore,
+                            truncate=truncate, retry=retry - 1, wait_period=wait_period)
+            else:
+                logger.error(
+                    f"Error for {table.name} insertion: {e}", escalate=True)
+        conn.close()
+
+    logger.debug(f"Data Inserted in {table.name} in: {time() - st} secs")
+
+
+def insert_data_df(table, data: pd.DataFrame, truncate=False):
+    conn = pool.connect()
+    if truncate:
+        conn.execute(f'TRUNCATE TABLE {table.name}')
+    response = data.to_sql(table.name, con=conn,
+                           if_exists='append', index=False, method='multi')
+    conn.close()
+    return response
+
+
+def execute_query(query, params=None, commit=False):
+    if params is None:
+        params = {}
+    if execute_retry:
+        return execute_query_v1(query, params=params, commit=commit)
+    else:
+        return execute_query_old(query, params=params, commit=commit)
+
+
+def execute_query_old(query, params=None, commit=False):
+    if params is None:
+        params = {}
+    st = time()
+    # logger.debug(f'Executing query...{query[:int(len(query)*0.25)]}...')
+    # engine = sql.create_engine(engine_str)
+    with pool.connect() as conn:
+        result = conn.execute(query, params=params)
+        if commit:
+            conn.execute("commit;")
+        conn.close()
+
+    # logger.debug(f"Time taken to execute query: {time() - st} secs")
+    return result.mappings()
+
+
+def execute_query_v1(query, retry=2, wait_period=5, params=None, commit=False):
+    if params is None:
+        params = {}
+    st = time()
+    short_query = query[: int(len(query) * 0.25)]
+    # logger.debug(f'Executing query...{short_query}...')
+    # engine = sql.create_engine(engine_str)
+    with pool.connect() as conn:
+        try:
+
+            result = conn.execute(query, params).mappings()
+            # conn.execute(ins, dict_data, multi=multi)
+            if commit:
+                conn.execute("commit;")
+        except sql_exec.OperationalError as e:
+            if retry > 0:
+                logger.info(f"Error for Query {short_query}: {e}")
+                logger.info(
+                    f'Retrying to execute query {short_query} after {wait_period} seconds')
+                sleep(wait_period)
+                result = execute_query_v1(
+                    query=query, retry=retry - 1, wait_period=wait_period)
+            else:
+                logger.error(
+                    f"Error for Query {short_query}: {e}", escalate=True)
+        conn.close()
+
+    # logger.debug(f"Time taken to execute query: {time() - st} secs")
+    return result
+
+
+def read_sql_df(query, params=None, commit=False):
+    st = time()
+    # logger.debug(f"Reading query..{query[:int(len(query)*0.25)]}...")
+    # engine = sql.create_engine(engine_str)
+    conn = pool.connect()
+    df = pd.read_sql(query, conn, params=params)
+    if commit:
+        conn.execute('commit')
+    conn.close()
+    # engine.dispose()
+    # logger.debug(f'Data read in {time() - st} secs')
+    return df
+
+
+def build_list_params(key, values: list):
+    values_in = {f"{key}_{_i}": _u for _i, _u in enumerate(values)}
+    params_in = ",".join([f"%({i})s" for i in values_in.keys()])
+    return values_in, params_in

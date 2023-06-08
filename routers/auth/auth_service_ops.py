@@ -13,7 +13,8 @@ from starlette.responses import JSONResponse
 from config.db_config import n_table_user
 from config import settings
 from config.logconfig import logger
-from db_ops import execute_query, UserDBHandler
+from routers.auth.auth_db_ops import UserDBHandler
+from routers.db_ops import execute_query
 from utils import md5, random_string, validate_email
 
 # This is used for the password hashing and validation
@@ -43,52 +44,10 @@ def check_password(email, password):
         return True
 
 
-def check_mfa_enabled(email):
-    query = f"""
-    select * from {n_table_user} where email=%(email)s;
-    """
-    response = execute_query(query, params={'email': email})
-    data = response.fetchone()
-    if data is None:
-        return False
-    else:
-        status = data['mfa_enabled']
-        return status
-
-
 def generate_token(email):
     base = random_string(8) + email + random_string(8)
     token = md5(base)
     return token
-
-
-def get_user_by_token(token):
-    query = f"""SELECT * FROM {n_table_user} where token=%(token)s and active=%(active)s and token is not NULL and token != '';"""
-    resp = execute_query(query=query, params={'token': token, 'active': True})
-    data = resp.fetchone()
-    if data is None:
-        raise HTTPException(
-            status_code=401, detail="Token Expired or Invalid Token")
-    else:
-        return data
-
-
-def verify_admin_token(Auth_Token: str = Header()):
-    user = get_user_by_token(Auth_Token)
-    if user is None:
-        raise HTTPException(
-            status_code=401, detail="Authorization Token is invalid")
-    elif user['role'] != 'admin':
-        raise HTTPException(status_code=401, detail="Access Denied")
-
-
-def verify_app_user(Auth_Token: str = Header()):
-    user = get_user_by_token(Auth_Token)
-    if user is None:
-        raise HTTPException(
-            status_code=401, detail="Authorization Token is invalid")
-    elif user['role'] != "app":
-        raise HTTPException(status_code=401, detail="Access Denied")
 
 
 def get_password_hash(password):
@@ -225,6 +184,10 @@ def destroy_token(token):
 def exists_user_details(email, auth_token):
     message, active, token, is_mfa_enabled, request_token, details = None, True, None, False, None, {}
     message = 'User already exists'
+
+    # Create New TokenData
+    generate_email_token_2fa(email, skip_check=True)
+
     # User details
     user = get_user_details(email)
     token = user['token']
@@ -236,6 +199,27 @@ def exists_user_details(email, auth_token):
     details['role'] = user['role']
 
     return message, active, token, request_token, details
+
+
+def generate_email_token_2fa(email, request_token="", skip_check=False):
+    if skip_check:
+        # Called Internally and cautiously
+        exists = True
+        msg = 'User exists'
+    else:
+        exists, msg = check_verify_existing_user(email)
+
+    token = None
+    if not exists:
+        message = msg
+    else:
+        token = generate_token(email)
+        query = f"UPDATE {n_table_user} SET request_token=%(request_token)s, token=%(token)s, updated_at=now() WHERE " \
+                f"email=%(email)s ; "
+        response = execute_query(
+            query, params={'email': email, 'token': token, 'request_token': request_token})
+        message = 'token generated'
+    return token, message
 
 
 def add_new_user(email: str, generate_tokens: bool = False, auth_token="", inputs={}, password=None, skip_new_user=False):

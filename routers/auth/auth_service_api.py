@@ -3,12 +3,12 @@ from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 from passlib.context import CryptContext
 from starlette.requests import Request
-
-from .auth_ops import  verify_token, get_user_by_token, admin_add_new_user
-from .auth_ops import add_new_user, change_user_password, flush_tokens
+from ..authenticators import get_user_by_token
+from .auth_service_ops import verify_token, admin_add_new_user
+from .auth_service_ops import add_new_user, change_user_password, flush_tokens
 from config.logconfig import logger
 
-from schemas.auth_schema import (Email, NewUser, User, UserPassword)
+from schemas.auth_service_schema import (Email, NewUser, User, UserPassword)
 from routers.authenticators import verify_user
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -92,21 +92,6 @@ def verify_access_token(request: Request):
         })
 
 
-@auth.post("/logout", status_code=status.HTTP_200_OK)
-def logout(request: Request):
-    try:
-        if flush_tokens(request.headers['auth-token']):
-            return {
-                "message": "User Logged out successfully"
-            }
-    except Exception as exc:
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": ""
-        })
-
-
 # add user
 @auth.post("/signup")
 def signup(user: NewUser):
@@ -136,4 +121,19 @@ def change_password(request: Request, payload: UserPassword):
         return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
             "status": "failure",
             "message": exc.args[0]
+        })
+
+
+@auth.post("/logout", status_code=status.HTTP_200_OK)
+def logout(request: Request):
+    try:
+        if flush_tokens(request.headers['auth-token']):
+            return {
+                "message": "User Logged out successfully"
+            }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": ""
         })
