@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 
 from config import settings
+from config.logconfig import logger
 
 from routers.auth_api import auth
 from routers.service_api import service
@@ -41,8 +42,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # Default Exceptions Handling
 @app.exception_handler(Exception)
 def default_exception_handler(request, exc):
-    # logger.error(f"Default Exception: {exc}\nTraceback: {''.join(traceback.format_tb(exc.__traceback__))}")
-    print(exc)
+    logger.error(f"Default Exception: {exc}\nTraceback: {''.join(traceback.format_tb(exc.__traceback__))}")
     return JSONResponse(content={"message": "unknown error"}, status_code=status.HTTP_400_BAD_REQUEST)
 
 
