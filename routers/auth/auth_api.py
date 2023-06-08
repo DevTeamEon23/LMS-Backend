@@ -9,7 +9,7 @@ from .auth_ops import add_new_user, change_user_password, flush_tokens
 from config.logconfig import logger
 
 from schemas.auth_schema import (Email, NewUser, User, UserPassword)
-from .authenticators import verify_user
+from routers.authenticators import verify_user
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

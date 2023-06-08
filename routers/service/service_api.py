@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from starlette import status
 
 from routers.authenticators import verify_user
-from routers.service_ops import sample_data
+from routers.service.service_ops import sample_data
 from utils import success_response
 
 service = APIRouter(tags=["Service :  Service Name"], dependencies=[Depends(verify_user)])
