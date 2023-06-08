@@ -17,6 +17,7 @@ def get_user_by_token(token):
 
 
 def verify_app_user(Auth_Token: str = Header()):
+    # Use only for app user only
     user = get_user_by_token(Auth_Token)
     if user is None:
         raise HTTPException(
