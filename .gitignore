@@ -1,0 +1,17 @@
+*.csv
+*.xlsx
+*.json
+.ipynb
+.env
+.env*
+*.pdf
+*.txt
+logs
+reports
+.idea
+*__pycache__*
+env
+venv
+.aws
+test*.py
+releases

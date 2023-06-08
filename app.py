@@ -1,0 +1,66 @@
+"""
+    This is the main entry point for the Api
+"""
+import traceback
+
+from fastapi import FastAPI, Request, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.middleware.gzip import GZipMiddleware
+
+from config import settings
+
+from routers.auth_api import auth
+from routers.service_api import service
+
+app = FastAPI(title="App-Name", debug=settings.DEBUG, docs_url=settings.DOCS_URL, redoc_url=settings.REDOC_URL,
+              openapi_url=settings.OPENAPI_URL)
+
+# Set up Pre-configured Routes
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
+
+# Modify Default Exception Handler
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    # Get the original 'detail' list of errors
+    details = exc.errors()
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=jsonable_encoder(
+            {
+                "status": "failure",
+                "message": f"{details[0]['loc'][-1]}:{details[0]['msg']}",
+            }
+        ),
+    )
+
+
+# Default Exceptions Handling
+@app.exception_handler(Exception)
+def default_exception_handler(request, exc):
+    # logger.error(f"Default Exception: {exc}\nTraceback: {''.join(traceback.format_tb(exc.__traceback__))}")
+    print(exc)
+    return JSONResponse(content={"message": "unknown error"}, status_code=status.HTTP_400_BAD_REQUEST)
+
+
+# Set MiddleWare
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Services Registration
+app.include_router(auth, prefix="/auth")
+app.include_router(service, prefix="/service")
+
+
+@app.on_event('startup')
+def startup_function():
+    # create_database()
+    pass
