@@ -15,14 +15,6 @@ def get_user_by_token(token):
     else:
         return data
 
-def verify_admin_token(Auth_Token: str = Header()):
-    user = get_user_by_token(Auth_Token)
-    if user is None:
-        raise HTTPException(
-            status_code=401, detail="Authorization Token is invalid")
-    elif user['role'] != 'admin':
-        raise HTTPException(status_code=401, detail="Access Denied")
-
 
 def verify_app_user(Auth_Token: str = Header()):
     user = get_user_by_token(Auth_Token)

@@ -212,14 +212,6 @@ def verify_token(token):
     return response, message, data
 
 
-def delete_user_details(email):
-    data = UserDBHandler.delete_user(email)
-    if data is not None:
-        return True
-    else:
-        raise ValueError("User does not exists")
-
-
 def destroy_token(token):
     if token is not None and token != '':
         query = f"UPDATE {n_table_user} SET token='' where token=%(token)s;"
@@ -404,15 +396,6 @@ def verify_request_token(request_token):
     return valid, email, msg
 
 
-def update_user_status(email, status):
-    is_existing, is_active = check_existing_user(email)
-    if is_existing:
-        # Update user status
-        return UserDBHandler.update_user_status(email, status)
-    else:
-        raise ValueError("User does not exists")
-
-
 def change_user_password(email, password, user):
     is_existing, _ = check_existing_user(email)
     if is_existing:
@@ -427,17 +410,6 @@ def change_user_password(email, password, user):
         raise ValueError("User does not exists")
 
 
-def change_mfa_status(email, status):
-    # print(email,status)
-    is_existing, is_active = check_existing_user(email)
-
-    if is_existing and is_active:
-        if UserDBHandler.change_mfa_status(email, status):
-            # if status:
-            #     AWSClient.send_totp_email(email, email)
-            return True
-    else:
-        raise ValueError("User does not exists or user is inactive")
 
 
 def flush_tokens(token):
