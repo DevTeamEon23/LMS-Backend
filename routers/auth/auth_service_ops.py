@@ -394,7 +394,5 @@ def change_user_password(email, password, user):
         raise ValueError("User does not exists")
 
 
-
-
 def flush_tokens(token):
     return UserDBHandler.flush_tokens(token)

@@ -92,7 +92,7 @@ def verify_access_token(request: Request):
         })
 
 
-# add user
+# add user DfYY5G2LDGy3nY8
 @auth.post("/signup")
 def signup(user: NewUser):
     try:
