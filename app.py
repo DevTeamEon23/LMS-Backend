@@ -16,7 +16,7 @@ from config.logconfig import logger
 from routers.auth.auth_service_api import auth
 from routers.lms_service.lms_service_api import service
 
-app = FastAPI(title="App-Name", debug=settings.DEBUG, docs_url=settings.DOCS_URL, redoc_url=settings.REDOC_URL,
+app = FastAPI(title="EonLearnings Pvt.Ltd - Api's", debug=settings.DEBUG, docs_url=settings.DOCS_URL, redoc_url=settings.REDOC_URL,
               openapi_url=settings.OPENAPI_URL)
 
 # Set up Pre-configured Routes
