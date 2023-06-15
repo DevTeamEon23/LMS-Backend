@@ -6,7 +6,7 @@ from pydantic import BaseModel, validator
 
 from utils import validate_email
 from typing import Union
-
+from config.db_config import MyEnum
 
 class Token(BaseModel):
     access_token: str
@@ -20,6 +20,7 @@ class User(BaseModel):
     email: str
     fullname: Union[str, None] = None
     password: str
+    role: str
 
 
 class NewUser(User):

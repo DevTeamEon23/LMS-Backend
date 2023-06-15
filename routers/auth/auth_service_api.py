@@ -53,7 +53,7 @@ def loginResponse(message, active, is_mfa_enabled, request_token, token, details
 def login(user: User):
     message, active, is_mfa_enabled, request_token, token, details = add_new_user(user.email, password=user.password, auth_token="",
                                                                                   inputs={
-                                                                                      'full_name': user.fullname, 'role': 'user',
+                                                                                      'full_name': user.fullname, 'role': user.role,
                                                                                       'users_allowed': '[]', 'active': False,
                                                                                       'picture': ""}, skip_new_user=True)
     return loginResponse(message, active, is_mfa_enabled, request_token, token, details)
@@ -97,7 +97,7 @@ def verify_access_token(request: Request):
 def signup(user: NewUser):
     try:
         return admin_add_new_user(user.email, generate_tokens=user.generate_token, password=user.password, auth_token="", inputs={
-            'full_name': user.fullname, 'role': 'user', 'users_allowed': '[]', 'active': False, 'picture': "", "password": None})
+            'full_name': user.fullname, 'role': user.role, 'users_allowed': '[]', 'active': False, 'picture': "", "password": None})
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
