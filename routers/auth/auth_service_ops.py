@@ -1,7 +1,7 @@
 import secrets
 from datetime import datetime
 
-import jwt
+from jose import jwt
 import traceback
 
 from dateutil.relativedelta import relativedelta

@@ -2,6 +2,7 @@
 *.xlsx
 *.json
 .ipynb
+eon/
 .env
 .env*
 *.pdf
