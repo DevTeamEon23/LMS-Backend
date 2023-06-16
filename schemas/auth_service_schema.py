@@ -20,6 +20,7 @@ class User(BaseModel):
     email: str
     fullname: Union[str, None] = None
     password: str
+    role: str
 
 
 class NewUser(User):

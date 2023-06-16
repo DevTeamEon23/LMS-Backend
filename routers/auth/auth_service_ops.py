@@ -221,7 +221,7 @@ def generate_email_token_2fa(email, request_token="", skip_check=False):
         message = 'token generated'
     return token, message
 
-
+#  Login Ops
 def add_new_user(email: str, generate_tokens: bool = False, auth_token="", inputs={}, password=None, skip_new_user=False):
     message, active, is_mfa_enabled, request_token, token, details = None, False, False, None, None, {}
     try:
@@ -289,7 +289,7 @@ def add_new_user(email: str, generate_tokens: bool = False, auth_token="", input
 
     return message, active, is_mfa_enabled, request_token, token, details
 
-
+# Signup ops
 def admin_add_new_user(email: str, generate_tokens: bool = False, auth_token="", inputs={}, password=None, skip_new_user=False):
     try:
         # Check Email Address
