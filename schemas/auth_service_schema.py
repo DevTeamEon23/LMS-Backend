@@ -1,8 +1,8 @@
-from typing import Union
+from typing import Union, List
 
 from fastapi import Header, HTTPException
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator,EmailStr
 
 from utils import validate_email
 from typing import Union
@@ -54,3 +54,7 @@ class UserStatus(Email):
 
 class UserPassword(Email):
     password: str = None
+
+
+class EmailSchema(BaseModel):
+   email: List[EmailStr]

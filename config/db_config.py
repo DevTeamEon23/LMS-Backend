@@ -1,6 +1,6 @@
 import sqlalchemy as sql
-
-from sqlalchemy import MetaData, Table, Column, Integer, DECIMAL, VARCHAR, Index, UniqueConstraint, \
+import enum
+from sqlalchemy import MetaData, Table, Column, Integer, DECIMAL, VARCHAR, Index, UniqueConstraint,Enum, \
     func, BOOLEAN, create_engine, Date, BigInteger, event, DDL, Float, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB, UUID, TIMESTAMP, ENUM
 from sqlalchemy.orm import declarative_base, configure_mappers
@@ -14,6 +14,12 @@ connection = sql.create_engine(engine_str)
 metadata = MetaData()
 Base = declarative_base(metadata=metadata)
 
+class MyEnum(enum.Enum):
+    Superadmin = 'Superadmin'
+    Admin = 'Admin'
+    Instructor = 'Instructor'
+    Learner = 'Learner'
+
 n_table_user = 'users'
 s_table_user = Table(
     n_table_user, metadata,
@@ -22,7 +28,7 @@ s_table_user = Table(
     Column('username', VARCHAR(150), nullable=False),
     Column('email', VARCHAR(150), nullable=False),
     Column('password', VARCHAR(150), nullable=False),
-    Column('role', VARCHAR(25), default='user', nullable=False),
+    Column('role', Enum(MyEnum), server_default='Learner'),
     Column('users_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
     Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA
