@@ -16,7 +16,7 @@ from config.logconfig import logger
 from routers.auth.auth_service_api import auth
 from routers.lms_service.lms_service_api import service
 
-app = FastAPI(title="App-Name", debug=settings.DEBUG, docs_url=settings.DOCS_URL, redoc_url=settings.REDOC_URL,
+app = FastAPI(title="EonLearnings", debug=settings.DEBUG, docs_url=settings.DOCS_URL, redoc_url=settings.REDOC_URL,
               openapi_url=settings.OPENAPI_URL)
 
 # Set up Pre-configured Routes
@@ -59,6 +59,10 @@ app.add_middleware(
 app.include_router(auth, prefix="/auth")
 app.include_router(service, prefix="/lms-service")
 
+
+@app.get('/')
+def root_message():
+    return{"Welcome To EonLearning LMS Application Have a Great Day! 🌻👨‍💻🌹"}
 
 @app.on_event('startup')
 def startup_function():
