@@ -1,4 +1,5 @@
 import traceback
+import random
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 from fastapi_mail import FastMail, MessageSchema,ConnectionConfig
@@ -169,7 +170,8 @@ conf = ConnectionConfig(
 
 @auth.post("/send_mail")
 async def send_mail(email: EmailSchema):
-
+    # Generate 4-digit OTP
+    otp = str(random.randint(1000, 9999))
 
     template = """
         <!DOCTYPE html>
@@ -189,7 +191,7 @@ async def send_mail(email: EmailSchema):
     </div>
     <p style="font-size:1.1em">Hi,</p>
     <p>Thank you for choosing EonLearning LMS. Use the following OTP to complete your Password Recovery Procedure. OTP is valid for 5 minutes</p>
-    <h2 style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">5598</h2>
+    <h2 style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">{otp}</h2>
     <p style="font-size:0.9em;">Thanks & Regards,<br />The EonLearning Team</p>
     <hr style="border:none;border-top:1px solid #eee" />
     <div style="float:right;padding:8px 0;color:#aaa;font-size:0.8em;line-height:1;font-weight:300">
@@ -204,9 +206,11 @@ async def send_mail(email: EmailSchema):
 </body>
 </html>
         """
- 
+     # Replace {otp} with the generated OTP
+    template = template.replace("{otp}", otp)
+    
     message = MessageSchema(
-        subject="Fastapi-Mail module",
+        subject="[EonLearning] OTP For Reset Password",
         recipients=email.dict().get("email"),  # List of recipients, as many as you can pass
         body=template,
         subtype="html"
