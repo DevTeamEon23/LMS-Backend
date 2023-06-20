@@ -100,7 +100,7 @@ def verify_access_token(request: Request):
 def signup(user: NewUser):
     try:
         return admin_add_new_user(user.email, generate_tokens=user.generate_token, password=user.password, auth_token="", inputs={
-            'full_name': user.fullname, 'role': 'user', 'users_allowed': '[]', 'active': False, 'picture': "", "password": None})
+            'full_name': user.fullname, 'role': 'Learner', 'users_allowed': '[]', 'active': False, 'picture': "", "password": None})
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -208,7 +208,7 @@ async def send_mail(email: EmailSchema):
         """
      # Replace {otp} with the generated OTP
     template = template.replace("{otp}", otp)
-    
+
     message = MessageSchema(
         subject="[EonLearning] OTP For Reset Password",
         recipients=email.dict().get("email"),  # List of recipients, as many as you can pass

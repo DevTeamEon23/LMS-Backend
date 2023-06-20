@@ -26,7 +26,7 @@ class UserDBHandler:
 
     @classmethod
     def get_users_list(cls):
-        query = """ SELECT full_name as username , email ,active as status FROM users where role='user' ; """
+        query = """ SELECT full_name as username , email ,active as status FROM users where role='Learner' ; """
         return execute_query(query).fetchall()
 
     @classmethod

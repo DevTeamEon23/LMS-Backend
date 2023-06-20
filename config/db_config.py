@@ -4,7 +4,7 @@ from sqlalchemy import MetaData, Table, Column, Integer, DECIMAL, VARCHAR, Index
     func, BOOLEAN, create_engine, Date, BigInteger, event, DDL, Float, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB, UUID, TIMESTAMP, ENUM
 from sqlalchemy.orm import declarative_base, configure_mappers
-
+from sqlalchemy import Enum
 from .settings import settings
 
 engine_str = f'mysql+mysqlconnector://{settings.PG_USER}:{settings.PG_PASSWORD}@{settings.PG_HOST}:{settings.PG_PORT}/{settings.DBNAME}'
@@ -22,7 +22,7 @@ s_table_user = Table(
     Column('username', VARCHAR(150), nullable=False),
     Column('email', VARCHAR(150), nullable=False),
     Column('password', VARCHAR(150), nullable=False),
-    Column('role', VARCHAR(25), default='user', nullable=False),
+    Column('role', Enum('Superadmin', 'Admin', 'Instructor', 'Learner'), server_default='Learner', nullable=False),
     Column('users_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
     Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA

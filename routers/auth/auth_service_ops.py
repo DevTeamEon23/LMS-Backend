@@ -270,7 +270,7 @@ def add_new_user(email: str, generate_tokens: bool = False, auth_token="", input
 
             # Add New User to the list of users
             data = {'full_name': full_name, 'username': username, 'email': v_email, 'password': hash_password,
-                    'role': inputs.get('role', 'user'),
+                    'role': inputs.get('role', 'Learner'),
                     'users_allowed': inputs.get('users_allowed', ''), 'auth_token': auth_token,
                     'request_token': request_token, 'token': token, 'active': False}
 
@@ -326,7 +326,7 @@ def admin_add_new_user(email: str, generate_tokens: bool = False, auth_token="",
 
             # Add New User to the list of users
             data = {'full_name': full_name, 'username': username, 'email': v_email, 'password': hash_password,
-                    'role': inputs.get('role', 'user'),
+                    'role': inputs.get('role', 'Learner'),
                     'users_allowed': inputs.get('users_allowed', ''), 'auth_token': auth_token,
                     'request_token': request_token, 'token': token, 'active': True, }
 
@@ -340,7 +340,7 @@ def admin_add_new_user(email: str, generate_tokens: bool = False, auth_token="",
         message = exc.args[0]
         logger.error(message)
 
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(message='User added successfully'))
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='Success',message='User added successfully'))
 
 
 def generate_request_token(email):
