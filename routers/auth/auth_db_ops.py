@@ -42,3 +42,27 @@ class UserDBHandler:
         else:
             query = """UPDATE users SET token = '' WHERE token = %(token)s; """
         return execute_query(query, params={'token': token})
+    
+    # @classmethod
+    # def check_email_registered(cls, email):
+    #     query = "SELECT COUNT(*) FROM users WHERE email = %(email)s"
+    #     params = {"email": email}
+    #     response = execute_query(query, params=params)
+    #     count = response.fetchone()[0]
+    #     return count > 0
+    
+    def get_user_by_email(cls, email):
+        query = f"SELECT * FROM {n_table_user} WHERE email = %(email)s"
+        params = {"email": email}
+        resp = execute_query(query=query, params=params)
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(status_code=401, detail="User not found")
+        else:
+            return data
+        
+    # @classmethod
+    # def check_email_registered(cls, email, user):
+    #     if not user:
+    #         raise HTTPException(status_code=400, detail="Email is not registered")
+    #     return True

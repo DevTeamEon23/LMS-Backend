@@ -1,13 +1,14 @@
 import traceback
+import json
 import random
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 from fastapi_mail import FastMail, MessageSchema,ConnectionConfig
 from passlib.context import CryptContext
 from starlette.requests import Request
-from ..authenticators import get_user_by_token
-from .auth_service_ops import verify_token, admin_add_new_user
-from .auth_service_ops import add_new_user, change_user_password, flush_tokens
+from routers.auth.auth_db_ops import UserDBHandler
+from ..authenticators import get_user_by_token,verify_email,get_user_by_email
+from .auth_service_ops import verify_token, admin_add_new_user,add_new_user, change_user_password, flush_tokens
 from config.logconfig import logger
 from dotenv import load_dotenv
 from schemas.auth_service_schema import (Email, NewUser, User,EmailSchema, UserPassword)
@@ -142,20 +143,6 @@ def logout(request: Request):
         })
 
 
-
-
-# conf = ConnectionConfig(
-#     MAIL_USERNAME = "aniket24aug22@gmail.com",
-#     MAIL_PASSWORD = "gblenofxhmfrwgvy",
-#     MAIL_FROM = "aniket24aug22@gmail.com",
-#     MAIL_PORT = 465,
-#     MAIL_SERVER = "smtp.gmail.com",
-#     MAIL_STARTTLS = False,
-#     MAIL_SSL_TLS = True,
-#     USE_CREDENTIALS = True,
-#     VALIDATE_CERTS = True
-# )
-
 conf = ConnectionConfig(
     MAIL_USERNAME=os.environ.get("MAIL_USERNAME"),
     MAIL_PASSWORD=os.environ.get("MAIL_PASSWORD"),
@@ -168,59 +155,67 @@ conf = ConnectionConfig(
     VALIDATE_CERTS=bool(os.environ.get("VALIDATE_CERTS"))
 )
 
+
+
 @auth.post("/send_mail")
 async def send_mail(email: EmailSchema):
+    user = get_user_by_email(email.email[0])  # Assuming only one email is provided in the list
+
+    # Check if the user is found (email is registered)
+    try:
+        user_data = get_user_by_email(email.email[0])
+    except Exception as exc:
+        return JSONResponse(status_code=401, content={
+            "status": "failure",
+            "message": "Email is not registered"
+        })
+
     # Generate 4-digit OTP
     otp = str(random.randint(1000, 9999))
 
     template = """
         <!DOCTYPE html>
-<html lang="en" >
-<head>
-  <meta charset="UTF-8">
-  <title>EonLearning LMS</title>
-  
-
-</head>
-<body>
-<!-- partial:index.partial.html -->
-<div style="font-family: Helvetica,Arial,sans-serif;min-width:1000px;overflow:auto;line-height:2">
-  <div style="margin:50px auto;width:70%;padding:20px 0">
-    <div style="border-bottom:1px solid #eee">
-      <a href="" style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">Reset your EonLearning LMS password</a>
-    </div>
-    <p style="font-size:1.1em">Hi,</p>
-    <p>Thank you for choosing EonLearning LMS. Use the following OTP to complete your Password Recovery Procedure. OTP is valid for 5 minutes</p>
-    <h2 style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">{otp}</h2>
-    <p style="font-size:0.9em;">Thanks & Regards,<br />The EonLearning Team</p>
-    <hr style="border:none;border-top:1px solid #eee" />
-    <div style="float:right;padding:8px 0;color:#aaa;font-size:0.8em;line-height:1;font-weight:300">
-      <p>EonLearning LMS Inc</p>
-      <p>Dalal Street</p>
-      <p>Mumbai-400001</p>
-    </div>
-  </div>
-</div>
-<!-- partial -->
-  
-</body>
-</html>
-        """
-     # Replace {otp} with the generated OTP
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>EonLearning LMS</title>
+        </head>
+        <body>
+            <!-- partial:index.partial.html -->
+            <div style="font-family: Helvetica,Arial,sans-serif;min-width:1000px;overflow:auto;line-height:2">
+                <div style="margin:50px auto;width:70%;padding:20px 0">
+                    <div style="border-bottom:1px solid #eee">
+                        <a href="" style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">Reset your EonLearning LMS password</a>
+                    </div>
+                    <p style="font-size:1.1em">Hi,</p>
+                    <p>Thank you for choosing EonLearning LMS. Use the following OTP to complete your Password Recovery Procedure. OTP is valid for 5 minutes</p>
+                    <h2 style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">{otp}</h2>
+                    <p style="font-size:0.9em;">Thanks & Regards,<br />The EonLearning Team</p>
+                    <hr style="border:none;border-top:1px solid #eee" />
+                    <div style="float:right;padding:8px 0;color:#aaa;font-size:0.8em;line-height:1;font-weight:300">
+                        <p>EonLearning LMS Inc</p>
+                        <p>Dalal Street</p>
+                        <p>Mumbai-400001</p>
+                    </div>
+                </div>
+            </div>
+            <!-- partial -->
+        </body>
+        </html>
+    """
+    
+    # Replace {otp} with the generated OTP
     template = template.replace("{otp}", otp)
 
     message = MessageSchema(
         subject="[EonLearning] OTP For Reset Password",
-        recipients=email.dict().get("email"),  # List of recipients, as many as you can pass
+        recipients=email.email,
         body=template,
         subtype="html"
-        )
- 
+    )
+
     fm = FastMail(conf)
     await fm.send_message(message)
     print(message)
- 
-     
- 
-    return JSONResponse(status_code=200, content={"message": "email has been sent"})
 
+    return JSONResponse(status_code=200, content={"status": "success","message": "Email has been sent","OTP":otp})
