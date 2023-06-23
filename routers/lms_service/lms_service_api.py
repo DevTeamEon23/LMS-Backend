@@ -2,9 +2,10 @@ import traceback
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends
 from starlette import status
-from schemas.lms_service_schema import User
+from schemas.lms_service_schema import User, DeleteUser
 from routers.authenticators import verify_user
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,delete_user_by_id
+from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import CategorySchema
 from utils import success_response
 from config.logconfig import logger
@@ -33,4 +34,19 @@ def fetch_all_users():
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
             "status": "failure",
             "message": "Failed to fetch users' data"
+        })
+    
+@service.delete("/delete_user")
+def delete_user(payload: DeleteUser):
+    try:
+        users = delete_user_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": users
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Delete user data"
         })

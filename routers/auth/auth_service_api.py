@@ -111,9 +111,9 @@ def signup(user: NewUser):
 
 
 # Update the user Password
-@auth.post("/change-user-password", dependencies=[Depends(verify_user)])
+@auth.post("/change-user-password", dependencies=[Depends(verify_email)])
 def change_password(request: Request, payload: UserPassword):
-    user = get_user_by_token(request.headers['auth-token'])
+    user = get_user_by_email(request.headers['email'])
     try:
         if change_user_password(payload.email, payload.password, user):
             return JSONResponse(status_code=status.HTTP_200_OK, content={
@@ -154,8 +154,6 @@ conf = ConnectionConfig(
     USE_CREDENTIALS=bool(os.environ.get("USE_CREDENTIALS")),
     VALIDATE_CERTS=bool(os.environ.get("VALIDATE_CERTS"))
 )
-
-
 
 @auth.post("/send_mail")
 async def send_mail(email: EmailSchema):

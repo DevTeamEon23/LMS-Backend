@@ -20,4 +20,5 @@ class User(BaseModel):
     fullname: Union[str, None] = None
     password: str
 
-
+class DeleteUser(BaseModel):
+    id: int

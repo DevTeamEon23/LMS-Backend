@@ -16,9 +16,9 @@ class LmsHandler:
             return data
 
     @classmethod
-    def add_users_to_db(cls, params):
-        query = f"""   INSERT into {n_table_user}(full_name, username, email,password, role, users_allowed, auth_token, request_token, token, active) VALUES 
-                        (%(full_name)s, %(username)s, %(email)s,%(password)s, %(role)s, %(users_allowed)s,  %(auth_token)s, %(request_token)s, %(token)s, %(active)s)
+    def add_user_to_db(cls, params):
+        query = f"""   INSERT into {n_table_user}(eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email) VALUES 
+                        (%(eid)s, %(sid)s, %(full_name)s, %(dept)s, %(adhr)s, %(username)s, %(email)s,%(password)s, %(bio)s, %(file)s, %(role)s, %(timezone)s, %(langtype)s, %(users_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s, %(exclude_from_email)s)
                         ; 
                     """
         return execute_query(query, params=params)
@@ -27,3 +27,8 @@ class LmsHandler:
     def get_all_users(cls):
         query = """ SELECT * FROM users; """
         return execute_query(query).fetchall()
+    
+    @classmethod
+    def delete_users(cls, id):
+        query = f""" DELETE FROM users WHERE id = '{id}'; """
+        return execute_query(query)

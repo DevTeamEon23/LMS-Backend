@@ -21,10 +21,19 @@ def get_user_by_email(email):
     resp = execute_query(query=query, params=params)
     data = resp.fetchone()
     if data is None:
-        raise HTTPException(status_code=401, detail="User not found")
+        raise HTTPException(status_code=401, headers = {"status": "failure"},detail="User not found")
     else:
         return data
     
+def delete_user_by_id(id):
+    query = f""" DELETE FROM users WHERE id="%(id)s";"""
+    resp = execute_query(query=query, params={'id': id})
+    data = resp.fetchone()
+    if data is None:
+        raise HTTPException(status_code=401, headers = {"status": "failure"},detail="User not found")
+    else:
+        return data
+
 def verify_app_user(Auth_Token: str = Header()):
     # Use only for app user only
     user = get_user_by_token(Auth_Token)
@@ -45,4 +54,4 @@ def verify_email(email: str = Header()):
     user = get_user_by_email(email)
     if user is None:
         raise HTTPException(
-            status_code=401, detail="Authorization Token is invalid")
+            status_code=401, detail="Authorization Email is invalid")
