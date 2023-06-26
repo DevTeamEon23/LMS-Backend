@@ -111,11 +111,10 @@ def signup(user: NewUser):
 
 
 # Update the user Password
-@auth.post("/change-user-password", dependencies=[Depends(verify_email)])
-def change_password(request: Request, payload: UserPassword):
-    user = get_user_by_email(request.headers['email'])
+@auth.post("/change-user-password")
+def change_password(payload: UserPassword):
     try:
-        if change_user_password(payload.email, payload.password, user):
+        if change_user_password(payload.email, payload.password):
             return JSONResponse(status_code=status.HTTP_200_OK, content={
                 "status": "success",
                 "message": "Updated password successfully"

@@ -30,9 +30,9 @@ class UserDBHandler:
         return execute_query(query).fetchall()
 
     @classmethod
-    def change_password(cls, email, password,user):
-        query = """ UPDATE users SET password = %(password)s WHERE email=%(email)s and id = %(user_id)s"""
-        params = {"password": password, "email": email,"user_id":user['id']}
+    def change_password(cls, email, password):
+        query = """ UPDATE users SET password = %(password)s WHERE email=%(email)s"""
+        params = {"password": password, "email": email}
         return execute_query(query, params=params)
 
     @classmethod

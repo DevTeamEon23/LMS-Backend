@@ -24,6 +24,12 @@ class LmsHandler:
         return execute_query(query, params=params)
     
     @classmethod
+    def change_password(cls, email, password,user):
+        query = """ UPDATE users SET password = %(password)s WHERE email=%(email)s and id = %(user_id)s"""
+        params = {"password": password, "email": email,"user_id":user['id']}
+        return execute_query(query, params=params)
+    
+    @classmethod
     def get_all_users(cls):
         query = """ SELECT * FROM users; """
         return execute_query(query).fetchall()

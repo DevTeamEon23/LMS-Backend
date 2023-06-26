@@ -380,14 +380,14 @@ def verify_request_token(request_token):
     return valid, email, msg
 
 
-def change_user_password(email, password, user):
+def change_user_password(email, password):
     is_existing, _ = check_existing_user(email)
     if is_existing:
         # Update user password
         if password is None:
             password = random_password()
         password_hash = get_password_hash(password)
-        UserDBHandler.change_password(email, password_hash, user)
+        UserDBHandler.change_password(email, password_hash)
         #     AWSClient.send_signup(email, password, subject='Password Change')
         return True
     else:
