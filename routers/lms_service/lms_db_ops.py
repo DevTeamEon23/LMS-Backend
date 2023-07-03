@@ -14,19 +14,64 @@ class LmsHandler:
                 status_code=401, detail="Token Expired or Invalid Token")
         else:
             return data
-
+# Users CRUD
     @classmethod
-    def add_user_to_db(cls, params):
-        query = f"""   INSERT into {n_table_user}(eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email) VALUES 
+    def add_users(cls, params):
+        query = f"""   INSERT into {n_table_user}(eid, sid, full_name, email,dept,adhr, username, password, bio, file, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email) VALUES 
                         (%(eid)s, %(sid)s, %(full_name)s, %(dept)s, %(adhr)s, %(username)s, %(email)s,%(password)s, %(bio)s, %(file)s, %(role)s, %(timezone)s, %(langtype)s, %(users_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s, %(exclude_from_email)s)
                         ; 
                     """
         return execute_query(query, params=params)
     
     @classmethod
-    def change_password(cls, email, password,user):
-        query = """ UPDATE users SET password = %(password)s WHERE email=%(email)s and id = %(user_id)s"""
-        params = {"password": password, "email": email,"user_id":user['id']}
+    def update_user_to_db(cls, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email, user):
+        query = f"""   
+        UPDATE {n_table_user} SET
+            eid = %(eid)s,
+            sid = %(sid)s,
+            full_name = %(full_name)s,
+            dept = %(dept)s,
+            adhr = %(adhr)s,
+            username = %(username)s,
+            email = %(email)s,
+            password = %(password)s,
+            bio = %(bio)s,
+            file = %(file)s,
+            role = %(role)s,
+            timezone = %(timezone)s,
+            langtype = %(langtype)s,
+            users_allowed = %(users_allowed)s,
+            auth_token = %(auth_token)s,
+            request_token = %(request_token)s,
+            token = %(token)s,
+            active = %(active)s,
+            deactive = %(deactive)s,
+            exclude_from_email = %(exclude_from_email)s
+        WHERE id = %(user_id)s;
+        """
+        params = {
+        "eid": eid,
+        "sid": sid,
+        "full_name": full_name,
+        "dept": dept,
+        "adhr": adhr,
+        "username": username,
+        "email": email,
+        "password": password,
+        "bio": bio,
+        "file": file,
+        "role": role,
+        "timezone": timezone,
+        "langtype": langtype,
+        "users_allowed": users_allowed,
+        "auth_token": auth_token,
+        "request_token": request_token,
+        "token": token,
+        "active": active,
+        "deactive": deactive,
+        "exclude_from_email": exclude_from_email,
+        "user_id":user["id"]
+    }
         return execute_query(query, params=params)
     
     @classmethod

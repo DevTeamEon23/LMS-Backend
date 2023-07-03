@@ -1,13 +1,32 @@
 from enum import Enum
 
 from pydantic import BaseModel,validator
-from typing import Union
+from typing import List,Union, Optional
 from utils import validate_email
 
 class query(str, Enum):
     category1 = 'category1'
     category2 = 'category2'
     category3 = 'category3'
+
+class Role(str, Enum):
+    Superadmin = 'Superadmin'
+    Admin = 'Admin'
+    Instructor = 'Instructor'
+    Learner = 'Learner'
+
+class Timezone(str, Enum):
+    IST = 'IST'
+    NST = 'NST'
+    AST = 'AST'
+    ECT = 'ECT'
+    GMT = 'GMT'
+    ARABIC = 'ARABIC'
+
+class Langtype(str, Enum):
+    English = 'English'
+    Hindi = 'Hindi'
+    Marathi = 'Marathi'
 
 
 class CategorySchema(BaseModel):
@@ -16,10 +35,28 @@ class CategorySchema(BaseModel):
     category: query
 
 
-class User(BaseModel):
+# class LocalUser(BaseModel):
+
+
+class AddUser(BaseModel):
+    eid: str
+    sid: str
+    full_name: Union[str, None] = None
     email: str
-    fullname: Union[str, None] = None
+    dept: str
+    adhr: str
+    username: str
     password: str
+    bio: str
+    file: List[bytes] = None
+    role: Role
+    timezone: Timezone
+    langtype: Langtype
+    active: bool = True
+    deactive: bool = False
+    exclude_from_email: bool = False
+    generate_token: bool
+
 
 class DeleteUser(BaseModel):
     id: int
@@ -38,5 +75,20 @@ class UserStatus(Email):
     status: Union[str, None] = False
 
 
-class UserPassword(Email):
-    password: str = None
+class UserDetail(Email):
+    eid: str
+    sid: str
+    full_name: Union[str, None] = None
+    email: str
+    dept: str
+    adhr: int
+    username: str
+    password: str
+    bio: str
+    file: Optional[bytes] = None
+    role: Role
+    timezone: Timezone
+    langtype: Langtype
+    active: bool = True
+    deactive: bool = False
+    exclude_from_email: bool = False

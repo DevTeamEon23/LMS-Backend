@@ -13,10 +13,10 @@ metadata = MetaData()
 Base = declarative_base(metadata=metadata)
 
 class Role(PythonEnum):
-    SUPERADMIN = 'Superadmin'
-    ADMIN = 'Admin'
-    INSTRUCTOR = 'Instructor'
-    LEARNER = 'Learner'
+    Superadmin = 'Superadmin'
+    Admin = 'Admin'
+    Instructor = 'Instructor'
+    Learner = 'Learner'
 
 class TimeZoneEnum(PythonEnum):
     IST = 'IST'
@@ -27,9 +27,72 @@ class TimeZoneEnum(PythonEnum):
     ARABIC = 'ARABIC'
 
 class LanguageEnum(PythonEnum):
-    ENGLISH = 'English'
-    HINDI = 'Hindi'
-    MARATHI = 'Marathi'
+    English = 'English'
+    Hindi = 'Hindi'
+    Marathi = 'Marathi'
+
+class Certificate(PythonEnum):
+    Certificate1 = 'Certificate1'
+    Certificate2 = 'Certificate2'
+    Certificate3 = 'Certificate3'
+    Certificate4 = 'Certificate4'
+
+class Level(PythonEnum):
+    level1 = 'level1'
+    level2 = 'level2'
+    level3 = 'level3'
+    level4 = 'level4'
+
+class ParentCategory(PythonEnum):
+    ParentCategory1 = 'ParentCategory1'
+    ParentCategory2 = 'ParentCategory2'
+    ParentCategory3 = 'ParentCategory3'
+    ParentCategory4 = 'ParentCategory4'
+
+class EventEnum(PythonEnum):
+    Selectevent = 'Selectevent'
+    Onusercreate = 'Onusercreate'
+    Onusersignup = 'Onusersignup'
+    Xhoursafterusersignup = 'Xhoursafterusersignup'
+    Xhoursafterusersignupandtheuserhasnotmadeapurchase = 'Xhoursafterusersignupandtheuserhasnotmadeapurchase'
+    Xhoursafterusercreation = 'Xhoursafterusercreation'
+    Xhoursafterusercreationandtheuserhasnotsignedin = ''
+    Xhoursafterusersignupandtheuserhasnotsignedin = ''
+    Xhourssinceuserlastsignedin = ''
+    Xhourssinceuserfirstsigninandtheuserhasnotcompletedanycourse = ''
+    Xhoursbeforeuserdeactivation = 'Xhoursbeforeuserdeactivation'
+    Oncourseassignment = 'Oncourseassignment'
+    Oncourseselfassignment = 'Oncourseselfassignment'
+    Xhoursaftercourseacquisition = 'Xhoursaftercourseacquisition'
+    Xhoursbeforecoursestart = 'Xhoursbeforecoursestart'
+    Oncoursecompletion = 'Oncoursecompletion'
+    Xhoursaftercoursecompletion = 'Xhoursaftercoursecompletion'
+    Oncoursefailure = 'Oncoursefailure'
+    Oncourseexpiration = 'Oncourseexpiration'
+    Xhoursbeforecourseexpiration = 'Xhoursbeforecourseexpiration'
+    Oncertificateacquisition = 'Oncertificateacquisition'
+    Oncertificateexpiration = 'Oncertificateexpiration'
+    Xhoursbeforecertificateexpiration = 'Xhoursbeforecertificateexpiration'
+    Ongroupassignment = 'Ongroupassignment'
+    Onbranchassignment = 'Onbranchassignment'
+    Onassignmentsubmission = 'Onassignmentsubmission'
+    Onassignmentgrading = 'Onassignmentgrading'
+    OnILTsessioncreate = 'OnILTsessioncreate'
+    OnILTsessionregistration = 'OnILTsessionregistration'
+    XhoursbeforeanILTsessionstarts = 'XhoursbeforeanILTsessionstarts'
+    OnILTgrading = 'OnILTgrading'
+    Onuserpayment = 'Onuserpayment'
+    OnlevelXreached = 'OnlevelXreached'
+
+class RecipientEnum(PythonEnum):
+    Selectrecipient = 'Selectrecipient'
+    Relateduser = 'Relateduser'
+    Accountowner = 'Accountowner'
+    SuperAdmins = 'SuperAdmins'
+    Branchadmins = 'Branchadmins'
+    Courseinstructors = 'Courseinstructors'
+    Courselearners = 'Courselearners'
+    Specificrecipients = 'Specificrecipients'
 
 n_table_user = 'users'
 s_table_user = Table(
@@ -61,6 +124,145 @@ s_table_user = Table(
     UniqueConstraint('eid', name=f'uq_{n_table_user}_eid'),
     Index(f'idx_{n_table_user}_token', 'token'),
 )
+
+table_course = 'course'
+s_table_course = Table(
+    table_course, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('coursename',VARCHAR(30), nullable=False),
+    Column('file',LONGBLOB, nullable=False),
+    Column('description',VARCHAR(255), nullable=False),
+    Column('coursecode',VARCHAR(20), unique=True),
+    Column('price', Float(10, 2)),
+    Column('courselink', VARCHAR(255)),
+    Column('coursevideo',LONGBLOB),
+    Column('capacity', VARCHAR(20)),
+    Column('startdate', VARCHAR(20)),
+    Column('enddate', VARCHAR(20)),
+    Column('timelimit', VARCHAR(20)),
+    Column('certificate', Enum(Certificate), server_default='Certificate1', nullable=False),
+    Column('level', Enum(Level), server_default='level1', nullable=False),
+    Column('category', Enum(ParentCategory), server_default='ParentCategory1', nullable=False),
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('isActive', BOOLEAN, default=True),
+    Column('isHide', BOOLEAN, default=False),
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    UniqueConstraint('coursecode', name=f'uq_{table_course}_couref'),
+    Index(f'idx_{table_course}_token', 'token'),
+)
+
+# lmsgroup table
+table_lmsgroup = 'lmsgroup'
+s_table_lmsgroup = Table(
+    table_lmsgroup, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('groupname', VARCHAR(45), nullable=False),
+    Column('groupdesc', VARCHAR(255), nullable=False),
+    Column('groupkey', VARCHAR(20)),
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    UniqueConstraint('groupkey', name=f'uq_{table_lmsgroup}_grpref'),
+    Index(f'idx_{table_lmsgroup}_token', 'token'),
+)
+
+# lmsevent table
+table_lmsevent = 'lmsevent'
+s_table_lmsevent = Table(
+    table_lmsevent, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('ename', VARCHAR(20), nullable=False),
+    Column('eventtype', Enum(EventEnum), nullable=False),
+    Column('recipienttype', Enum(RecipientEnum), nullable=False),
+    Column('descp', VARCHAR(300)),
+    Column('isActive', BOOLEAN, default=True),
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Index(f'idx_{table_lmsevent}_token', 'token'),
+)
+
+# parentcategory table
+table_parentcategory = 'parentcategory'
+s_table_parentcategory = Table(
+    table_parentcategory, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('name', VARCHAR(45)),
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Index(f'idx_{table_parentcategory}_token', 'token'),
+)
+
+# virtualtraining table
+table_virtualtraining = 'virtualtraining'
+s_table_virtualtraining = Table(
+    table_virtualtraining, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('instname', VARCHAR(45)),
+    Column('virtualname', VARCHAR(20)),
+    Column('date', VARCHAR(20)),
+    Column('starttime', VARCHAR(20)),
+    Column('meetlink', VARCHAR(455)),
+    Column('messg', VARCHAR(655)),
+    Column('duration', VARCHAR(20)),
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Index(f'idx_{table_virtualtraining}_token', 'token'),
+)
+
+# category table
+table_category = 'category'
+s_table_category = Table(
+    table_category, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('name', VARCHAR(20)),
+    Column('parentcategory', Enum(ParentCategory)),
+    Column('price', Float(10, 2)),
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Index(f'idx_{table_category}_token', 'token'),
+)
+
+# classroom table
+table_classroom = 'classroom'
+s_table_classroom = Table(
+    table_classroom, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('instname', VARCHAR(45)),
+    Column('classname', VARCHAR(20)),
+    Column('date', VARCHAR(20)),
+    Column('starttime', VARCHAR(20)),
+    Column('venue', VARCHAR(455)),
+    Column('messg', VARCHAR(655)),
+    Column('duration', VARCHAR(20)),
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Index(f'idx_{table_classroom}_token', 'token'),
+)
+
+# conference table
+table_conference = 'conference'
+s_table_conference = Table(
+    table_conference, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('instname', VARCHAR(45)),
+    Column('confname', VARCHAR(20)),
+    Column('date', VARCHAR(20)),
+    Column('starttime', VARCHAR(20)),
+    Column('meetlink', VARCHAR(455)),
+    Column('messg', VARCHAR(655)),
+    Column('duration', VARCHAR(20)),
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Index(f'idx_{table_conference}_token', 'token'),
+)
+
 
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')
 metadata.create_all(meta_engine, checkfirst=True)

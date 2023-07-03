@@ -52,7 +52,7 @@ def loginResponse(message, active, is_mfa_enabled, request_token, token, details
         return {"status": "success", 'message': message, "is_active": active, "is_mfa_enabled": is_mfa_enabled, "token": token,
                 'data': user_detail, 'error': None}
 
-
+# Login API
 @auth.post('/login')
 def login(user: User):
     message, active, is_mfa_enabled, request_token, token, details = add_new_user(user.email, password=user.password, auth_token="",
@@ -62,7 +62,7 @@ def login(user: User):
                                                                                       'picture': ""}, skip_new_user=True)
     return loginResponse(message, active, is_mfa_enabled, request_token, token, details)
 
-
+# Token Verification for Other apis
 @auth.get('/verify-token')
 def verify_access_token(request: Request):
     try:
@@ -96,7 +96,7 @@ def verify_access_token(request: Request):
         })
 
 
-# add user DfYY5G2LDGy3nY8
+# Signup 
 @auth.post("/signup")
 def signup(user: NewUser):
     try:
@@ -110,7 +110,7 @@ def signup(user: NewUser):
         })
 
 
-# Update the user Password
+# Reset Password 
 @auth.post("/change-user-password")
 def change_password(payload: UserPassword):
     try:
@@ -126,7 +126,7 @@ def change_password(payload: UserPassword):
             "message": exc.args[0]
         })
 
-
+# Logout
 @auth.post("/logout", status_code=status.HTTP_200_OK)
 def logout(request: Request):
     try:
@@ -142,6 +142,7 @@ def logout(request: Request):
         })
 
 
+# Forgot Password Send OTP on Mail-Id
 conf = ConnectionConfig(
     MAIL_USERNAME=os.environ.get("MAIL_USERNAME"),
     MAIL_PASSWORD=os.environ.get("MAIL_PASSWORD"),
