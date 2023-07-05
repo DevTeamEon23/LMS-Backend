@@ -44,17 +44,19 @@ class AddUser(BaseModel):
     full_name: Union[str, None] = None
     email: str
     dept: str
-    adhr: str
+    adhr: int
     username: str
     password: str
     bio: str
-    file: List[bytes] = None
+    file: bytes
     role: Role
     timezone: Timezone
     langtype: Langtype
     active: bool = True
     deactive: bool = False
     exclude_from_email: bool = False
+
+class Users(AddUser):
     generate_token: bool
 
 

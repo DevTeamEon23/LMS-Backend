@@ -3,6 +3,7 @@ from sqlalchemy import MetaData, Table, Column, String, Integer, DECIMAL, VARCHA
     func, BOOLEAN, create_engine, Date, BigInteger, event, DDL, Float, ForeignKey,Enum
 from sqlalchemy.dialects.postgresql import JSONB, UUID, TIMESTAMP,BYTEA
 from sqlalchemy.dialects.mysql import LONGBLOB
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import declarative_base, configure_mappers
 from .settings import settings
 from enum import Enum as PythonEnum
@@ -266,6 +267,7 @@ s_table_conference = Table(
 
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')
 metadata.create_all(meta_engine, checkfirst=True)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=meta_engine)
 # Close the engine
 meta_engine.dispose()
 

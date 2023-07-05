@@ -105,6 +105,14 @@ def validate_email(email):
     else:
         return False
 
+def validate_emails(email):
+    if not isinstance(email, str):
+        return False
+    if re.fullmatch(regex_email, email):
+        return True
+    else:
+        return False
+    
 
 if __name__ == "__main__":
     pass

@@ -1,16 +1,21 @@
 import secrets
+import shutil
 import random
+import json
 from enum import Enum
 from typing import List
 import traceback
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user
+from config.db_config import n_table_user,Base
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import AddUser
 from starlette.responses import JSONResponse
 from starlette import status
+from sqlalchemy.schema import Column
+from sqlalchemy import String, Integer, Text, Enum, Boolean
+from sqlalchemy_utils import EmailType, URLType
 from ..authenticators import get_user_by_token
 from utils import md5, random_string, validate_email
 
@@ -114,8 +119,12 @@ def change_user_details(eid, sid, full_name, dept, adhr, username, email, passwo
 
 # ***************************************************************************************************************
 
-
-
+# def file_to_dict(file):
+#     return {
+#         "filename": file.filename,
+#         "content_type": file.content_type,
+#         "size": file.file_size,
+#     }
 
 def check_email(email):
     is_valid = validate_email(email)
@@ -242,7 +251,7 @@ class Langtype(str, Enum):
     Hindi = 'Hindi'
     Marathi = 'Marathi'
 
-def add_new(eid: str, sid: str, full_name: str, email: str,dept: str, adhr: str, username: str,bio: str,file: List[bytes], role: Role, timezone: Timezone, langtype: Langtype,generate_tokens: bool = False, auth_token="", inputs={},password=None, skip_new_user=False):
+def add_new(email: str,file: bytes,generate_tokens: bool = False, auth_token="", inputs={},password=None, skip_new_user=False):
     try:
         # Check Email Address
         v_email = check_email(email)
@@ -259,9 +268,18 @@ def add_new(eid: str, sid: str, full_name: str, email: str,dept: str, adhr: str,
 
         elif not is_existing and not is_active and skip_new_user == False:
 
+            eid = inputs.get('eid')
             sid = md5(v_email)
             full_name = inputs.get('full_name', None)
             full_name = v_email.split('@')[0] if full_name is None or full_name == '' else full_name
+            email = inputs.get('email')
+            dept = inputs.get('dept')
+            adhr = inputs.get('adhr')
+            username = inputs.get('username')
+            bio = inputs.get('bio')
+            role = inputs.get('role')
+            timezone = inputs.get('timezone')
+            langtype = inputs.get('langtype')
 
             # Password for manual signing
             if password is None:
@@ -275,12 +293,12 @@ def add_new(eid: str, sid: str, full_name: str, email: str,dept: str, adhr: str,
             token = create_token(v_email)
 
             request_token = ''
-
+            
             # Add New User to the list of users
-            data = {'eid': eid, 'sid': sid, 'full_name': full_name, 'email': v_email, 'dept': dept, 'adhr': adhr,'username': username, 'password': hash_password, 'bio': bio, 'file': file,
+            data = {'eid': eid, 'sid': sid, 'full_name': full_name, 'email': v_email, 'dept': dept, 'adhr': adhr,'username': username, 'password': hash_password, 'bio': bio,'file': file,
                     'role': role, 'timezone': timezone, 'langtype': langtype,
                     'users_allowed': inputs.get('users_allowed', ''), 'auth_token': auth_token,
-                    'request_token': request_token, 'token': token, 'active': True, 'deactive': False, 'exclude_from_email': False,}
+                    'request_token': request_token, 'token': token, 'active': True, 'deactive': False, 'exclude_from_email': False}
 
             resp = LmsHandler.add_users(data)
             # If token not required,
@@ -292,4 +310,4 @@ def add_new(eid: str, sid: str, full_name: str, email: str,dept: str, adhr: str,
         message = exc.args[0]
         logger.error(message)
 
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='Success',message='User added successfully'))
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='User added successfully'))

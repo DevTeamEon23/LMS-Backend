@@ -9,7 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
-
+from fastapi.staticfiles import StaticFiles
 from config import settings
 from config.logconfig import logger
 
@@ -22,6 +22,7 @@ app = FastAPI(title="EonLearnings", debug=settings.DEBUG, docs_url=settings.DOCS
 # Set up Pre-configured Routes
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
+app.mount("/media/", StaticFiles(directory="media/"), name="media")
 
 # Modify Default Exception Handler
 @app.exception_handler(RequestValidationError)
