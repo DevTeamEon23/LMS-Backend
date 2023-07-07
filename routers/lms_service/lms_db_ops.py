@@ -24,7 +24,7 @@ class LmsHandler:
         return execute_query(query, params=params)
     
     @classmethod
-    def update_user_to_db(cls, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email, user):
+    def update_user_to_db(cls,id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email, user):
         query = f"""   
         UPDATE {n_table_user} SET
             eid = %(eid)s,
@@ -47,7 +47,7 @@ class LmsHandler:
             active = %(active)s,
             deactive = %(deactive)s,
             exclude_from_email = %(exclude_from_email)s
-        WHERE id = %(user_id)s;
+        WHERE id = %(id)s;
         """
         params = {
         "eid": eid,
@@ -70,7 +70,7 @@ class LmsHandler:
         "active": active,
         "deactive": deactive,
         "exclude_from_email": exclude_from_email,
-        "user_id":user["id"]
+        "id":id
     }
         return execute_query(query, params=params)
     

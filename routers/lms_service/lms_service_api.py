@@ -44,42 +44,27 @@ async def create_user(eid: str = Form(...),sid: str = Form(...), full_name: str 
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
-            "message": "User is not registered"
+            "message": "User registration failed"
         })
 
-# @service.post("/addusers")
-# def add_users(eid: str = Form(...),sid: str = Form(...), full_name: str = Form(...), email: str = Form(...),dept: str = Form(...), adhr: str = Form(...), username: str = Form(...), password: str = Form(...),bio: str = Form(...), role: str = Form(...), timezone: str = Form(...), langtype: str = Form(...), active: bool = Form(...), deactive: bool = Form(...), exclude_from_email: bool = Form(...), generate_token: bool = Form(...),file: UploadFile = File(...), db: Session = Depends(get_database_session)):
-#     with open("media/"+file.filename, "wb") as buffer:
-#         shutil.copyfileobj(file.file, buffer)
-#     url = str("media/"+file.filename)
-#     try:
-#         return add_new(email, generate_token,password=password, auth_token="", inputs={
-#             'eid': eid,'sid': sid,'full_name': full_name,'email': email,'dept': dept,'adhr': adhr,'username': username,'bio': bio,'file': url,'role': role, 'timezone': timezone, 'langtype': langtype,'users_allowed': '[]', 'active': active, 'deactive': deactive, 'exclude_from_email': exclude_from_email, 'picture': "", "password": None})
-#     except Exception as exc: 
-#         logger.error(traceback.format_exc())
-#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-#             "status": "failure",
-#             "message": "User is not registered"
-#         })
-# @service.post("/addusers")
-# def add_users(user: Users = Form(...), file: UploadFile = File(...)):
-#     user_dict = json.loads(user)
-#     with open("media/" + file.filename, "wb") as buffer:
-#         shutil.copyfileobj(file.file, buffer)
-#     url = str("media/" + file.filename)
-#     try:
-#         return add_new(user_dict['email'], generate_tokens=user_dict['generate_token'], password=user_dict['password'], auth_token="", inputs={
-#             'eid': user_dict['eid'], 'sid': user_dict['sid'], 'full_name': user_dict['fullname'], 'dept': user_dict['dept'],
-#             'adhr': user_dict['adhr'], 'username': user_dict['username'], 'bio': user_dict['bio'], 'file': url,
-#             'role': user_dict['role'], 'timezone': user_dict['timezone'], 'langtype': user_dict['langtype'],
-#             'users_allowed': '[]', 'active': user_dict['active'], 'deactive': user_dict['deactive'],
-#             'exclude_from_email': user_dict['exclude_from_email'], 'picture': "", "password": None})
-#     except Exception as exc:
-#         logger.error(traceback.format_exc())
-#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-#             "status": "failure",
-#             "message": "User is not registered"
-#         })
+@service.post("/update_users")
+def update_users(id: int = Form(...),eid: str = Form(...),sid: str = Form(...), full_name: str = Form(...), email: str = Form(...),dept: str = Form(...), adhr: str = Form(...), username: str = Form(...), password: str = Form(...),bio: str = Form(...), role: str = Form(...), timezone: str = Form(...), langtype: str = Form(...), active: bool = Form(...), deactive: bool = Form(...), exclude_from_email: bool = Form(...), generate_token: bool = Form(...),file: UploadFile = File(...)):
+    with open("media/"+file.filename, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    url = str("media/"+file.filename)
+    try:
+        return change_user_details(id,email,langtype,generate_token,password, auth_token="", inputs={
+                'id': id,'eid': eid,'sid': sid,'full_name': full_name,'email': email, 'dept': dept, 'adhr': adhr,'username': username,'bio': bio,'file': url,'role': role, 'timezone': timezone, 'langtype': langtype,'users_allowed': '[]', 'active': active, 'deactive': deactive, 'exclude_from_email': exclude_from_email, 'picture': "", "password": None})
+            # return JSONResponse(status_code=status.HTTP_200_OK, content={
+            #     "status": "success",
+            #     "message": "Updated User successfully"
+            # })
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
+            "status": "failure",
+            "message": exc.args[0]
+        })
     
 @service.get("/users")
 def fetch_all_users():
@@ -113,6 +98,10 @@ def delete_user(payload: DeleteUser):
             "message": "Failed to Delete user data"
         })
     
+
+
+
+
 # Update the user Password
 @service.post("/change-password-setting", dependencies=[Depends(verify_user)])
 def update_users(request: Request, payload: UserDetail):

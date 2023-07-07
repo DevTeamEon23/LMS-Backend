@@ -78,6 +78,7 @@ class UserStatus(Email):
 
 
 class UserDetail(Email):
+    id: int
     eid: str
     sid: str
     full_name: Union[str, None] = None

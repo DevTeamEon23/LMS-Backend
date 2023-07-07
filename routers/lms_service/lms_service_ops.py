@@ -1,6 +1,8 @@
+import os
 import secrets
 import shutil
 import random
+import base64
 import json
 from enum import Enum
 from typing import List
@@ -17,11 +19,12 @@ from sqlalchemy.schema import Column
 from sqlalchemy import String, Integer, Text, Enum, Boolean
 from sqlalchemy_utils import EmailType, URLType
 from ..authenticators import get_user_by_token
-from utils import md5, random_string, validate_email
+from utils import md5, random_string, validate_email,validate_emails
 
 # This is used for the password hashing and validation
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+save_file_path = "C:\\Users\\Admin\\Desktop\\TEST_projects\\All_FastAPI_Projects\\fastapi\\media\\${item.file}"
 
     
 def sample_data(payload):
@@ -51,11 +54,17 @@ def fetch_all_users_data():
         # Transform the user objects into a list of dictionaries
         users_data = []
         for user in users:
+
             user_data = {
                 "id": user.id,
+                "eid": user.eid,
+                "sid": user.sid,
                 "full_name": user.full_name,
-                "username": user.username,
                 "email": user.email,
+                "dept": user.dept,
+                "adhr": user.adhr,
+                "username": user.username,
+                "file": os.path.join(save_file_path, user.file.decode("utf-8")),  # Full file path
                 "role": user.role,
                 "token": user.token,
                 "active": user.active,
@@ -98,18 +107,18 @@ def delete_user_by_id(id):
             "message": "Failed to delete user data"
         })
     
-def change_user_details(eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email, user):
-    is_existing, _ = check_existing_user(email)
-    if is_existing:
-        # Update user password
-        if password is None:
-            password = random_password()
-        password_hash = get_password_hash(password)
-        LmsHandler.update_user_to_db(eid, sid, full_name, dept, adhr, username, email, password_hash, bio, file, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email, user)
-        #     AWSClient.send_signup(email, password, subject='Password Change')
-        return True
-    else:
-        raise ValueError("User does not exists")
+# def change_user_details(email: str,file: bytes,generate_tokens: bool = False, auth_token="", inputs={},password=None, skip_new_user=False):
+#     is_existing, _ = check_existing_user(email)
+#     if is_existing:
+#         # Update user password
+#         if password is None:
+#             password = random_password()
+#         password_hash = get_password_hash(password)
+#         LmsHandler.update_user_to_db(eid, sid, full_name, dept, adhr, username, email, password_hash, bio, file, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email, user)
+#         #     AWSClient.send_signup(email, password, subject='Password Change')
+#         return True
+#     else:
+#         raise ValueError("User does not exists")
     
 
 
@@ -133,6 +142,13 @@ def check_email(email):
     else:
         raise ValueError('Invalid email value')
 
+def check_emails(email):
+    is_valid = validate_emails(email)
+    if is_valid:
+        return str(email).lower()
+    else:
+        raise ValueError('Invalid email value')
+    
 def check_password(email, password):
     query = f"""
     select * from {n_table_user} where email=%(email)s;
@@ -272,10 +288,10 @@ def add_new(email: str,file: bytes,generate_tokens: bool = False, auth_token="",
             sid = md5(v_email)
             full_name = inputs.get('full_name', None)
             full_name = v_email.split('@')[0] if full_name is None or full_name == '' else full_name
-            email = inputs.get('email')
-            dept = inputs.get('dept')
-            adhr = inputs.get('adhr')
-            username = inputs.get('username')
+            email = inputs.get('username')
+            dept = inputs.get('email')
+            adhr = inputs.get('dept')
+            username = inputs.get('adhr')
             bio = inputs.get('bio')
             role = inputs.get('role')
             timezone = inputs.get('timezone')
@@ -311,3 +327,66 @@ def add_new(email: str,file: bytes,generate_tokens: bool = False, auth_token="",
         logger.error(message)
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='User added successfully'))
+
+
+def change_user_details(email: str,file: bytes,role: str, timezone: str, langtype: str,generate_tokens: bool = False, auth_token="", inputs={},password=None, skip_new_user=False):
+    try:
+        # Check Email Address
+        v_email = check_emails(email)
+
+        # Check user existence and status
+        is_existing, is_active = check_existing_user(v_email)
+
+        # If user Already Exists
+        if is_existing:
+            # Check password
+            id = inputs.get('id')
+            eid = inputs.get('eid')
+            sid = md5(v_email)
+            full_name = inputs.get('full_name', None)
+            full_name = v_email.split('@')[0] if full_name is None or full_name == '' else full_name
+            email = inputs.get('email')
+            dept = inputs.get('dept')
+            adhr = inputs.get('adhr')
+            username = inputs.get('username')
+            bio = inputs.get('bio')
+            role = inputs.get('role')
+            timezone = inputs.get('timezone')
+            langtype = inputs.get('langtype')
+
+            # Password for manual signing
+            if password is None:
+                password = random_password()
+            if password is None:
+                hash_password = ""
+            else:
+                hash_password = get_password_hash(password)
+
+            # Token Generation
+            token = create_token(v_email)
+
+            request_token = ''
+            
+            # Add New User to the list of users
+            data = {'id': id,'eid': eid, 'sid': sid, 'full_name': full_name, 'dept': dept, 'adhr': adhr,'username': username, 'email': v_email, 'password': hash_password, 'bio': bio,'file': file,
+                    'role': role, 'timezone': timezone, 'langtype': langtype,
+                    'users_allowed': inputs.get('users_allowed', ''), 'auth_token': auth_token,
+                    'request_token': request_token, 'token': token, 'active': True, 'deactive': False, 'exclude_from_email': False}
+
+            resp = LmsHandler.update_user_to_db(data)
+            # If token not required,
+            if not generate_tokens and len(auth_token) == 0:
+                token = None
+
+        elif not is_existing and not is_active and skip_new_user == False:
+
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "message": "User Does not Exists"
+            })
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='User Updated successfully'))
