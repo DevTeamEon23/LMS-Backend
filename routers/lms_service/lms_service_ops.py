@@ -291,6 +291,7 @@ def add_new(email: str,file: bytes,generate_tokens: bool = False, auth_token="",
             email = inputs.get('username')
             dept = inputs.get('email')
             adhr = inputs.get('dept')
+            file = inputs.get('file')
             username = inputs.get('adhr')
             bio = inputs.get('bio')
             role = inputs.get('role')
