@@ -7,9 +7,10 @@ import json
 from enum import Enum
 from typing import List
 import traceback
+from fastapi import HTTPException
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user,Base
+from config.db_config import n_table_user,Base,table_course
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import AddUser
@@ -26,7 +27,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 save_file_path = "C:\\Users\\Admin\\Desktop\\TEST_projects\\All_FastAPI_Projects\\fastapi\\media\\${item.file}"
 
-    
+course_file_path = "C:\\Users\\Admin\\Desktop\\TEST_projects\\All_FastAPI_Projects\\fastapi\\course\\${item.file}"
+
+coursevideo_file_path = "C:\\Users\\Admin\\Desktop\\TEST_projects\\All_FastAPI_Projects\\fastapi\\coursevideo\\${item.file}"
+
 def sample_data(payload):
     logger.info(payload)
     return {
@@ -38,6 +42,11 @@ def get_password_hash(password):
 
 def create_token(email):
     base = random_string(8) + email + random_string(8)
+    token = md5(base)
+    return token
+
+def create_course_token(coursename):
+    base = random_string(8) + coursename + random_string(8)
     token = md5(base)
     return token
 
@@ -107,33 +116,11 @@ def delete_user_by_id(id):
             "message": "Failed to delete user data"
         })
     
-# def change_user_details(email: str,file: bytes,generate_tokens: bool = False, auth_token="", inputs={},password=None, skip_new_user=False):
-#     is_existing, _ = check_existing_user(email)
-#     if is_existing:
-#         # Update user password
-#         if password is None:
-#             password = random_password()
-#         password_hash = get_password_hash(password)
-#         LmsHandler.update_user_to_db(eid, sid, full_name, dept, adhr, username, email, password_hash, bio, file, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email, user)
-#         #     AWSClient.send_signup(email, password, subject='Password Change')
-#         return True
-#     else:
-#         raise ValueError("User does not exists")
-    
-
-
 
 
 
 
 # ***************************************************************************************************************
-
-# def file_to_dict(file):
-#     return {
-#         "filename": file.filename,
-#         "content_type": file.content_type,
-#         "size": file.file_size,
-#     }
 
 def check_email(email):
     is_valid = validate_email(email)
@@ -391,3 +378,150 @@ def change_user_details(email: str,file: bytes,role: str, timezone: str, langtyp
         logger.error(message)
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='User Updated successfully'))
+
+
+
+#############################################################################################################################
+
+def check_existing_course(coursename):
+    """
+    Only safe to use after the coursename has been validated
+    :param coursename: coursename of the course
+    :return: bool, bool is_existing, is_authorized
+    """
+    query = f"""
+    select * from {table_course} where coursename=%(coursename)s;
+    """
+    response = execute_query(query, params={'coursename': coursename})
+    data = response.fetchone()
+
+    if data is None:
+        return False, False
+    else:
+        isActive = data['isActive']
+        return True, isActive
+    
+def get_course_by_coursename(coursename):
+    query = f"SELECT * FROM {table_course} WHERE coursename = %(coursename)s"
+    params = {"coursename": coursename}
+    resp = execute_query(query=query, params=params)
+    data = resp.fetchone()
+    if data is None:
+        return False, False
+    else:
+        isActive = data['isActive']
+        return True, isActive
+        
+def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: bool = False, auth_token="", inputs={},skip_new_course=False):
+    try:
+        # Check Email Address
+        # coursename = get_course_by_coursename(coursename)
+
+        # Check user existence and status
+        is_existing, is_active = check_existing_course(coursename)
+
+        # If user Already Exists
+        if is_existing:
+            # Check password
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "message": "Course Already Exists"
+            })
+
+        elif not is_existing and not is_active and skip_new_course == False:
+
+            coursename = inputs.get('coursename', None)
+            coursename = coursename.split('@')[0] if coursename is None or coursename == '' else coursename
+            file = inputs.get('file')
+            description = inputs.get('description')
+            coursecode = md5(coursename)
+            price = inputs.get('price')
+            courselink = inputs.get('courselink')
+            coursevideo = inputs.get('coursevideo')
+            capacity = inputs.get('capacity')
+            startdate = inputs.get('startdate')
+            enddate = inputs.get('enddate')
+            timelimit = inputs.get('timelimit')
+            certificate = inputs.get('certificate')
+            level = inputs.get('level')
+            category = inputs.get('category')
+
+            # Token Generation
+            token = create_course_token(coursename)
+
+            request_token = ''
+            
+            # Add New User to the list of users
+            data = {'coursename': coursename,'file': file, 'description': description, 'coursecode': coursecode, 'price':price, 'courselink': courselink, 'coursevideo': coursevideo, 'capacity': capacity, 'startdate': startdate, 'enddate': enddate, 'timelimit': timelimit,
+                    'certificate': certificate, 'level': level, 'category': category,
+                    'course_allowed': inputs.get('course_allowed', ''), 'auth_token': auth_token,
+                    'request_token': request_token, 'token': token, 'isActive': True, 'isHide': False}
+
+            resp = LmsHandler.add_courses(data)
+            # If token not required,
+            if not generate_tokens and len(auth_token) == 0:
+                token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course added successfully'))
+
+
+def fetch_all_courses_data():
+    try:
+        # Query all users from the database
+        courses = LmsHandler.get_all_courses()
+
+        # Transform the user objects into a list of dictionaries
+        courses_data = []
+        for course in courses:
+
+            course_data = {
+                "id": course.id,
+                "coursename": course.coursename,
+                "file": os.path.join(course_file_path, course.file.decode("utf-8")),  # Full file path
+                "description": course.description,
+                "coursecode": course.coursecode,
+                "price": course.price ,
+                "courselink": course.courselink,
+                "coursevideo": os.path.join(coursevideo_file_path, course.file.decode("utf-8")),  # Full file path
+                "capacity": course.capacity,
+                "startdate": course.startdate,
+                "enddate": course.enddate,
+                "timelimit": course.timelimit,
+                "certificate": course.certificate,
+                "level": course.level,
+                "category": course.category,
+                "token": course.token,
+                "isActive": course.isActive,
+                "isHide": course.isHide,
+                "created_at": course.created_at,
+                "updated_at": course.updated_at,
+                # Include other course attributes as needed
+            }
+            courses_data.append(course_data)
+
+        return courses_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch courses data"
+        })
+    
+
+def delete_course_by_id(id):
+    try:
+        # Delete the course by ID
+        courses = LmsHandler.delete_courses(id)
+        return courses
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to delete course data"
+        })
+    
+

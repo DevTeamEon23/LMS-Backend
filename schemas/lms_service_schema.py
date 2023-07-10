@@ -77,7 +77,7 @@ class UserStatus(Email):
     status: Union[str, None] = False
 
 
-class UserDetail(Email):
+class UserDetail(BaseModel):
     id: int
     eid: str
     sid: str
@@ -95,3 +95,8 @@ class UserDetail(Email):
     active: bool = True
     deactive: bool = False
     exclude_from_email: bool = False
+
+####################                    Courses                        ##############################
+
+class DeleteCourse(BaseModel):
+    id: int

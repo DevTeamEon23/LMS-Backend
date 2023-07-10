@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from config.db_config import n_table_user
+from config.db_config import n_table_user,table_course
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -26,7 +26,7 @@ class LmsHandler:
     @classmethod
     def update_user_to_db(cls,id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email, user):
         query = f"""   
-        UPDATE {n_table_user} SET
+        UPDATE users SET
             eid = %(eid)s,
             sid = %(sid)s,
             full_name = %(full_name)s,
@@ -50,6 +50,7 @@ class LmsHandler:
         WHERE id = %(id)s;
         """
         params = {
+        "id":id,
         "eid": eid,
         "sid": sid,
         "full_name": full_name,
@@ -70,7 +71,6 @@ class LmsHandler:
         "active": active,
         "deactive": deactive,
         "exclude_from_email": exclude_from_email,
-        "id":id
     }
         return execute_query(query, params=params)
     
@@ -82,4 +82,48 @@ class LmsHandler:
     @classmethod
     def delete_users(cls, id):
         query = f""" DELETE FROM users WHERE id = '{id}'; """
+        return execute_query(query)
+    
+
+############################################################################################################################
+
+
+# Courses CRUD
+    def get_course_by_token(token):
+        query = f"""SELECT * FROM {table_course} where token=%(token)s and isActive=%(isActive)s and token is not NULL and token != '';"""
+        resp = execute_query(query=query, params={'token': token, 'active': True})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+# Add Courses 
+    @classmethod
+    def add_courses(cls, params):
+        query = f"""   INSERT into {table_course}(coursename, file, description, coursecode,price,courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, course_allowed, auth_token, request_token, token, isActive, isHide) VALUES 
+                        (%(coursename)s, %(file)s, %(description)s, %(coursecode)s, %(price)s, %(courselink)s, %(coursevideo)s,%(capacity)s, %(startdate)s, %(enddate)s, %(timelimit)s, %(certificate)s, %(level)s, %(category)s, %(course_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(isActive)s, %(isHide)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+    
+    @classmethod
+    def get_all_courses(cls):
+        query = """ SELECT * FROM course; """
+        return execute_query(query).fetchall()
+    
+    @classmethod
+    def get_course_by_coursename(cls, coursename):
+        query = f"SELECT * FROM {table_course} WHERE coursename = %(coursename)s"
+        params = {"coursename": coursename}
+        resp = execute_query(query=query, params=params)
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(status_code=401, detail="Course not found")
+        else:
+            return data
+        
+    @classmethod
+    def delete_courses(cls, id):
+        query = f""" DELETE FROM course WHERE id = '{id}'; """
         return execute_query(query)

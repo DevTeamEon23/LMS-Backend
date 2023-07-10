@@ -3,6 +3,9 @@
 *.json
 .ipynb
 eon/
+media/
+course/
+coursevideo/
 .env
 .env*
 *.pdf
