@@ -10,7 +10,7 @@ import traceback
 from fastapi import HTTPException
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user,Base,table_course
+from config.db_config import n_table_user,Base,table_course,table_lmsgroup
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import AddUser
@@ -47,6 +47,11 @@ def create_token(email):
 
 def create_course_token(coursename):
     base = random_string(8) + coursename + random_string(8)
+    token = md5(base)
+    return token
+
+def create_group_token(groupname):
+    base = random_string(8) + groupname + random_string(8)
     token = md5(base)
     return token
 
@@ -120,7 +125,7 @@ def delete_user_by_id(id):
 
 
 
-# ***************************************************************************************************************
+# ************************************************   USERS   ***************************************************************
 
 def check_email(email):
     is_valid = validate_email(email)
@@ -168,6 +173,24 @@ def check_existing_user(email):
         active = data['active']
         return True, active
 
+def check_existing_course(coursename):
+    """
+    Only safe to use after the id has been validated
+    :param id: id of the user
+    :return: bool, bool is_existing, is_authorized
+    """
+    query = f"""
+    select * from {table_lmsgroup} where coursename=%(coursename)s;
+    """
+    response = execute_query(query, params={'coursename': coursename})
+    data = response.fetchone()
+
+    if data is None:
+        return False, False
+    else:
+        isActive = data['isActive']
+        return True, isActive
+    
 def get_user_details(email):
     """
     Only safe to use after the email has been validated
@@ -316,72 +339,87 @@ def add_new(email: str,file: bytes,generate_tokens: bool = False, auth_token="",
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='User added successfully'))
 
+def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, active, deactive, exclude_from_email):
+    is_existing, _ = check_existing_user(email)
+    if is_existing:
+        # Update user password
+        if password is None:
+            password = random_password()
+        password_hash = get_password_hash(password)
 
-def change_user_details(email: str,file: bytes,role: str, timezone: str, langtype: str,generate_tokens: bool = False, auth_token="", inputs={},password=None, skip_new_user=False):
-    try:
-        # Check Email Address
-        v_email = check_emails(email)
+        sid = md5(email)
+         
+        LmsHandler.update_user_to_db(id, eid, sid, full_name, dept, adhr, username,email, password_hash, bio, file, role, timezone, langtype, active, deactive, exclude_from_email)
+        #     AWSClient.send_signup(email, password, subject='Password Change')
+        return True
+    else:
+        raise ValueError("User does not exists")
 
-        # Check user existence and status
-        is_existing, is_active = check_existing_user(v_email)
+# def change_user_details(email: str,file: bytes,role: str, timezone: str, langtype: str,generate_tokens: bool = False, auth_token="", inputs={},password=None, skip_new_user=False):
+#     try:
+#         # Check Email Address
+#         v_email = check_emails(email)
 
-        # If user Already Exists
-        if is_existing:
-            # Check password
-            id = inputs.get('id')
-            eid = inputs.get('eid')
-            sid = md5(v_email)
-            full_name = inputs.get('full_name', None)
-            full_name = v_email.split('@')[0] if full_name is None or full_name == '' else full_name
-            email = inputs.get('email')
-            dept = inputs.get('dept')
-            adhr = inputs.get('adhr')
-            username = inputs.get('username')
-            bio = inputs.get('bio')
-            role = inputs.get('role')
-            timezone = inputs.get('timezone')
-            langtype = inputs.get('langtype')
+#         # Check user existence and status
+#         is_existing, is_active = check_existing_user(v_email)
 
-            # Password for manual signing
-            if password is None:
-                password = random_password()
-            if password is None:
-                hash_password = ""
-            else:
-                hash_password = get_password_hash(password)
+#         # If user Already Exists
+#         if is_existing:
+#             # Check password
+#             id = inputs.get('id')
+#             eid = inputs.get('eid')
+#             sid = md5(v_email)
+#             full_name = inputs.get('full_name', None)
+#             full_name = v_email.split('@')[0] if full_name is None or full_name == '' else full_name
+#             email = inputs.get('email')
+#             dept = inputs.get('dept')
+#             adhr = inputs.get('adhr')
+#             username = inputs.get('username')
+#             bio = inputs.get('bio')
+#             role = inputs.get('role')
+#             timezone = inputs.get('timezone')
+#             langtype = inputs.get('langtype')
 
-            # Token Generation
-            token = create_token(v_email)
+#             # Password for manual signing
+#             if password is None:
+#                 password = random_password()
+#             if password is None:
+#                 hash_password = ""
+#             else:
+#                 hash_password = get_password_hash(password)
 
-            request_token = ''
+#             # Token Generation
+#             token = create_token(v_email)
+
+#             request_token = ''
             
-            # Add New User to the list of users
-            data = {'id': id,'eid': eid, 'sid': sid, 'full_name': full_name, 'dept': dept, 'adhr': adhr,'username': username, 'email': v_email, 'password': hash_password, 'bio': bio,'file': file,
-                    'role': role, 'timezone': timezone, 'langtype': langtype,
-                    'users_allowed': inputs.get('users_allowed', ''), 'auth_token': auth_token,
-                    'request_token': request_token, 'token': token, 'active': True, 'deactive': False, 'exclude_from_email': False}
+#             # Add New User to the list of users
+#             data = {'id': id,'eid': eid, 'sid': sid, 'full_name': full_name, 'dept': dept, 'adhr': adhr,'username': username, 'email': v_email, 'password': hash_password, 'bio': bio,'file': file,
+#                     'role': role, 'timezone': timezone, 'langtype': langtype,
+#                     'users_allowed': inputs.get('users_allowed', ''), 'auth_token': auth_token,
+#                     'request_token': request_token, 'token': token, 'active': True, 'deactive': False, 'exclude_from_email': False}
 
-            resp = LmsHandler.update_user_to_db(data)
-            # If token not required,
-            if not generate_tokens and len(auth_token) == 0:
-                token = None
+#             resp = LmsHandler.update_user_to_db(data)
+#             # If token not required,
+#             if not generate_tokens and len(auth_token) == 0:
+#                 token = None
 
-        elif not is_existing and not is_active and skip_new_user == False:
+#         elif not is_existing and not is_active and skip_new_user == False:
 
-            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-                "message": "User Does not Exists"
-            })
+#             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#                 "message": "User Does not Exists"
+#             })
 
-    except ValueError as exc:
-        logger.error(traceback.format_exc())
-        message = exc.args[0]
-        logger.error(message)
+#     except ValueError as exc:
+#         logger.error(traceback.format_exc())
+#         message = exc.args[0]
+#         logger.error(message)
 
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='User Updated successfully'))
+#     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='User Updated successfully'))
 
 
 
-#############################################################################################################################
+##################################################   COURSES  ###########################################################################
 
 def check_existing_course(coursename):
     """
@@ -468,7 +506,17 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course added successfully'))
 
-
+def change_course_details(id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):
+    is_existing, _ = check_existing_course(coursename)
+    if is_existing:
+        # Update courses
+         
+        LmsHandler.update_course_to_db(id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide)
+        #     AWSClient.send_signup(email, password, subject='Password Change')
+        return True
+    else:
+        raise ValueError("Course does not exists")
+    
 def fetch_all_courses_data():
     try:
         # Query all users from the database
@@ -525,3 +573,121 @@ def delete_course_by_id(id):
         })
     
 
+###################################################   GROUPS   #######################################################################
+
+def check_existing_group(groupname):
+    """
+    Only safe to use after the groupname has been validated
+    :param groupname: groupname of the course
+    :return: bool, bool is_existing, is_authorized
+    """
+    query = f"""
+    select * from {table_lmsgroup} where groupname=%(groupname)s;
+    """
+    response = execute_query(query, params={'groupname': groupname})
+    data = response.fetchone()
+
+    if data is None:
+        return False, False
+    else:
+        isActive = data['isActive']
+        return True, isActive
+    
+def get_group_by_groupname(groupname):
+    query = f"SELECT * FROM {table_lmsgroup} WHERE groupname = %(groupname)s"
+    params = {"groupname": groupname}
+    resp = execute_query(query=query, params=params)
+    data = resp.fetchone()
+    if data is None:
+        return False, False
+    else:
+        isActive = data['isActive']
+        return True, isActive
+        
+def add_group(groupname: str,generate_tokens: bool = False, auth_token="", inputs={},skip_new_group=False):
+    try:
+        # Check Email Address
+        # groupname = get_group_by_groupname(groupname)
+
+        # Check user existence and status
+        is_existing, is_active = check_existing_group(groupname)
+
+        # If user Already Exists
+        if is_existing:
+            # Check password
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "message": "Group Already Exists"
+            })
+
+        elif not is_existing and not is_active and skip_new_group == False:
+
+            groupname = inputs.get('groupname', None)
+            groupname = groupname.split('@')[0] if groupname is None or groupname == '' else groupname
+            groupdesc = inputs.get('groupdesc')
+            groupkey = inputs.get('groupkey')
+
+            # Token Generation
+            token = create_group_token(groupname)
+
+            request_token = ''
+            
+            # Add New User to the list of users
+            data = {'groupname': groupname, 'groupdesc': groupdesc, 'groupkey': groupkey,
+                    'group_allowed': inputs.get('group_allowed', ''), 'auth_token': auth_token,
+                    'request_token': request_token, 'token': token, 'isActive': True}
+
+            resp = LmsHandler.add_groups(data)
+            # If token not required,
+            if not generate_tokens and len(auth_token) == 0:
+                token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Group added successfully'))
+
+
+def fetch_all_groups_data():
+    try:
+        # Query all group from the database
+        groups = LmsHandler.get_all_groups()
+
+        # Transform the user objects into a list of dictionaries
+        groups_data = []
+        for group in groups:
+
+            group_data = {
+                "id": group.id,
+                "groupname": group.groupname,
+                "groupdesc": group.groupdesc,
+                "groupkey": group.groupkey,
+                "token": group.token,
+                "created_at": group.created_at,
+                "updated_at": group.updated_at,
+                # Include other group attributes as needed
+            }
+            groups_data.append(group_data)
+
+        return groups_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch group data"
+        })
+    
+
+def delete_group_by_id(id):
+    try:
+        # Delete the group by ID
+        groups = LmsHandler.delete_groups(id)
+        return groups
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to delete group data"
+        })
+    

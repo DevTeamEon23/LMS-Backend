@@ -96,7 +96,12 @@ class UserDetail(BaseModel):
     deactive: bool = False
     exclude_from_email: bool = False
 
-####################                    Courses                        ##############################
+####################                    Courses                    ##############################
 
 class DeleteCourse(BaseModel):
+    id: int
+
+####################                    Groups                     ##############################
+
+class DeleteGroup(BaseModel):
     id: int

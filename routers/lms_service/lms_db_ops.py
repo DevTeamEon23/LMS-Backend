@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from config.db_config import n_table_user,table_course
+from config.db_config import n_table_user,table_course,table_lmsgroup
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -24,7 +24,7 @@ class LmsHandler:
         return execute_query(query, params=params)
     
     @classmethod
-    def update_user_to_db(cls,id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email, user):
+    def update_user_to_db(cls,id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, active, deactive, exclude_from_email):
         query = f"""   
         UPDATE users SET
             eid = %(eid)s,
@@ -40,10 +40,6 @@ class LmsHandler:
             role = %(role)s,
             timezone = %(timezone)s,
             langtype = %(langtype)s,
-            users_allowed = %(users_allowed)s,
-            auth_token = %(auth_token)s,
-            request_token = %(request_token)s,
-            token = %(token)s,
             active = %(active)s,
             deactive = %(deactive)s,
             exclude_from_email = %(exclude_from_email)s
@@ -64,10 +60,6 @@ class LmsHandler:
         "role": role,
         "timezone": timezone,
         "langtype": langtype,
-        "users_allowed": users_allowed,
-        "auth_token": auth_token,
-        "request_token": request_token,
-        "token": token,
         "active": active,
         "deactive": deactive,
         "exclude_from_email": exclude_from_email,
@@ -106,7 +98,7 @@ class LmsHandler:
                         ; 
                     """
         return execute_query(query, params=params)
-    
+
     @classmethod
     def get_all_courses(cls):
         query = """ SELECT * FROM course; """
@@ -124,6 +116,91 @@ class LmsHandler:
             return data
         
     @classmethod
+    def update_course_to_db(cls,id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):
+        query = f"""   
+        UPDATE course SET
+            coursename = %(coursename)s,
+            file = %(file)s,
+            description = %(description)s,
+            coursecode = %(coursecode)s,
+            price = %(price)s,
+            courselink = %(courselink)s,
+            coursevideo = %(coursevideo)s,
+            capacity = %(capacity)s,
+            startdate = %(startdate)s,
+            enddate = %(enddate)s,
+            timelimit = %(timelimit)s,
+            certificate = %(certificate)s,
+            level = %(level)s,
+            category = %(category)s,
+            isActive = %(isActive)s,
+            isHide = %(isHide)s
+        WHERE id = %(id)s;
+        """
+        params = {
+        "id":id,
+        "coursename": coursename,
+        "file": file,
+        "description": description,
+        "coursecode": coursecode,
+        "price": price,
+        "courselink": courselink,
+        "coursevideo": coursevideo,
+        "capacity": capacity,
+        "startdate": startdate,
+        "enddate": enddate,
+        "timelimit": timelimit,
+        "certificate": certificate,
+        "level": level,
+        "category": category,
+        "isActive": isActive,
+        "isHide": isHide,
+    }
+        return execute_query(query, params=params)
+    
+    @classmethod
     def delete_courses(cls, id):
         query = f""" DELETE FROM course WHERE id = '{id}'; """
+        return execute_query(query)
+    
+
+########################################################################################
+
+    def get_group_by_token(token):
+        query = f"""SELECT * FROM {table_lmsgroup} where token=%(token)s and token is not NULL and token != '';"""
+        resp = execute_query(query=query, params={'token': token})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
+    @classmethod
+    def add_groups(cls, params):
+        query = f"""   INSERT into {table_lmsgroup} (groupname,groupdesc,groupkey, group_allowed, auth_token, request_token, token, isActive) VALUES 
+                        (%(groupname)s, %(groupdesc)s, %(groupkey)s, %(group_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(isActive)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+    
+    @classmethod
+    def get_all_groups(cls):
+        query = """ SELECT * FROM lmsgroup; """
+        return execute_query(query).fetchall()
+    
+    @classmethod
+    def get_group_by_groupname(cls, groupname):
+        query = f"SELECT * FROM {table_lmsgroup} WHERE groupname = %(groupname)s"
+        params = {"groupname": groupname}
+        resp = execute_query(query=query, params=params)
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(status_code=401, detail="Group not found")
+        else:
+            return data
+        
+    @classmethod
+    def delete_groups(cls, id):
+        query = f""" DELETE FROM lmsgroup WHERE id = '{id}'; """
         return execute_query(query)
