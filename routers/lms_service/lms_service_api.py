@@ -11,7 +11,7 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup)
 from utils import success_response
@@ -200,15 +200,15 @@ def delete_course(payload: DeleteCourse):
 
 # Create Group
 @service.post('/addgroups')
-async def create_group(groupname: str = Form(...),groupdesc: str = Form(...), groupkey: str = Form(...), isActive: bool = Form(...),generate_token: bool = Form(...)):
+async def create_group(groupname: str = Form(...),groupdesc: str = Form(...), groupkey: str = Form(...),generate_token: bool = Form(...)):
     try:
         return add_group(generate_token, auth_token="", inputs={
-                'groupname': groupname, 'groupdesc': groupdesc, 'groupkey': groupkey, 'group_allowed': '[]', 'isActive': isActive ,'picture': ""})
+                'groupname': groupname, 'groupdesc': groupdesc, 'groupkey': groupkey, 'group_allowed': '[]','picture': ""})
     except Exception as exc: 
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
-            "message": "Group registration failed"
+            "message": "Group registration failed Alreadly Exists"
         })
     
 # Read Group list
@@ -227,6 +227,21 @@ def fetch_all_groups():
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
             "status": "failure",
             "message": "Failed to fetch groups' data"
+        })
+
+@service.post("/update_groups")
+def update_groups(id: int = Form(...),groupname: str = Form(...),groupdesc: str = Form(...), groupkey: str = Form(...)):
+    try:
+        if change_group_details(id, groupname, groupdesc, groupkey):
+            return JSONResponse(status_code=status.HTTP_200_OK, content={
+                "status": "success",
+                "message": "Updated Group successfully"
+            })
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
+            "status": "failure",
+            "message": exc.args[0]
         })
     
 @service.delete("/delete_group")

@@ -10,7 +10,7 @@ import traceback
 from fastapi import HTTPException
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user,Base,table_course,table_lmsgroup
+from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import AddUser
@@ -173,23 +173,6 @@ def check_existing_user(email):
         active = data['active']
         return True, active
 
-def check_existing_course(coursename):
-    """
-    Only safe to use after the id has been validated
-    :param id: id of the user
-    :return: bool, bool is_existing, is_authorized
-    """
-    query = f"""
-    select * from {table_lmsgroup} where coursename=%(coursename)s;
-    """
-    response = execute_query(query, params={'coursename': coursename})
-    data = response.fetchone()
-
-    if data is None:
-        return False, False
-    else:
-        isActive = data['isActive']
-        return True, isActive
     
 def get_user_details(email):
     """
@@ -355,78 +338,12 @@ def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, pa
     else:
         raise ValueError("User does not exists")
 
-# def change_user_details(email: str,file: bytes,role: str, timezone: str, langtype: str,generate_tokens: bool = False, auth_token="", inputs={},password=None, skip_new_user=False):
-#     try:
-#         # Check Email Address
-#         v_email = check_emails(email)
-
-#         # Check user existence and status
-#         is_existing, is_active = check_existing_user(v_email)
-
-#         # If user Already Exists
-#         if is_existing:
-#             # Check password
-#             id = inputs.get('id')
-#             eid = inputs.get('eid')
-#             sid = md5(v_email)
-#             full_name = inputs.get('full_name', None)
-#             full_name = v_email.split('@')[0] if full_name is None or full_name == '' else full_name
-#             email = inputs.get('email')
-#             dept = inputs.get('dept')
-#             adhr = inputs.get('adhr')
-#             username = inputs.get('username')
-#             bio = inputs.get('bio')
-#             role = inputs.get('role')
-#             timezone = inputs.get('timezone')
-#             langtype = inputs.get('langtype')
-
-#             # Password for manual signing
-#             if password is None:
-#                 password = random_password()
-#             if password is None:
-#                 hash_password = ""
-#             else:
-#                 hash_password = get_password_hash(password)
-
-#             # Token Generation
-#             token = create_token(v_email)
-
-#             request_token = ''
-            
-#             # Add New User to the list of users
-#             data = {'id': id,'eid': eid, 'sid': sid, 'full_name': full_name, 'dept': dept, 'adhr': adhr,'username': username, 'email': v_email, 'password': hash_password, 'bio': bio,'file': file,
-#                     'role': role, 'timezone': timezone, 'langtype': langtype,
-#                     'users_allowed': inputs.get('users_allowed', ''), 'auth_token': auth_token,
-#                     'request_token': request_token, 'token': token, 'active': True, 'deactive': False, 'exclude_from_email': False}
-
-#             resp = LmsHandler.update_user_to_db(data)
-#             # If token not required,
-#             if not generate_tokens and len(auth_token) == 0:
-#                 token = None
-
-#         elif not is_existing and not is_active and skip_new_user == False:
-
-#             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-#                 "message": "User Does not Exists"
-#             })
-
-#     except ValueError as exc:
-#         logger.error(traceback.format_exc())
-#         message = exc.args[0]
-#         logger.error(message)
-
-#     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='User Updated successfully'))
-
-
 
 ##################################################   COURSES  ###########################################################################
 
+#Function for Add Course to stop the Course name unique voilation
 def check_existing_course(coursename):
-    """
-    Only safe to use after the coursename has been validated
-    :param coursename: coursename of the course
-    :return: bool, bool is_existing, is_authorized
-    """
+
     query = f"""
     select * from {table_course} where coursename=%(coursename)s;
     """
@@ -438,12 +355,16 @@ def check_existing_course(coursename):
     else:
         isActive = data['isActive']
         return True, isActive
-    
-def get_course_by_coursename(coursename):
-    query = f"SELECT * FROM {table_course} WHERE coursename = %(coursename)s"
-    params = {"coursename": coursename}
-    resp = execute_query(query=query, params=params)
-    data = resp.fetchone()
+
+#Function for Update Course to check the availabilty for Successfull updation
+def check_existing_course_by_id(id):
+
+    query = f"""
+    select * from {table_course} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
     if data is None:
         return False, False
     else:
@@ -452,8 +373,6 @@ def get_course_by_coursename(coursename):
         
 def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: bool = False, auth_token="", inputs={},skip_new_course=False):
     try:
-        # Check Email Address
-        # coursename = get_course_by_coursename(coursename)
 
         # Check user existence and status
         is_existing, is_active = check_existing_course(coursename)
@@ -506,8 +425,9 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course added successfully'))
 
+
 def change_course_details(id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):
-    is_existing, _ = check_existing_course(coursename)
+    is_existing, _ = check_existing_course_by_id(id)
     if is_existing:
         # Update courses
          
@@ -576,11 +496,7 @@ def delete_course_by_id(id):
 ###################################################   GROUPS   #######################################################################
 
 def check_existing_group(groupname):
-    """
-    Only safe to use after the groupname has been validated
-    :param groupname: groupname of the course
-    :return: bool, bool is_existing, is_authorized
-    """
+
     query = f"""
     select * from {table_lmsgroup} where groupname=%(groupname)s;
     """
@@ -592,22 +508,23 @@ def check_existing_group(groupname):
     else:
         isActive = data['isActive']
         return True, isActive
-    
-def get_group_by_groupname(groupname):
-    query = f"SELECT * FROM {table_lmsgroup} WHERE groupname = %(groupname)s"
-    params = {"groupname": groupname}
-    resp = execute_query(query=query, params=params)
-    data = resp.fetchone()
+        
+def check_existing_group_by_id(id):
+
+    query = f"""
+    select * from {table_lmsgroup} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
     if data is None:
         return False, False
     else:
         isActive = data['isActive']
         return True, isActive
-        
+    
 def add_group(groupname: str,generate_tokens: bool = False, auth_token="", inputs={},skip_new_group=False):
     try:
-        # Check Email Address
-        # groupname = get_group_by_groupname(groupname)
 
         # Check user existence and status
         is_existing, is_active = check_existing_group(groupname)
@@ -679,6 +596,18 @@ def fetch_all_groups_data():
         })
     
 
+def change_group_details(id, groupname, groupdesc, groupkey):
+    is_existing, _ = check_existing_group_by_id(id)
+    if is_existing:
+        # Update courses
+         
+        LmsHandler.update_group_to_db(id, groupname, groupdesc, groupkey)
+        #     AWSClient.send_signup(email, password, subject='Password Change')
+        return True
+    else:
+        raise ValueError("Group does not exists")
+    
+
 def delete_group_by_id(id):
     try:
         # Delete the group by ID
@@ -691,3 +620,127 @@ def delete_group_by_id(id):
             "message": "Failed to delete group data"
         })
     
+########################################################################################################################
+
+def check_existing_category(name):
+
+    query = f"""
+    select * from {table_category} where name=%(name)s;
+    """
+    response = execute_query(query, params={'name': name})
+    data = response.fetchone()
+
+    if data is None:
+        return False, False
+    else:
+        isActive = data['isActive']
+        return True, isActive
+        
+def check_existing_category_by_id(id):
+
+    query = f"""
+    select * from {table_category} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
+    if data is None:
+        return False, False
+    else:
+        isActive = data['isActive']
+        return True, isActive
+    
+def add_category(name: str, parentcategory: str, price: str, inputs={},skip_new_group=False):
+    try:
+
+        # Check user existence and status
+        is_existing, is_active = check_existing_category(name)
+
+        # If user Already Exists
+        if is_existing:
+            # Check password
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "message": "Category Already Exists"
+            })
+
+        elif not is_existing and not is_active and skip_new_group == False:
+
+            name = inputs.get('groupname', None)
+            name = name.split('@')[0] if name is None or name == '' else name
+            parentcategory = inputs.get('parentcategory')
+            price = inputs.get('price')
+
+            # Token Generation
+            # token = create_group_token(name)
+
+            # request_token = ''
+            
+            # Add New User to the list of users
+            data = {'name': name, 'parentcategory': parentcategory, 'price': price}
+
+            resp = LmsHandler.add_category(data)
+            # # If token not required,
+            # if not generate_tokens and len(auth_token) == 0:
+            #     token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Category added successfully'))
+
+
+def fetch_all_categories_data():
+    try:
+        # Query all group from the database
+        groups = LmsHandler.get_all_groups()
+
+        # Transform the user objects into a list of dictionaries
+        groups_data = []
+        for group in groups:
+
+            group_data = {
+                "id": group.id,
+                "groupname": group.groupname,
+                "groupdesc": group.groupdesc,
+                "groupkey": group.groupkey,
+                "token": group.token,
+                "created_at": group.created_at,
+                "updated_at": group.updated_at,
+                # Include other group attributes as needed
+            }
+            groups_data.append(group_data)
+
+        return groups_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch category data"
+        })
+    
+
+def change_category_details(id, name, parentcategory, price):
+    is_existing, _ = check_existing_category_by_id(id)
+    if is_existing:
+        # Update category
+         
+        LmsHandler.update_category_to_db(id, name, parentcategory, price)
+        #     AWSClient.send_signup(email, password, subject='Password Change')
+        return True
+    else:
+        raise ValueError("Category does not exists")
+    
+
+def delete_category_by_id(id):
+    try:
+        # Delete the category by ID
+        categories = LmsHandler.delete_category(id)
+        return categories
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to delete category data"
+        })
