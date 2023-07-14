@@ -55,11 +55,14 @@ def create_group_token(groupname):
     token = md5(base)
     return token
 
+def create_category_token(name):
+    base = random_string(8) + name + random_string(8)
+    token = md5(base)
+    return token
+
 def random_password(password_length=12):
     return secrets.token_urlsafe(password_length)
 
-
-    
 def fetch_all_users_data():
     try:
         # Query all users from the database
@@ -96,7 +99,43 @@ def fetch_all_users_data():
             "message": "Failed to fetch users data"
         })
     
+#Get User data by id for update fields Mapping
+def fetch_users_by_onlyid(id):
+    try:
+        # Query user from the database for the specified id
+        user = LmsHandler.get_user_by_id(id)
 
+        if not user:
+            # Handle the case when no user is found for the specified id
+            return None
+
+        # Transform the user object into a dictionary
+        user_data = {
+            "id": user.id,
+            "eid": user.eid,
+            "sid": user.sid,
+            "full_name": user.full_name,
+            "email": user.email,
+            "dept": user.dept,
+            "adhr": user.adhr,
+            "username": user.username,
+            "file": os.path.join(save_file_path, user.file.decode("utf-8")),  # Full file path
+            "role": user.role,
+            "token": user.token,
+            "active": user.active,
+            "created_at": user.created_at,
+            "updated_at": user.updated_at,
+            # Include other user attributes as needed
+        }
+
+        return user_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user data"
+        })
+    
 # def delete_user_by_id(id, token):
 #     try: 
 #         # Query all users from the database
@@ -631,10 +670,9 @@ def check_existing_category(name):
     data = response.fetchone()
 
     if data is None:
-        return False, False
+        return False
     else:
-        isActive = data['isActive']
-        return True, isActive
+        return True
         
 def check_existing_category_by_id(id):
 
@@ -645,16 +683,15 @@ def check_existing_category_by_id(id):
     data = response.fetchone()
 
     if data is None:
-        return False, False
+        return False
     else:
-        isActive = data['isActive']
-        return True, isActive
+        return True
     
-def add_category(name: str, parentcategory: str, price: str, inputs={},skip_new_group=False):
+def add_category(name: str,generate_tokens: bool = False, auth_token="", inputs={},skip_new_category=False):
     try:
 
         # Check user existence and status
-        is_existing, is_active = check_existing_category(name)
+        is_existing = check_existing_category(name)
 
         # If user Already Exists
         if is_existing:
@@ -663,25 +700,26 @@ def add_category(name: str, parentcategory: str, price: str, inputs={},skip_new_
                 "message": "Category Already Exists"
             })
 
-        elif not is_existing and not is_active and skip_new_group == False:
+        elif not is_existing and skip_new_category == False:
 
-            name = inputs.get('groupname', None)
+            name = inputs.get('name', None)
             name = name.split('@')[0] if name is None or name == '' else name
-            parentcategory = inputs.get('parentcategory')
             price = inputs.get('price')
 
             # Token Generation
-            # token = create_group_token(name)
+            token = create_category_token(name)
 
-            # request_token = ''
+            request_token = ''
             
             # Add New User to the list of users
-            data = {'name': name, 'parentcategory': parentcategory, 'price': price}
+            data = {'name': name, 'price': price,
+                    'category_allowed': inputs.get('category_allowed', ''), 'auth_token': auth_token,
+                    'request_token': request_token, 'token': token }
 
             resp = LmsHandler.add_category(data)
             # # If token not required,
-            # if not generate_tokens and len(auth_token) == 0:
-            #     token = None
+            if not generate_tokens and len(auth_token) == 0:
+                token = None
 
     except ValueError as exc:
         logger.error(traceback.format_exc())
@@ -694,25 +732,23 @@ def add_category(name: str, parentcategory: str, price: str, inputs={},skip_new_
 def fetch_all_categories_data():
     try:
         # Query all group from the database
-        groups = LmsHandler.get_all_groups()
+        categories = LmsHandler.get_all_categories()
 
-        # Transform the user objects into a list of dictionaries
-        groups_data = []
-        for group in groups:
+        # Transform the category objects into a list of dictionaries
+        categories_data = []
+        for category in categories:
 
-            group_data = {
-                "id": group.id,
-                "groupname": group.groupname,
-                "groupdesc": group.groupdesc,
-                "groupkey": group.groupkey,
-                "token": group.token,
-                "created_at": group.created_at,
-                "updated_at": group.updated_at,
+            category_data = {
+                "id": category.id,
+                "name": category.name,
+                "price": category.price,
+                "created_at": category.created_at,
+                "updated_at": category.updated_at,
                 # Include other group attributes as needed
             }
-            groups_data.append(group_data)
+            categories_data.append(category_data)
 
-        return groups_data
+        return categories_data
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -721,12 +757,12 @@ def fetch_all_categories_data():
         })
     
 
-def change_category_details(id, name, parentcategory, price):
-    is_existing, _ = check_existing_category_by_id(id)
+def change_category_details(id, name, price):
+    is_existing = check_existing_category_by_id(id)
     if is_existing:
         # Update category
          
-        LmsHandler.update_category_to_db(id, name, parentcategory, price)
+        LmsHandler.update_category_to_db(id, name, price)
         #     AWSClient.send_signup(email, password, subject='Password Change')
         return True
     else:

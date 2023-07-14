@@ -143,7 +143,8 @@ s_table_course = Table(
     Column('timelimit', VARCHAR(20)),
     Column('certificate', Enum(Certificate), server_default='Certificate1', nullable=False),
     Column('level', Enum(Level), server_default='level1', nullable=False),
-    Column('category', Enum(ParentCategory), server_default='ParentCategory1', nullable=False),
+    # Column('category', Enum(ParentCategory), server_default='ParentCategory1', nullable=False),
+    Column('category', Integer, ForeignKey('category.id'), nullable=False),
     Column('course_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
     Column('request_token', VARCHAR(2500), nullable=False),
@@ -226,7 +227,6 @@ s_table_category = Table(
     table_category, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('name', VARCHAR(20)),
-    Column('parentcategory', Enum(ParentCategory)),
     Column('price', Float(10, 2)),
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),

@@ -15,6 +15,17 @@ class LmsHandler:
         else:
             return data
 
+#Get User data by id for update fields Mapping
+    def get_user_by_id(id):
+        query = f"""SELECT * FROM users WHERE id = %(id)s AND active = %(active)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id, 'active': True})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
 #Add Users
     @classmethod
     def add_users(cls, params):
@@ -74,6 +85,12 @@ class LmsHandler:
         query = """ SELECT * FROM users; """
         return execute_query(query).fetchall()
 
+# #Fetch Users by id
+#     @classmethod
+#     def get_users_by_id(cls,id):
+#         query = """ SELECT * FROM users WHERE id = '{id}'; """
+#         return execute_query(query).fetchall()
+    
 #Delete Users
     @classmethod
     def delete_users(cls, id):
@@ -253,8 +270,8 @@ class LmsHandler:
 #Add Groups
     @classmethod
     def add_category(cls, params):
-        query = f"""   INSERT into {table_category} (name,parentcategory,price) VALUES 
-                        (%(name)s, %(parentcategory)s, %(price)s)
+        query = f"""   INSERT into {table_category} (name,price,category_allowed, auth_token, request_token, token) VALUES 
+                        (%(name)s, %(price)s, %(category_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
                         ; 
                     """
         return execute_query(query, params=params)
@@ -279,18 +296,16 @@ class LmsHandler:
         
 #Update Courses
     @classmethod
-    def update_category_to_db(cls, id, name, parentcategory, price):
+    def update_category_to_db(cls, id, name, price):
         query = f"""   
         UPDATE category SET
             name = %(name)s,
-            parentcategory = %(parentcategory)s,
             price = %(price)s
         WHERE id = %(id)s;
         """
         params = {
         "id":id,
         "name": name,
-        "parentcategory": parentcategory,
         "price": price,
     }
         return execute_query(query, params=params)

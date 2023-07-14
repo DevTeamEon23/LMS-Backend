@@ -105,3 +105,8 @@ class DeleteCourse(BaseModel):
 
 class DeleteGroup(BaseModel):
     id: int
+
+####################                    Category                     ##############################
+
+class DeleteCategory(BaseModel):
+    id: int
