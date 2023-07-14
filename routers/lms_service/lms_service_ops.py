@@ -119,6 +119,7 @@ def fetch_users_by_onlyid(id):
             "dept": user.dept,
             "adhr": user.adhr,
             "username": user.username,
+            "bio": user.bio,
             "file": os.path.join(save_file_path, user.file.decode("utf-8")),  # Full file path
             "role": user.role,
             "token": user.token,

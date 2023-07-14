@@ -84,12 +84,6 @@ class LmsHandler:
     def get_all_users(cls):
         query = """ SELECT * FROM users; """
         return execute_query(query).fetchall()
-
-# #Fetch Users by id
-#     @classmethod
-#     def get_users_by_id(cls,id):
-#         query = """ SELECT * FROM users WHERE id = '{id}'; """
-#         return execute_query(query).fetchall()
     
 #Delete Users
     @classmethod
