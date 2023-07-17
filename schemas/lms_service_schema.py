@@ -110,3 +110,8 @@ class DeleteGroup(BaseModel):
 
 class DeleteCategory(BaseModel):
     id: int
+
+####################                    Event                     ##############################
+
+class DeleteEvent(BaseModel):
+    id: int

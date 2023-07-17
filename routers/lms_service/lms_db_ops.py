@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -309,3 +309,70 @@ class LmsHandler:
     def delete_category(cls, id):
         query = f""" DELETE FROM category WHERE id = '{id}'; """
         return execute_query(query)
+    
+######################################################################################################################
+
+#Events CRUD
+    def get_event_by_token(token):
+        query = f"""SELECT * FROM {table_lmsevent} where token=%(token)s and token is not NULL and token != '';"""
+        resp = execute_query(query=query, params={'token': token})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+
+#Add Events
+    @classmethod
+    def add_event(cls, params):
+        query = f"""   INSERT into {table_lmsevent} (ename,eventtype,recipienttype,descp,isActive,event_allowed, auth_token, request_token, token) VALUES 
+                        (%(ename)s, %(eventtype)s, %(recipienttype)s, %(descp)s, %(isActive)s, %(event_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+
+#Fetch Events
+    @classmethod
+    def get_all_events(cls):
+        query = """ SELECT * FROM lmsevent; """
+        return execute_query(query).fetchall()
+
+#Fetch Events By Event Name
+    @classmethod
+    def get_event_by_ename(cls, ename):
+        query = f"SELECT * FROM {table_lmsevent} WHERE ename = %(ename)s"
+        params = {"ename": ename}
+        resp = execute_query(query=query, params=params)
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(status_code=401, detail="Event not found")
+        else:
+            return data
+        
+#Update Events
+    @classmethod
+    def update_event_to_db(cls, id, ename, eventtype,recipienttype,descp):
+        query = f"""   
+        UPDATE lmsevent SET
+            ename = %(ename)s,
+            eventtype = %(eventtype)s,
+            recipienttype = %(recipienttype)s,
+            descp = %(descp)s
+        WHERE id = %(id)s;
+        """
+        params = {
+        "id":id,
+        "ename": ename,
+        "eventtype": eventtype,
+        "recipienttype":recipienttype,
+        "descp": descp,
+    }
+        return execute_query(query, params=params)
+    
+#Delete Event
+    @classmethod
+    def delete_event(cls, id):
+        query = f""" DELETE FROM lmsevent WHERE id = '{id}'; """
+        return execute_query(query)
+

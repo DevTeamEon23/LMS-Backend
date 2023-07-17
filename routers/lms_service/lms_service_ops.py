@@ -10,7 +10,7 @@ import traceback
 from fastapi import HTTPException
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category
+from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import AddUser
@@ -60,6 +60,11 @@ def create_category_token(name):
     token = md5(base)
     return token
 
+def create_event_token(ename):
+    base = random_string(8) + ename + random_string(8)
+    token = md5(base)
+    return token
+
 def random_password(password_length=12):
     return secrets.token_urlsafe(password_length)
 
@@ -81,8 +86,11 @@ def fetch_all_users_data():
                 "dept": user.dept,
                 "adhr": user.adhr,
                 "username": user.username,
+                "bio": user.bio,
                 "file": os.path.join(save_file_path, user.file.decode("utf-8")),  # Full file path
                 "role": user.role,
+                "timezone": user.timezone,
+                "langtype": user.langtype,
                 "token": user.token,
                 "active": user.active,
                 "created_at": user.created_at,
@@ -122,6 +130,8 @@ def fetch_users_by_onlyid(id):
             "bio": user.bio,
             "file": os.path.join(save_file_path, user.file.decode("utf-8")),  # Full file path
             "role": user.role,
+            "timezone": user.timezone,
+            "langtype": user.langtype,
             "token": user.token,
             "active": user.active,
             "created_at": user.created_at,
@@ -330,6 +340,9 @@ def add_new(email: str,file: bytes,generate_tokens: bool = False, auth_token="",
             role = inputs.get('role')
             timezone = inputs.get('timezone')
             langtype = inputs.get('langtype')
+            active = inputs.get('active')
+            deactive = inputs.get('deactive')
+            exclude_from_email = inputs.get('exclude_from_email')
 
             # Password for manual signing
             if password is None:
@@ -346,9 +359,9 @@ def add_new(email: str,file: bytes,generate_tokens: bool = False, auth_token="",
             
             # Add New User to the list of users
             data = {'eid': eid, 'sid': sid, 'full_name': full_name, 'email': v_email, 'dept': dept, 'adhr': adhr,'username': username, 'password': hash_password, 'bio': bio,'file': file,
-                    'role': role, 'timezone': timezone, 'langtype': langtype,
+                    'role': role, 'timezone': timezone, 'langtype': langtype, "active": active, "deactive": deactive, "exclude_from_email": exclude_from_email,
                     'users_allowed': inputs.get('users_allowed', ''), 'auth_token': auth_token,
-                    'request_token': request_token, 'token': token, 'active': True, 'deactive': False, 'exclude_from_email': False}
+                    'request_token': request_token, 'token': token}
 
             resp = LmsHandler.add_users(data)
             # If token not required,
@@ -441,6 +454,8 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
             certificate = inputs.get('certificate')
             level = inputs.get('level')
             category = inputs.get('category')
+            isActive = inputs.get('isActive')
+            isHide = inputs.get('isHide')
 
             # Token Generation
             token = create_course_token(coursename)
@@ -449,9 +464,9 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
             
             # Add New User to the list of users
             data = {'coursename': coursename,'file': file, 'description': description, 'coursecode': coursecode, 'price':price, 'courselink': courselink, 'coursevideo': coursevideo, 'capacity': capacity, 'startdate': startdate, 'enddate': enddate, 'timelimit': timelimit,
-                    'certificate': certificate, 'level': level, 'category': category,
+                    'certificate': certificate, 'level': level, 'category': category, 'isActive': isActive, 'isHide': isHide,
                     'course_allowed': inputs.get('course_allowed', ''), 'auth_token': auth_token,
-                    'request_token': request_token, 'token': token, 'isActive': True, 'isHide': False}
+                    'request_token': request_token, 'token': token}
 
             resp = LmsHandler.add_courses(data)
             # If token not required,
@@ -781,3 +796,129 @@ def delete_category_by_id(id):
             "status": "failure",
             "message": "Failed to delete category data"
         })
+    
+
+##########################################################################################################################
+
+def check_existing_event(ename):
+
+    query = f"""
+    select * from {table_lmsevent} where ename=%(ename)s;
+    """
+    response = execute_query(query, params={'ename': ename})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+        
+def check_existing_event_by_id(id):
+
+    query = f"""
+    select * from {table_lmsevent} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+def add_event(ename: str,generate_tokens: bool = False, auth_token="", inputs={},skip_new_category=False):
+    try:
+
+        # Check user existence and status
+        is_existing = check_existing_event(ename)
+
+        # If user Already Exists
+        if is_existing:
+            # Check password
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "message": "Events Already Exists"
+            })
+
+        elif not is_existing and skip_new_category == False:
+
+            ename = inputs.get('ename', None)
+            ename = ename.split('@')[0] if ename is None or ename == '' else ename
+            eventtype = inputs.get('eventtype')
+            recipienttype = inputs.get('recipienttype')
+            descp = inputs.get('descp')
+
+            # Token Generation
+            token = create_event_token(ename)
+
+            request_token = ''
+            
+            # Add New User to the list of users
+            data = {'ename': ename, 'eventtype': eventtype, 'recipienttype': recipienttype, 'descp': descp,
+                    'event_allowed': inputs.get('event_allowed', ''), 'auth_token': auth_token,
+                    'request_token': request_token, 'token': token, 'isActive': True }
+
+            resp = LmsHandler.add_event(data)
+            # # If token not required,
+            if not generate_tokens and len(auth_token) == 0:
+                token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Event added successfully'))
+
+
+def fetch_all_events_data():
+    try:
+        # Query all group from the database
+        events = LmsHandler.get_all_events()
+
+        # Transform the category objects into a list of dictionaries
+        events_data = []
+        for event in events:
+
+            event_data = {
+                "id": event.id,
+                "ename": event.ename,
+                "eventtype": event.eventtype,
+                "recipienttype": event.recipienttype,
+                "created_at": event.created_at,
+                "updated_at": event.updated_at,
+                # Include other group attributes as needed
+            }
+            events_data.append(event_data)
+
+        return events_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch events data"
+        })
+    
+
+def change_event_details(id, ename, eventtype,recipienttype,descp):
+    is_existing = check_existing_event_by_id(id)
+    if is_existing:
+        # Update event
+         
+        LmsHandler.update_event_to_db(id, ename, eventtype,recipienttype,descp)
+        return True
+    else:
+        raise ValueError("Event does not exists")
+    
+
+def delete_event_by_id(id):
+    try:
+        # Delete the event by ID
+        events = LmsHandler.delete_event(id)
+        return events
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to delete event data"
+        })
+        

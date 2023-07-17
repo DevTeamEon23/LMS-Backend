@@ -11,9 +11,9 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id
 from routers.lms_service.lms_db_ops import LmsHandler
-from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory)
+from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent)
 from utils import success_response
 from config.logconfig import logger
 
@@ -137,7 +137,7 @@ def delete_user(payload: DeleteUser):
         })
     
 
-##########################################################
+############################################################################################################################
 
 # Create Course
 @service.post('/addcourses')
@@ -213,7 +213,7 @@ def delete_course(payload: DeleteCourse):
             "message": "Failed to Delete course data"
         })
     
-############################################################
+############################################################################################################################
 
 # Create Group
 @service.post('/addgroups')
@@ -276,7 +276,7 @@ def delete_group(payload: DeleteGroup):
             "message": "Failed to Delete group data"
         })
 
-##########################################################
+######################################################################################################################
 
 # Create Group
 @service.post('/addcategories')
@@ -338,4 +338,69 @@ def delete_category(payload: DeleteCategory):
             "status": "failure",
             "message": "Failed to Delete category data"
         })
+
+#####################################################################################################################
+
+
+# Create Event
+@service.post('/addevents')
+async def create_event(ename: str = Form(...),eventtype: str = Form(...), recipienttype: str = Form(...), descp: str = Form(...),generate_token: bool = Form(...)):
+    try:
+        return add_event(generate_token, auth_token="", inputs={
+                'ename': ename, 'eventtype': eventtype, 'recipienttype': recipienttype, "descp": descp, 'group_allowed': '[]','picture': ""})
+    except Exception as exc: 
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Event registration failed Alreadly Exists"
+        })
+    
+# Read Group list
+@service.get("/events")
+def fetch_all_events():
+    try:
+        # Fetch all groups' data here
+        events = fetch_all_events_data()
+
+        return {
+            "status": "success",
+            "data": events
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch events data"
+        })
+
+@service.post("/update_events")
+def update_events(id: int = Form(...),ename: str = Form(...),eventtype: str = Form(...), recipienttype: str = Form(...), descp: str = Form(...)):
+    try:
+        if change_event_details(id, ename, eventtype, recipienttype, descp):
+            return JSONResponse(status_code=status.HTTP_200_OK, content={
+                "status": "success",
+                "message": "Updated Event successfully"
+            })
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
+            "status": "failure",
+            "message": exc.args[0]
+        })
+    
+@service.delete("/delete_event")
+def delete_event(payload: DeleteEvent):
+    try:
+        events = delete_event_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": events
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Delete event data"
+        })
+
 
