@@ -8,6 +8,7 @@ from enum import Enum
 from typing import List
 import traceback
 from fastapi import HTTPException
+from fastapi.responses import FileResponse
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
 from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent
@@ -25,11 +26,13 @@ from utils import md5, random_string, validate_email,validate_emails
 # This is used for the password hashing and validation
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-save_file_path = "C:\\Users\\Admin\\Desktop\\TEST_projects\\All_FastAPI_Projects\\fastapi\\media\\${item.file}"
+save_file_path = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/{user.file}"
 
-course_file_path = "C:\\Users\\Admin\\Desktop\\TEST_projects\\All_FastAPI_Projects\\fastapi\\course\\${item.file}"
+imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
 
-coursevideo_file_path = "C:\\Users\\Admin\\Desktop\\TEST_projects\\All_FastAPI_Projects\\fastapi\\coursevideo\\${item.file}"
+course_file_path = "C:/Users/Admin/Desktop/TEST_projects/All_FastAPI_Projects/fastapi/course/${item.file}"
+
+coursevideo_file_path = "C:/Users/Admin/Desktop/TEST_projects/All_FastAPI_Projects/fastapi/coursevideo/${item.file}"
 
 def sample_data(payload):
     logger.info(payload)
@@ -87,16 +90,20 @@ def fetch_all_users_data():
                 "adhr": user.adhr,
                 "username": user.username,
                 "bio": user.bio,
-                "file": os.path.join(save_file_path, user.file.decode("utf-8")),  # Full file path
+                # "file": os.path.join(save_file_path, user.file.decode("utf-8")),  # Full file path
+                "file": user.file,
                 "role": user.role,
                 "timezone": user.timezone,
                 "langtype": user.langtype,
                 "token": user.token,
-                "active": user.active,
+                "active": True if user.active == 1 else False,
+                "deactive": True if user.deactive == 1 else False,
+                "exclude_from_email": True if user.exclude_from_email == 1 else False,
                 "created_at": user.created_at,
                 "updated_at": user.updated_at,
                 # Include other user attributes as needed
             }
+
             users_data.append(user_data)
 
         return users_data
@@ -106,6 +113,14 @@ def fetch_all_users_data():
             "status": "failure",
             "message": "Failed to fetch users data"
         })
+
+def get_image(file: str):
+    imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
+    image_path = os.path.join(imgpath, file)
+    if os.path.isfile(image_path):
+        return FileResponse(image_path, media_type="image/jpeg")
+    else:
+        return {"error": "Image not found"}
     
 #Get User data by id for update fields Mapping
 def fetch_users_by_onlyid(id):
@@ -119,7 +134,7 @@ def fetch_users_by_onlyid(id):
 
         # Transform the user object into a dictionary
         user_data = {
-            "id": user.id,
+           "id": user.id,
             "eid": user.eid,
             "sid": user.sid,
             "full_name": user.full_name,
@@ -127,13 +142,17 @@ def fetch_users_by_onlyid(id):
             "dept": user.dept,
             "adhr": user.adhr,
             "username": user.username,
+            "password": user.password,
             "bio": user.bio,
-            "file": os.path.join(save_file_path, user.file.decode("utf-8")),  # Full file path
+            # "file": os.path.join(save_file_path, user.file.decode("utf-8")),  # Full file path
+            "file":user.file,
             "role": user.role,
             "timezone": user.timezone,
             "langtype": user.langtype,
             "token": user.token,
-            "active": user.active,
+           "active": True if user.active == 1 else False,
+            "deactive": True if user.deactive == 1 else False,
+            "exclude_from_email": True if user.exclude_from_email == 1 else False,
             "created_at": user.created_at,
             "updated_at": user.updated_at,
             # Include other user attributes as needed

@@ -1,9 +1,15 @@
 import traceback
 import shutil
 import json
+import time
+import os
+import base64
+from zipfile import ZipFile
+from PIL import Image
+from io import BytesIO
 import routers.lms_service.lms_service_ops as model
-from fastapi.responses import JSONResponse
-from fastapi import APIRouter, Depends,UploadFile, File,Form
+from fastapi.responses import JSONResponse,HTMLResponse,FileResponse
+from fastapi import APIRouter, Depends,UploadFile, File,Form, Query
 from starlette import status
 from sqlalchemy.orm import Session
 from starlette.requests import Request
@@ -402,5 +408,57 @@ def delete_event(payload: DeleteEvent):
             "status": "failure",
             "message": "Failed to Delete event data"
         })
+    
 
+# To Upload Zip File of SCORM 
 
+@service.post("/upload/")
+async def create_upload_file(file: UploadFile = File(...), uname: str = Form(...)):
+
+    #Create unique folder for uploading Scorm zip
+    mode = 0o666
+    parent_dir = "C:/Users/Admin/Desktop/LIVE/LMS-Backend"
+    file_dir = str(int(time.time()))
+    path = os.path.join(parent_dir, file_dir)
+    os.mkdir(path, mode)
+
+    #MOve uploaded file to created unique folder
+    with open(file_dir + "/" + file.filename, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    # Extract zip file in that unique folder
+    with ZipFile(file_dir + "/" + file.filename, 'r') as zObject:
+        zObject.extractall(
+            path=file_dir + "/")
+
+#     # YOu got all relevance data for iframe and database entry
+    return {"filename": file.filename, "name": uname, "url": parent_dir+"/"+file_dir+"/story.html"}
+
+# @service.get("/images", response_class=HTMLResponse)
+# def images():
+#     imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
+#     image_tags = []
+#     for filename in os.listdir(imgpath):
+#         image_path = os.path.join(imgpath, filename)
+#         with open(image_path, 'rb') as f:
+#             base64data = base64.b64encode(f.read()).decode('utf-8')
+#         image_tags.append(f'<img src="data:image/jpeg;base64,{base64data}" alt="{filename}">')
+
+#     return "\n".join(image_tags)
+
+@service.get("/images")
+def list_images():
+    imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
+    image_tags = []
+    for filename in os.listdir(imgpath):
+        image_tags.append(f'<img src="/images/{filename}" alt="{filename}">')
+
+    return "\n".join(image_tags)
+
+@service.get("/images/{filename}")
+def get_image(filename: str):
+    imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
+    image_path = os.path.join(imgpath, filename)
+    if os.path.isfile(image_path):
+        return FileResponse(image_path, media_type="image/jpeg")
+    else:
+        return {"error": "Image not found"}
