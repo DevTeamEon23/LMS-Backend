@@ -124,6 +124,7 @@ def get_image(file: str):
     
 #Get User data by id for update fields Mapping
 def fetch_users_by_onlyid(id):
+
     try:
         # Query user from the database for the specified id
         user = LmsHandler.get_user_by_id(id)
@@ -134,7 +135,7 @@ def fetch_users_by_onlyid(id):
 
         # Transform the user object into a dictionary
         user_data = {
-           "id": user.id,
+            "id": user.id,
             "eid": user.eid,
             "sid": user.sid,
             "full_name": user.full_name,
@@ -142,15 +143,14 @@ def fetch_users_by_onlyid(id):
             "dept": user.dept,
             "adhr": user.adhr,
             "username": user.username,
-            "password": user.password,
             "bio": user.bio,
             # "file": os.path.join(save_file_path, user.file.decode("utf-8")),  # Full file path
-            "file":user.file,
+            "file": user.file,
             "role": user.role,
             "timezone": user.timezone,
             "langtype": user.langtype,
             "token": user.token,
-           "active": True if user.active == 1 else False,
+            "active": True if user.active == 1 else False,
             "deactive": True if user.deactive == 1 else False,
             "exclude_from_email": True if user.exclude_from_email == 1 else False,
             "created_at": user.created_at,
