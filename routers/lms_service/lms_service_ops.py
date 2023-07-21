@@ -90,7 +90,6 @@ def fetch_all_users_data():
                 "adhr": user.adhr,
                 "username": user.username,
                 "bio": user.bio,
-                # "file": os.path.join(save_file_path, user.file.decode("utf-8")),  # Full file path
                 "file": user.file,
                 "role": user.role,
                 "timezone": user.timezone,
@@ -144,7 +143,6 @@ def fetch_users_by_onlyid(id):
             "adhr": user.adhr,
             "username": user.username,
             "bio": user.bio,
-            # "file": os.path.join(save_file_path, user.file.decode("utf-8")),  # Full file path
             "file": user.file,
             "role": user.role,
             "timezone": user.timezone,
@@ -165,18 +163,6 @@ def fetch_users_by_onlyid(id):
             "status": "failure",
             "message": "Failed to fetch user data"
         })
-    
-# def delete_user_by_id(id, token):
-#     try: 
-#         # Query all users from the database
-#         users = LmsHandler.delete_users(id, token )
-#         return users
-#     except Exception as exc:
-#         logger.error(traceback.format_exc())
-#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-#             "status": "failure",
-#             "message": "Failed to delete users data"
-#         })
 
 def delete_user_by_id(id):
     try:
@@ -523,12 +509,12 @@ def fetch_all_courses_data():
             course_data = {
                 "id": course.id,
                 "coursename": course.coursename,
-                "file": os.path.join(course_file_path, course.file.decode("utf-8")),  # Full file path
+                "file": course.file,
                 "description": course.description,
                 "coursecode": course.coursecode,
                 "price": course.price ,
                 "courselink": course.courselink,
-                "coursevideo": os.path.join(coursevideo_file_path, course.file.decode("utf-8")),  # Full file path
+                "coursevideo": course.coursevideo,
                 "capacity": course.capacity,
                 "startdate": course.startdate,
                 "enddate": course.enddate,
@@ -553,7 +539,50 @@ def fetch_all_courses_data():
             "message": "Failed to fetch courses data"
         })
     
+#Get Course data by id for update fields Mapping
+def fetch_course_by_onlyid(id):
 
+    try:
+        # Query category from the database for the specified id
+        course = LmsHandler.get_course_by_id(id)
+
+        if not course:
+            # Handle the case when no category is found for the specified id
+            return None
+
+        # Transform the category object into a dictionary
+        course_data = {
+                "id": course.id,
+                "coursename": course.coursename,
+                "file": course.file,
+                "description": course.description,
+                "coursecode": course.coursecode,
+                "price": course.price ,
+                "courselink": course.courselink,
+                "coursevideo": course.coursevideo,
+                "capacity": course.capacity,
+                "startdate": course.startdate,
+                "enddate": course.enddate,
+                "timelimit": course.timelimit,
+                "certificate": course.certificate,
+                "level": course.level,
+                "category": course.category,
+                "token": course.token,
+                "isActive": course.isActive,
+                "isHide": course.isHide,
+                "created_at": course.created_at,
+                "updated_at": course.updated_at,
+            # Include other course attributes as needed
+        }
+
+        return course_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch course data"
+        })
+    
 def delete_course_by_id(id):
     try:
         # Delete the course by ID
@@ -784,6 +813,33 @@ def fetch_all_categories_data():
             categories_data.append(category_data)
 
         return categories_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch category data"
+        })
+    
+#Get Category data by id for update fields Mapping
+def fetch_category_by_onlyid(id):
+
+    try:
+        # Query category from the database for the specified id
+        category = LmsHandler.get_category_by_id(id)
+
+        if not category:
+            # Handle the case when no category is found for the specified id
+            return None
+
+        # Transform the category object into a dictionary
+        category_data = {
+            "id": category.id,
+            "name": category.name,
+            "price": category.price,
+            # Include other category attributes as needed
+        }
+
+        return category_data
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={

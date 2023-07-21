@@ -9,7 +9,7 @@ coursevideo/
 .env
 .env*
 *.pdf
-*.txt
+# *.txt
 logs
 reports
 .idea

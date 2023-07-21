@@ -105,6 +105,17 @@ class LmsHandler:
                 status_code=401, detail="Token Expired or Invalid Token")
         else:
             return data
+
+#Get Course data by id for update fields Mapping
+    def get_course_by_id(id):
+        query = f"""SELECT * FROM course WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
         
 # Add Courses 
     @classmethod
@@ -261,6 +272,17 @@ class LmsHandler:
         else:
             return data
 
+#Get category data by id for update fields Mapping
+    def get_category_by_id(id):
+        query = f"""SELECT * FROM category WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
 #Add Groups
     @classmethod
     def add_category(cls, params):

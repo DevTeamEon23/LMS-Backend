@@ -17,7 +17,7 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent)
 from utils import success_response
@@ -88,26 +88,8 @@ def fetch_user_by_onlyid(id):
             "status": "failure",
             "message": "Failed to fetch users' data"
         }) 
+    
 # Update users
-# @service.post("/update_users")
-# def update_users(id: int = Form(...),eid: str = Form(...),sid: str = Form(...), full_name: str = Form(...), email: str = Form(...),dept: str = Form(...), adhr: str = Form(...), username: str = Form(...), password: str = Form(...),bio: str = Form(...), role: str = Form(...), timezone: str = Form(...), langtype: str = Form(...), active: bool = Form(...), deactive: bool = Form(...), exclude_from_email: bool = Form(...), generate_token: bool = Form(...),file: UploadFile = File(...)):
-#     with open("media/"+file.filename, "wb") as buffer:
-#         shutil.copyfileobj(file.file, buffer)
-#     url = str("media/"+file.filename)
-#     try:
-#         return change_user_details(id,email,langtype,generate_token,password, auth_token="", inputs={
-#                 'id': id,'eid': eid,'sid': sid,'full_name': full_name,'email': email, 'dept': dept, 'adhr': adhr,'username': username,'bio': bio,'file': url,'role': role, 'timezone': timezone, 'langtype': langtype,'users_allowed': '[]', 'active': active, 'deactive': deactive, 'exclude_from_email': exclude_from_email, 'picture': "", "password": None})
-#             # return JSONResponse(status_code=status.HTTP_200_OK, content={
-#             #     "status": "success",
-#             #     "message": "Updated Course successfully"
-#             # })
-#     except Exception as exc:
-#         logger.error(traceback.format_exc())
-#         return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
-#             "status": "failure",
-#             "message": exc.args[0]
-#         })
-
 @service.post("/update_users")
 def update_users(id: int = Form(...),eid: str = Form(...),sid: str = Form(...), full_name: str = Form(...), email: str = Form(...),dept: str = Form(...), adhr: str = Form(...), username: str = Form(...), password: str = Form(...),bio: str = Form(...), role: str = Form(...), timezone: str = Form(...), langtype: str = Form(...), active: bool = Form(...), deactive: bool = Form(...), exclude_from_email: bool = Form(...),file: UploadFile = File(...)):
     with open("media/"+file.filename, "wb") as buffer:
@@ -182,6 +164,24 @@ def fetch_all_courses():
             "message": "Failed to fetch courses' data"
         })
 
+#Get Courses data by id for update fields Mapping
+@service.get("/courses_by_onlyid")
+def fetch_courses_by_onlyid(id):
+    try:
+        # Fetch all course's data here
+        courses = fetch_course_by_onlyid(id)
+
+        return {
+            "status": "success",
+            "data": courses
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch course's data"
+        }) 
+    
 @service.post("/update_courses")
 def update_courses(id: int = Form(...),coursename: str = Form(...),description: str = Form(...), coursecode: str = Form(...), price: str = Form(...),courselink: str = Form(...), capacity: str = Form(...), startdate: str = Form(...), enddate: str = Form(...),timelimit: str = Form(...), certificate: str = Form(...), level: str = Form(...), category: str = Form(...), isActive: bool = Form(...), isHide: bool = Form(...),file: UploadFile = File(...),coursevideo: UploadFile = File(...)):
     with open("media/"+file.filename, "wb") as buffer:
@@ -315,6 +315,24 @@ def fetch_all_categories():
             "message": "Failed to fetch categories' data"
         })
 
+#Get User data by id for update fields Mapping
+@service.get("/categories_by_onlyid")
+def fetch_categories_by_onlyid(id):
+    try:
+        # Fetch all users' data here
+        categories = fetch_category_by_onlyid(id)
+
+        return {
+            "status": "success",
+            "data": categories
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch category's data"
+        }) 
+    
 @service.post("/update_categories")
 def update_categories(id: int = Form(...),name: str = Form(...), price: str = Form(...)):
     try:
