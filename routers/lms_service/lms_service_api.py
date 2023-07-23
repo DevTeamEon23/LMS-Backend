@@ -17,7 +17,7 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent)
 from utils import success_response
@@ -252,6 +252,24 @@ def fetch_all_groups():
             "message": "Failed to fetch groups' data"
         })
 
+#Get Group data by id for update fields Mapping
+@service.get("/groups_by_onlyid")
+def fetch_groups_by_onlyid(id):
+    try:
+        # Fetch all group's data here
+        groups = fetch_group_by_onlyid(id)
+
+        return {
+            "status": "success",
+            "data": groups
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch group's data"
+        }) 
+    
 @service.post("/update_groups")
 def update_groups(id: int = Form(...),groupname: str = Form(...),groupdesc: str = Form(...), groupkey: str = Form(...)):
     try:
@@ -397,6 +415,24 @@ def fetch_all_events():
             "message": "Failed to fetch events data"
         })
 
+#Get Group data by id for update fields Mapping
+@service.get("/events_by_onlyid")
+def fetch_events_by_onlyid(id):
+    try:
+        # Fetch all event's data here
+        events = fetch_event_by_onlyid(id)
+
+        return {
+            "status": "success",
+            "data": events
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch event's data"
+        }) 
+    
 @service.post("/update_events")
 def update_events(id: int = Form(...),ename: str = Form(...),eventtype: str = Form(...), recipienttype: str = Form(...), descp: str = Form(...)):
     try:
@@ -431,11 +467,11 @@ def delete_event(payload: DeleteEvent):
 # To Upload Zip File of SCORM 
 
 @service.post("/upload/")
-async def create_upload_file(file: UploadFile = File(...), uname: str = Form(...)):
+async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str = Form(...)):
 
     #Create unique folder for uploading Scorm zip
     mode = 0o666
-    parent_dir = "C:/Users/Admin/Desktop/LIVE/LMS-Backend"
+    parent_dir = "C:/Users/Aniruddha/Desktop/LIVE/LMS-Backend"
     file_dir = str(int(time.time()))
     path = os.path.join(parent_dir, file_dir)
     os.mkdir(path, mode)
@@ -465,7 +501,7 @@ async def create_upload_file(file: UploadFile = File(...), uname: str = Form(...
 
 @service.get("/images")
 def list_images():
-    imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
+    imgpath = "C:/Users/Aniruddha/Desktop/LIVE/LMS-Backend/media/"
     image_tags = []
     for filename in os.listdir(imgpath):
         image_tags.append(f'<img src="/images/{filename}" alt="{filename}">')
@@ -474,7 +510,7 @@ def list_images():
 
 @service.get("/images/{filename}")
 def get_image(filename: str):
-    imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
+    imgpath = "C:/Users/Aniruddha/Desktop/LIVE/LMS-Backend/media/"
     image_path = os.path.join(imgpath, filename)
     if os.path.isfile(image_path):
         return FileResponse(image_path, media_type="image/jpeg")

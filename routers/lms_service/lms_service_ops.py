@@ -698,7 +698,37 @@ def fetch_all_groups_data():
             "message": "Failed to fetch group data"
         })
     
+#Get Group data by id for update fields Mapping
+def fetch_group_by_onlyid(id):
 
+    try:
+        # Query group from the database for the specified id
+        group = LmsHandler.get_group_by_id(id)
+
+        if not group:
+            # Handle the case when no group is found for the specified id
+            return None
+
+        # Transform the group object into a dictionary
+        group_data = {
+                "id": group.id,
+                "groupname": group.groupname,
+                "groupdesc": group.groupdesc,
+                "groupkey": group.groupkey,
+                "token": group.token,
+                "created_at": group.created_at,
+                "updated_at": group.updated_at,
+            # Include other group attributes as needed
+        }
+
+        return group_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch group data"
+        })
+    
 def change_group_details(id, groupname, groupdesc, groupkey):
     is_existing, _ = check_existing_group_by_id(id)
     if is_existing:
@@ -961,7 +991,7 @@ def fetch_all_events_data():
                 "recipienttype": event.recipienttype,
                 "created_at": event.created_at,
                 "updated_at": event.updated_at,
-                # Include other group attributes as needed
+                # Include other event attributes as needed
             }
             events_data.append(event_data)
 
@@ -973,7 +1003,36 @@ def fetch_all_events_data():
             "message": "Failed to fetch events data"
         })
     
+#Get Event data by id for update fields Mapping
+def fetch_event_by_onlyid(id):
 
+    try:
+        # Query event from the database for the specified id
+        event = LmsHandler.get_event_by_id(id)
+
+        if not event:
+            # Handle the case when no event is found for the specified id
+            return None
+
+        # Transform the event object into a dictionary
+        event_data = {
+                "id": event.id,
+                "ename": event.ename,
+                "eventtype": event.eventtype,
+                "recipienttype": event.recipienttype,
+                "created_at": event.created_at,
+                "updated_at": event.updated_at,
+            # Include other event attributes as needed
+        }
+
+        return event_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch event data"
+        })
+    
 def change_event_details(id, ename, eventtype,recipienttype,descp):
     is_existing = check_existing_event_by_id(id)
     if is_existing:

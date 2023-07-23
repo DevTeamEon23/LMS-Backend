@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -208,6 +208,17 @@ class LmsHandler:
         else:
             return data
 
+#Get Group data by id for update fields Mapping
+    def get_group_by_id(id):
+        query = f"""SELECT * FROM lmsgroup WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
 #Add Groups
     @classmethod
     def add_groups(cls, params):
@@ -345,6 +356,17 @@ class LmsHandler:
         else:
             return data
 
+#Get event data by id for update fields Mapping
+    def get_event_by_id(id):
+        query = f"""SELECT * FROM lmsevent WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
 #Add Events
     @classmethod
     def add_event(cls, params):
@@ -398,3 +420,86 @@ class LmsHandler:
         query = f""" DELETE FROM lmsevent WHERE id = '{id}'; """
         return execute_query(query)
 
+######################################################################################################################
+
+#Classroom CRUD
+    def get_classroom_by_token(token):
+        query = f"""SELECT * FROM {table_classroom} where token=%(token)s and token is not NULL and token != '';"""
+        resp = execute_query(query=query, params={'token': token})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+
+#Get classroom data by id for update fields Mapping
+    def get_classroom_by_id(id):
+        query = f"""SELECT * FROM classroom WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
+#Add Classroom
+    @classmethod
+    def add_classroom(cls, params):
+        query = f"""   INSERT into {table_classroom} (instname,classname,date,starttime,venue,messg,duration,token) VALUES 
+                        (%(instname)s, %(classname)s, %(date)s, %(starttime)s, %(venue)s, %(messg)s, %(duration)s, %(token)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+
+#Fetch Classroom
+    @classmethod
+    def get_all_classrooms(cls):
+        query = """ SELECT * FROM classroom; """
+        return execute_query(query).fetchall()
+
+#Fetch Classname By Event Name
+    @classmethod
+    def get_classroom_by_classname(cls, classname):
+        query = f"SELECT * FROM {table_classroom} WHERE classname = %(classname)s"
+        params = {"classname": classname}
+        resp = execute_query(query=query, params=params)
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(status_code=401, detail="Classname not found")
+        else:
+            return data
+        
+#Update Events
+    @classmethod
+    def update_classroom_to_db(cls, id, instname, classname, date, starttime, venue, messg, duration):
+        query = f"""   
+        UPDATE classroom SET
+            instname = %(instname)s,
+            classname = %(classname)s,
+            date = %(date)s,
+            starttime = %(starttime)s
+            venue = %(venue)s,
+            messg = %(messg)s,
+            duration = %(duration)s
+        WHERE id = %(id)s;
+        """
+        params = {
+        "id":id,
+        "instname": instname,
+        "classname": classname,
+        "date":date,
+        "starttime": starttime,
+        "venue": venue,
+        "messg":messg,
+        "duration": duration,
+    }
+        return execute_query(query, params=params)
+    
+#Delete Classroom
+    @classmethod
+    def delete_classroom(cls, id):
+        query = f""" DELETE FROM classroom WHERE id = '{id}'; """
+        return execute_query(query)
+    
