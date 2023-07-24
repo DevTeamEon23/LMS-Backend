@@ -115,3 +115,18 @@ class DeleteCategory(BaseModel):
 
 class DeleteEvent(BaseModel):
     id: int
+
+####################                    Classroom                     ##############################
+
+class DeleteClassroom(BaseModel):
+    id: int
+
+####################                    Conference                     ##############################
+
+class DeleteConference(BaseModel):
+    id: int
+
+####################                    Virtual Training                     ##############################
+
+class DeleteVirtual(BaseModel):
+    id: int

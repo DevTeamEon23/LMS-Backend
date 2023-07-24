@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -447,8 +447,8 @@ class LmsHandler:
 #Add Classroom
     @classmethod
     def add_classroom(cls, params):
-        query = f"""   INSERT into {table_classroom} (instname,classname,date,starttime,venue,messg,duration,token) VALUES 
-                        (%(instname)s, %(classname)s, %(date)s, %(starttime)s, %(venue)s, %(messg)s, %(duration)s, %(token)s)
+        query = f"""   INSERT into {table_classroom} (instname,classname,date,starttime,venue,messg,duration,classroom_allowed,auth_token,request_token,token) VALUES 
+                        (%(instname)s, %(classname)s, %(date)s, %(starttime)s, %(venue)s, %(messg)s, %(duration)s, %(classroom_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
                         ; 
                     """
         return execute_query(query, params=params)
@@ -479,7 +479,7 @@ class LmsHandler:
             instname = %(instname)s,
             classname = %(classname)s,
             date = %(date)s,
-            starttime = %(starttime)s
+            starttime = %(starttime)s,
             venue = %(venue)s,
             messg = %(messg)s,
             duration = %(duration)s
@@ -492,7 +492,7 @@ class LmsHandler:
         "date":date,
         "starttime": starttime,
         "venue": venue,
-        "messg":messg,
+        "messg": messg,
         "duration": duration,
     }
         return execute_query(query, params=params)
@@ -502,4 +502,171 @@ class LmsHandler:
     def delete_classroom(cls, id):
         query = f""" DELETE FROM classroom WHERE id = '{id}'; """
         return execute_query(query)
+
+######################################################################################################################
+
+#Conference CRUD
+    def get_conference_by_token(token):
+        query = f"""SELECT * FROM {table_conference} where token=%(token)s and token is not NULL and token != '';"""
+        resp = execute_query(query=query, params={'token': token})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+
+#Get conference data by id for update fields Mapping
+    def get_conference_by_id(id):
+        query = f"""SELECT * FROM conference WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
+#Add Conference
+    @classmethod
+    def add_conference(cls, params):
+        query = f"""   INSERT into {table_conference} (instname,confname,date,starttime,meetlink,messg,duration,conference_allowed,auth_token,request_token,token) VALUES 
+                        (%(instname)s, %(confname)s, %(date)s, %(starttime)s, %(meetlink)s, %(messg)s, %(duration)s, %(conference_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+
+#Fetch Conference
+    @classmethod
+    def get_all_conferences(cls):
+        query = """ SELECT * FROM conference; """
+        return execute_query(query).fetchall()
+
+#Fetch Conference By Event Name
+    @classmethod
+    def get_conference_by_confname(cls, confname):
+        query = f"SELECT * FROM {table_conference} WHERE confname = %(confname)s"
+        params = {"confname": confname}
+        resp = execute_query(query=query, params=params)
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(status_code=401, detail="Conference not found")
+        else:
+            return data
+        
+#Update Conference
+    @classmethod
+    def update_conference_to_db(cls, id, instname, confname, date, starttime, meetlink, messg, duration):
+        query = f"""   
+        UPDATE conference SET
+            instname = %(instname)s,
+            confname = %(confname)s,
+            date = %(date)s,
+            starttime = %(starttime)s,
+            meetlink = %(meetlink)s,
+            messg = %(messg)s,
+            duration = %(duration)s
+        WHERE id = %(id)s;
+        """
+        params = {
+        "id":id,
+        "instname": instname,
+        "confname": confname,
+        "date":date,
+        "starttime": starttime,
+        "meetlink": meetlink,
+        "messg": messg,
+        "duration": duration,
+    }
+        return execute_query(query, params=params)
+    
+#Delete Conference
+    @classmethod
+    def delete_conference(cls, id):
+        query = f""" DELETE FROM conference WHERE id = '{id}'; """
+        return execute_query(query)
+    
+######################################################################################################################
+
+#Virtual Training CRUD
+    def get_virtualtraining_by_token(token):
+        query = f"""SELECT * FROM {table_virtualtraining} where token=%(token)s and token is not NULL and token != '';"""
+        resp = execute_query(query=query, params={'token': token})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+
+#Get Virtual Training data by id for update fields Mapping
+    def get_virtualtraining_by_id(id):
+        query = f"""SELECT * FROM virtualtraining WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
+#Add Virtual Training
+    @classmethod
+    def add_virtualtraining(cls, params):
+        query = f"""   INSERT into {table_virtualtraining} (instname,virtualname,date,starttime,meetlink,messg,duration,virtualtraining_allowed,auth_token,request_token,token) VALUES 
+                        (%(instname)s, %(virtualname)s, %(date)s, %(starttime)s, %(meetlink)s, %(messg)s, %(duration)s, %(virtualtraining_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+
+#Fetch Virtual Training
+    @classmethod
+    def get_all_virtualtrainings(cls):
+        query = """ SELECT * FROM virtualtraining; """
+        return execute_query(query).fetchall()
+
+#Fetch Virtual Training By virtualname
+    @classmethod
+    def get_virtualtraining_by_virtualname(cls, virtualname):
+        query = f"SELECT * FROM {table_virtualtraining} WHERE virtualname = %(virtualname)s"
+        params = {"virtualname": virtualname}
+        resp = execute_query(query=query, params=params)
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(status_code=401, detail="Virtual Training not found")
+        else:
+            return data
+        
+#Update Virtual Training
+    @classmethod
+    def update_virtualtraining_to_db(cls, id, instname, virtualname, date, starttime, meetlink, messg, duration):
+        query = f"""   
+        UPDATE virtualtraining SET
+            instname = %(instname)s,
+            virtualname = %(virtualname)s,
+            date = %(date)s,
+            starttime = %(starttime)s,
+            meetlink = %(meetlink)s,
+            messg = %(messg)s,
+            duration = %(duration)s
+        WHERE id = %(id)s;
+        """
+        params = {
+        "id":id,
+        "instname": instname,
+        "virtualname": virtualname,
+        "date":date,
+        "starttime": starttime,
+        "meetlink": meetlink,
+        "messg": messg,
+        "duration": duration,
+    }
+        return execute_query(query, params=params)
+    
+#Delete Virtual Training
+    @classmethod
+    def delete_virtualtraining(cls, id):
+        query = f""" DELETE FROM virtualtraining WHERE id = '{id}'; """
+        return execute_query(query)
+
     

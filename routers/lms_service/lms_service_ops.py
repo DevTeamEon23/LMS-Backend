@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent
+from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import AddUser
@@ -65,6 +65,21 @@ def create_category_token(name):
 
 def create_event_token(ename):
     base = random_string(8) + ename + random_string(8)
+    token = md5(base)
+    return token
+
+def create_classroom_token(classname):
+    base = random_string(8) + classname + random_string(8)
+    token = md5(base)
+    return token
+
+def create_conference_token(confname):
+    base = random_string(8) + confname + random_string(8)
+    token = md5(base)
+    return token
+
+def create_virtualtraining_token(virtualname):
+    base = random_string(8) + virtualname + random_string(8)
     token = md5(base)
     return token
 
@@ -1056,3 +1071,490 @@ def delete_event_by_id(id):
             "message": "Failed to delete event data"
         })
         
+##########################################################################################################################
+
+def check_existing_classroom(classname):
+
+    query = f"""
+    select * from {table_classroom} where classname=%(classname)s;
+    """
+    response = execute_query(query, params={'classname': classname})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+        
+def check_existing_classroom_by_id(id):
+
+    query = f"""
+    select * from {table_classroom} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+def add_classroom(classname: str,generate_tokens: bool = False, auth_token="", inputs={},skip_new_category=False):
+    try:
+
+        # Check user existence and status
+        is_existing = check_existing_classroom(classname)
+
+        # If user Already Exists
+        if is_existing:
+            # Check password
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "message": "Classroom Already Exists"
+            })
+
+        elif not is_existing and skip_new_category == False:
+
+            instname = inputs.get('instname')
+            classname = inputs.get('classname')
+            date = inputs.get('date')
+            starttime = inputs.get('starttime')
+            venue = inputs.get('venue')
+            messg = inputs.get('messg')
+            duration = inputs.get('duration')
+
+            # Token Generation
+            token = create_classroom_token(classname)
+
+            request_token = ''
+            
+            # Add New User to the list of users
+            data = {'instname': instname,'classname': classname, 'date': date, 'starttime': starttime, 'venue': venue, 'messg': messg, 'duration': duration,
+                    'classroom_allowed': inputs.get('classroom_allowed', ''), 'auth_token': auth_token,
+                    'request_token': request_token, 'token': token}
+
+            resp = LmsHandler.add_classroom(data)
+            # # If token not required,
+            if not generate_tokens and len(auth_token) == 0:
+                token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Classroom added successfully'))
+
+
+def fetch_all_classroom_data():
+    try:
+        # Query all classroom from the database
+        classrooms = LmsHandler.get_all_classrooms()
+
+        # Transform the classroom objects into a list of dictionaries
+        classrooms_data = []
+        for classroom in classrooms:
+
+            classroom_data = {
+                "id": classroom.id,
+                "instname": classroom.instname,
+                "classname": classroom.classname,
+                "date": classroom.date,
+                "starttime": classroom.starttime,
+                "venue": classroom.venue,
+                "messg": classroom.messg,
+                "duration": classroom.duration,
+                "created_at": classroom.created_at,
+                "updated_at": classroom.updated_at,
+                # Include other classroom attributes as needed
+            }
+            classrooms_data.append(classroom_data)
+
+        return classrooms_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch classrooms data"
+        })
+    
+#Get Classroom data by id for update fields Mapping
+def fetch_classroom_by_onlyid(id):
+
+    try:
+        # Query classroom from the database for the specified id
+        classroom = LmsHandler.get_classroom_by_id(id)
+
+        if not classroom:
+            # Handle the case when no classroom is found for the specified id
+            return None
+
+        # Transform the classroom object into a dictionary
+        classroom_data = {
+                "id": classroom.id,
+                "instname": classroom.instname,
+                "classname": classroom.classname,
+                "date": classroom.date,
+                "starttime": classroom.starttime,
+                "venue": classroom.venue,
+                "messg": classroom.messg,
+                "duration": classroom.duration,
+                "created_at": classroom.created_at,
+                "updated_at": classroom.updated_at,
+            # Include other classroom attributes as needed
+        }
+
+        return classroom_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch classroom data"
+        })
+    
+def change_classroom_details(id, instname, classname, date, starttime, venue, messg, duration):
+    is_existing = check_existing_classroom_by_id(id)
+    if is_existing:
+        # Update classroom
+         
+        LmsHandler.update_classroom_to_db(id, instname, classname, date, starttime, venue, messg, duration)
+        return True
+    else:
+        raise ValueError("Classroom does not exists")
+    
+
+def delete_classroom_by_id(id):
+    try:
+        # Delete the classroom by ID
+        classrooms = LmsHandler.delete_classroom(id)
+        return classrooms
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to delete classroom data"
+        })
+    
+##########################################################################################################################
+
+def check_existing_conference(confname):
+
+    query = f"""
+    select * from {table_conference} where confname=%(confname)s;
+    """
+    response = execute_query(query, params={'confname': confname})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+        
+def check_existing_conference_by_id(id):
+
+    query = f"""
+    select * from {table_conference} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+def add_conference(confname: str,generate_tokens: bool = False, auth_token="", inputs={},skip_new_category=False):
+    try:
+
+        # Check conference existence and status
+        is_existing = check_existing_conference(confname)
+
+        # If conference Already Exists
+        if is_existing:
+            # Check password
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "message": "Conference Already Exists"
+            })
+
+        elif not is_existing and skip_new_category == False:
+
+            instname = inputs.get('instname')
+            confname = inputs.get('confname')
+            date = inputs.get('date')
+            starttime = inputs.get('starttime')
+            meetlink = inputs.get('meetlink')
+            messg = inputs.get('messg')
+            duration = inputs.get('duration')
+
+            # Token Generation
+            token = create_conference_token(confname)
+
+            request_token = ''
+            
+            # Add New Conference to the list of Conferences
+            data = {'instname': instname,'confname': confname, 'date': date, 'starttime': starttime, 'meetlink': meetlink, 'messg': messg, 'duration': duration,
+                    'conference_allowed': inputs.get('conference_allowed', ''), 'auth_token': auth_token,
+                    'request_token': request_token, 'token': token}
+
+            resp = LmsHandler.add_conference(data)
+            # # If token not required,
+            if not generate_tokens and len(auth_token) == 0:
+                token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Conference added successfully'))
+
+
+def fetch_all_conference_data():
+    try:
+        # Query all conference from the database
+        conferences = LmsHandler.get_all_conferences()
+
+        # Transform the conference objects into a list of dictionaries
+        conferences_data = []
+        for conference in conferences:
+
+            conference_data = {
+                "id": conference.id,
+                "instname": conference.instname,
+                "confname": conference.confname,
+                "date": conference.date,
+                "starttime": conference.starttime,
+                "meetlink": conference.meetlink,
+                "messg": conference.messg,
+                "duration": conference.duration,
+                "created_at": conference.created_at,
+                "updated_at": conference.updated_at,
+                # Include other conference attributes as needed
+            }
+            conferences_data.append(conference_data)
+
+        return conferences_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch conferences data"
+        })
+    
+#Get Conference data by id for update fields Mapping
+def fetch_conference_by_onlyid(id):
+
+    try:
+        # Query conferences from the database for the specified id
+        conference = LmsHandler.get_conference_by_id(id)
+
+        if not conference:
+            # Handle the case when no conference is found for the specified id
+            return None
+
+        # Transform the conference object into a dictionary
+        conference_data = {
+                "id": conference.id,
+                "instname": conference.instname,
+                "confname": conference.confname,
+                "date": conference.date,
+                "starttime": conference.starttime,
+                "meetlink": conference.meetlink,
+                "messg": conference.messg,
+                "duration": conference.duration,
+                "created_at": conference.created_at,
+                "updated_at": conference.updated_at,
+            # Include other conference attributes as needed
+        }
+
+        return conference_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch conference data"
+        })
+    
+def change_conference_details(id, instname, confname, date, starttime, meetlink, messg, duration):
+    is_existing = check_existing_conference_by_id(id)
+    if is_existing:
+        # Update conference
+         
+        LmsHandler.update_conference_to_db(id, instname, confname, date, starttime, meetlink, messg, duration)
+        return True
+    else:
+        raise ValueError("Conference does not exists")
+    
+
+def delete_conference_by_id(id):
+    try:
+        # Delete the conference by ID
+        conferences = LmsHandler.delete_conference(id)
+        return conferences
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to delete conferences data"
+        })
+        
+##########################################################################################################################
+
+def check_existing_virtualtraining(virtualname):
+
+    query = f"""
+    select * from {table_virtualtraining} where virtualname=%(virtualname)s;
+    """
+    response = execute_query(query, params={'virtualname': virtualname})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+        
+def check_existing_virtualtraining_by_id(id):
+
+    query = f"""
+    select * from {table_virtualtraining} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+def add_virtualtraining(virtualname: str,generate_tokens: bool = False, auth_token="", inputs={},skip_new_category=False):
+    try:
+
+        # Check virtualtraining existence and status
+        is_existing = check_existing_virtualtraining(virtualname)
+
+        # If virtualtraining Already Exists
+        if is_existing:
+            # Check virtualtraining
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "message": "Virtual Training Already Exists"
+            })
+
+        elif not is_existing and skip_new_category == False:
+
+            instname = inputs.get('instname')
+            virtualname = inputs.get('virtualname')
+            date = inputs.get('date')
+            starttime = inputs.get('starttime')
+            meetlink = inputs.get('meetlink')
+            messg = inputs.get('messg')
+            duration = inputs.get('duration')
+
+            # Token Generation
+            token = create_virtualtraining_token(virtualname)
+
+            request_token = ''
+            
+            # Add New Conference to the list of Conferences
+            data = {'instname': instname,'virtualname': virtualname, 'date': date, 'starttime': starttime, 'meetlink': meetlink, 'messg': messg, 'duration': duration,
+                    'virtualtraining_allowed': inputs.get('virtualtraining_allowed', ''), 'auth_token': auth_token,
+                    'request_token': request_token, 'token': token}
+
+            resp = LmsHandler.add_virtualtraining(data)
+            # # If token not required,
+            if not generate_tokens and len(auth_token) == 0:
+                token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Virtual Training added successfully'))
+
+
+def fetch_all_virtualtraining_data():
+    try:
+        # Query all virtualtraining from the database
+        virtualtrainings = LmsHandler.get_all_virtualtrainings()
+
+        # Transform the virtualtraining objects into a list of dictionaries
+        virtualtrainings_data = []
+        for virtualtraining in virtualtrainings:
+
+            virtualtraining_data = {
+                "id": virtualtraining.id,
+                "instname": virtualtraining.instname,
+                "virtualname": virtualtraining.virtualname,
+                "date": virtualtraining.date,
+                "starttime": virtualtraining.starttime,
+                "meetlink": virtualtraining.meetlink,
+                "messg": virtualtraining.messg,
+                "duration": virtualtraining.duration,
+                "created_at": virtualtraining.created_at,
+                "updated_at": virtualtraining.updated_at,
+                # Include other virtualtraining attributes as needed
+            }
+            virtualtrainings_data.append(virtualtraining_data)
+
+        return virtualtrainings_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch virtualtrainings data"
+        })
+    
+#Get Virtual Training data by id for update fields Mapping
+def fetch_virtualtraining_by_onlyid(id):
+
+    try:
+        # Query virtualtraining from the database for the specified id
+        virtualtraining = LmsHandler.get_virtualtraining_by_id(id)
+
+        if not virtualtraining:
+            # Handle the case when no virtualtraining is found for the specified id
+            return None
+
+        # Transform the virtualtraining object into a dictionary
+        virtualtraining_data = {
+                "id": virtualtraining.id,
+                "instname": virtualtraining.instname,
+                "virtualname": virtualtraining.virtualname,
+                "date": virtualtraining.date,
+                "starttime": virtualtraining.starttime,
+                "meetlink": virtualtraining.meetlink,
+                "messg": virtualtraining.messg,
+                "duration": virtualtraining.duration,
+                "created_at": virtualtraining.created_at,
+                "updated_at": virtualtraining.updated_at,
+            # Include other virtualtraining attributes as needed
+        }
+
+        return virtualtraining_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch virtualtraining data"
+        })
+    
+def change_virtualtraining_details(id, instname, virtualname, date, starttime, meetlink, messg, duration):
+    is_existing = check_existing_virtualtraining_by_id(id)
+    if is_existing:
+        # Update virtualtrainings
+        LmsHandler.update_virtualtraining_to_db(id, instname, virtualname, date, starttime, meetlink, messg, duration)
+        return True
+    else:
+        raise ValueError("Virtual Training does not exists")
+    
+
+def delete_virtualtraining_by_id(id):
+    try:
+        # Delete the virtualtraining by ID
+        virtualtrainings = LmsHandler.delete_virtualtraining(id)
+        return virtualtrainings
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to delete virtualtraining data"
+        })

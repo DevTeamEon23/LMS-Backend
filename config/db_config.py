@@ -95,6 +95,20 @@ class RecipientEnum(PythonEnum):
     Courselearners = 'Courselearners'
     Specificrecipients = 'Specificrecipients'
 
+#Discussion
+class Access(PythonEnum):
+    Access1 = 'Access1'
+    Access2 = 'Access2'
+    Access3 = 'Access3'
+
+#Calendar
+class Audience(PythonEnum):
+    Audience1 = 'Audience1'
+    Audience2 = 'Audience2'
+    Audience3 = 'Audience3'
+
+
+#Tables Codes Go Here --*
 n_table_user = 'users'
 s_table_user = Table(
     n_table_user, metadata,
@@ -185,6 +199,9 @@ s_table_lmsevent = Table(
     Column('recipienttype', Enum(RecipientEnum), nullable=False),
     Column('descp', VARCHAR(300)),
     Column('isActive', BOOLEAN, default=True),
+    Column('event_allowed', VARCHAR(150), nullable=False),
+    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+    Column('request_token', VARCHAR(2500), nullable=False),
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
@@ -215,6 +232,9 @@ s_table_virtualtraining = Table(
     Column('meetlink', VARCHAR(455)),
     Column('messg', VARCHAR(655)),
     Column('duration', VARCHAR(20)),
+    Column('virtualtraining_allowed', VARCHAR(150), nullable=False),
+    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+    Column('request_token', VARCHAR(2500), nullable=False),
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
@@ -228,6 +248,9 @@ s_table_category = Table(
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('name', VARCHAR(20)),
     Column('price', Float(10, 2)),
+    Column('category_allowed', VARCHAR(150), nullable=False),
+    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+    Column('request_token', VARCHAR(2500), nullable=False),
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
@@ -246,6 +269,9 @@ s_table_classroom = Table(
     Column('venue', VARCHAR(455)),
     Column('messg', VARCHAR(655)),
     Column('duration', VARCHAR(20)),
+    Column('classroom_allowed', VARCHAR(150), nullable=False),
+    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+    Column('request_token', VARCHAR(2500), nullable=False),
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
@@ -264,12 +290,52 @@ s_table_conference = Table(
     Column('meetlink', VARCHAR(455)),
     Column('messg', VARCHAR(655)),
     Column('duration', VARCHAR(20)),
+    Column('conference_allowed', VARCHAR(150), nullable=False),
+    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+    Column('request_token', VARCHAR(2500), nullable=False),
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Index(f'idx_{table_conference}_token', 'token'),
 )
 
+# Discussion table
+table_discussion = 'discussion'
+s_table_discussion = Table(
+    table_discussion, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('topic', VARCHAR(45)),
+    Column('messg', VARCHAR(655)),
+    Column('file', VARCHAR(20)),
+    Column('access', Enum(Access), server_default='Access1', nullable=False),
+    Column('discussion_allowed', VARCHAR(150), nullable=False),
+    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+    Column('request_token', VARCHAR(2500), nullable=False),
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Index(f'idx_{table_discussion}_token', 'token'),
+)
+
+# calender table
+table_calender = 'calender'
+s_table_calender = Table(
+    table_calender, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('cal_eventname', VARCHAR(45)),
+    Column('date', VARCHAR(20)),
+    Column('starttime', VARCHAR(20)),
+    Column('duration', VARCHAR(20)),
+    Column('audience', Enum(Audience), server_default='Audience1', nullable=True),
+    Column('messg', VARCHAR(655)),
+    Column('calender_allowed', VARCHAR(150), nullable=False),
+    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+    Column('request_token', VARCHAR(2500), nullable=False),
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Index(f'idx_{table_calender}_token', 'token'),
+)
 
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')
 metadata.create_all(meta_engine, checkfirst=True)

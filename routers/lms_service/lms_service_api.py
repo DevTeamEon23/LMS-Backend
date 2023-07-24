@@ -17,9 +17,9 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id
 from routers.lms_service.lms_db_ops import LmsHandler
-from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent)
+from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual)
 from utils import success_response
 from config.logconfig import logger
 
@@ -463,6 +463,252 @@ def delete_event(payload: DeleteEvent):
             "message": "Failed to Delete event data"
         })
     
+############################################################################################################################
+
+# Create Classroom
+@service.post('/addclassrooms')
+async def create_classroom(instname: str = Form(...),classname: str = Form(...), date: str = Form(...), starttime: str = Form(...), venue: str = Form(...), messg: str = Form(...), duration: str = Form(...),generate_token: bool = Form(...)):
+    try:
+        return add_classroom(generate_token, auth_token="", inputs={
+                'instname': instname, 'classname': classname, 'date': date, 'starttime': starttime, 'venue': venue, 'messg': messg, 'duration': duration, 'group_allowed': '[]','picture': ""})
+    except Exception as exc: 
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Classroom registration failed Alreadly Exists"
+        })
+    
+# Read Classroom list
+@service.get("/classrooms")
+def fetch_all_classrooms():
+    try:
+        # Fetch all classrooms' data here
+        classrooms = fetch_all_classroom_data()
+
+        return {
+            "status": "success",
+            "data": classrooms
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch classroom's data"
+        })
+
+#Get Classroom data by id for update fields Mapping
+@service.get("/classrooms_by_onlyid")
+def fetch_classrooms_by_onlyid(id):
+    try:
+        # Fetch all classroom's data here
+        classrooms = fetch_classroom_by_onlyid(id)
+
+        return {
+            "status": "success",
+            "data": classrooms
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch classroom's data"
+        }) 
+    
+@service.post("/update_classrooms")
+def update_classrooms(id: int = Form(...),instname: str = Form(...),classname: str = Form(...), date: str = Form(...), starttime: str = Form(...), venue: str = Form(...), messg: str = Form(...), duration: str = Form(...)):
+    try:
+        if change_classroom_details(id, instname, classname, date, starttime, venue, messg, duration):
+            return JSONResponse(status_code=status.HTTP_200_OK, content={
+                "status": "success",
+                "message": "Updated Classroom successfully"
+            })
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
+            "status": "failure",
+            "message": exc.args[0]
+        })
+    
+@service.delete("/delete_classroom")
+def delete_classroom(payload: DeleteClassroom):
+    try:
+        classrooms = delete_classroom_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": classrooms
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Delete classrooms data"
+        })
+    
+############################################################################################################################
+
+# Create Conference
+@service.post('/addconferences')
+async def create_conference(instname: str = Form(...),confname: str = Form(...), date: str = Form(...), starttime: str = Form(...), meetlink: str = Form(...), messg: str = Form(...), duration: str = Form(...),generate_token: bool = Form(...)):
+    try:
+        return add_conference(generate_token, auth_token="", inputs={
+                'instname': instname, 'confname': confname, 'date': date, 'starttime': starttime, 'meetlink': meetlink, 'messg': messg, 'duration': duration, 'group_allowed': '[]','picture': ""})
+    except Exception as exc: 
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Conference registration failed Alreadly Exists"
+        })
+    
+# Read Conference list
+@service.get("/conferences")
+def fetch_all_conferences():
+    try:
+        # Fetch all conference's data here
+        conferences = fetch_all_conference_data()
+
+        return {
+            "status": "success",
+            "data": conferences
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch conference's data"
+        })
+
+#Get Conference data by id for update fields Mapping
+@service.get("/conferences_by_onlyid")
+def fetch_conferences_by_onlyid(id):
+    try:
+        # Fetch all conference's data here
+        conferences = fetch_conference_by_onlyid(id)
+
+        return {
+            "status": "success",
+            "data": conferences
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch conference's data"
+        }) 
+    
+@service.post("/update_conferences")
+def update_conferences(id: int = Form(...),instname: str = Form(...),confname: str = Form(...), date: str = Form(...), starttime: str = Form(...), meetlink: str = Form(...), messg: str = Form(...), duration: str = Form(...)):
+    try:
+        if change_conference_details(id, instname, confname, date, starttime, meetlink, messg, duration):
+            return JSONResponse(status_code=status.HTTP_200_OK, content={
+                "status": "success",
+                "message": "Updated Conference successfully"
+            })
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
+            "status": "failure",
+            "message": exc.args[0]
+        })
+    
+@service.delete("/delete_conference")
+def delete_conference(payload: DeleteConference):
+    try:
+        conferences = delete_conference_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": conferences
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Delete conferences data"
+        })
+    
+
+############################################################################################################################
+
+# Create Virtual Training
+@service.post('/addvirtualtrainings')
+async def create_virtualtraining(instname: str = Form(...),virtualname: str = Form(...), date: str = Form(...), starttime: str = Form(...), meetlink: str = Form(...), messg: str = Form(...), duration: str = Form(...),generate_token: bool = Form(...)):
+    try:
+        return add_virtualtraining(generate_token, auth_token="", inputs={
+                'instname': instname, 'virtualname': virtualname, 'date': date, 'starttime': starttime, 'meetlink': meetlink, 'messg': messg, 'duration': duration, 'group_allowed': '[]','picture': ""})
+    except Exception as exc: 
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Virtual Training registration failed Alreadly Exists"
+        })
+    
+# Read Virtual Training list
+@service.get("/virtualtrainings")
+def fetch_all_virtualtraining():
+    try:
+        # Fetch all virtualtraining's data here
+        virtualtrainings = fetch_all_virtualtraining_data()
+
+        return {
+            "status": "success",
+            "data": virtualtrainings
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch virtualtraining's data"
+        })
+
+#Get Virtual Training data by id for update fields Mapping
+@service.get("/virtualtrainings_by_onlyid")
+def fetch_virtualtrainings_by_onlyid(id):
+    try:
+        # Fetch all virtualtraining's data here
+        virtualtrainings = fetch_virtualtraining_by_onlyid(id)
+
+        return {
+            "status": "success",
+            "data": virtualtrainings
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch virtualtraining's data"
+        }) 
+    
+@service.post("/update_virtualtrainings")
+def update_virtualtrainings(id: int = Form(...),instname: str = Form(...),virtualname: str = Form(...), date: str = Form(...), starttime: str = Form(...), meetlink: str = Form(...), messg: str = Form(...), duration: str = Form(...)):
+    try:
+        if change_virtualtraining_details(id, instname, virtualname, date, starttime, meetlink, messg, duration):
+            return JSONResponse(status_code=status.HTTP_200_OK, content={
+                "status": "success",
+                "message": "Updated Virtual Training successfully"
+            })
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
+            "status": "failure",
+            "message": exc.args[0]
+        })
+    
+@service.delete("/delete_virtualtraining")
+def delete_virtualtrainings(payload: DeleteVirtual):
+    try:
+        virtualtrainings = delete_virtualtraining_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": virtualtrainings
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Delete virtualtrainings data"
+        })
+    
+
+##########################################################################################################################
 
 # To Upload Zip File of SCORM 
 
@@ -471,7 +717,7 @@ async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str =
 
     #Create unique folder for uploading Scorm zip
     mode = 0o666
-    parent_dir = "C:/Users/Aniruddha/Desktop/LIVE/LMS-Backend"
+    parent_dir = "C:/Users/Admin/Desktop/LIVE/LMS-Backend"
     file_dir = str(int(time.time()))
     path = os.path.join(parent_dir, file_dir)
     os.mkdir(path, mode)
@@ -501,7 +747,7 @@ async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str =
 
 @service.get("/images")
 def list_images():
-    imgpath = "C:/Users/Aniruddha/Desktop/LIVE/LMS-Backend/media/"
+    imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
     image_tags = []
     for filename in os.listdir(imgpath):
         image_tags.append(f'<img src="/images/{filename}" alt="{filename}">')
@@ -510,7 +756,7 @@ def list_images():
 
 @service.get("/images/{filename}")
 def get_image(filename: str):
-    imgpath = "C:/Users/Aniruddha/Desktop/LIVE/LMS-Backend/media/"
+    imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
     image_path = os.path.join(imgpath, filename)
     if os.path.isfile(image_path):
         return FileResponse(image_path, media_type="image/jpeg")
