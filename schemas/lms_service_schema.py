@@ -130,3 +130,8 @@ class DeleteConference(BaseModel):
 
 class DeleteVirtual(BaseModel):
     id: int
+
+####################                    Discussion                     ##############################
+
+class DeleteDiscussion(BaseModel):
+    id: int

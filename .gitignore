@@ -6,6 +6,7 @@ eon/
 media/
 course/
 coursevideo/
+files/
 .env
 .env*
 *.pdf

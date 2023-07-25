@@ -304,9 +304,9 @@ table_discussion = 'discussion'
 s_table_discussion = Table(
     table_discussion, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('topic', VARCHAR(45)),
+    Column('topic', VARCHAR(45), nullable=False),
     Column('messg', VARCHAR(655)),
-    Column('file', VARCHAR(20)),
+    Column('file',LONGBLOB, nullable=False),
     Column('access', Enum(Access), server_default='Access1', nullable=False),
     Column('discussion_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google

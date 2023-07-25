@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -668,5 +668,87 @@ class LmsHandler:
     def delete_virtualtraining(cls, id):
         query = f""" DELETE FROM virtualtraining WHERE id = '{id}'; """
         return execute_query(query)
+    
+######################################################################################################################
+
+#Discussion CRUD
+    def get_discussion_by_token(token):
+        query = f"""SELECT * FROM {table_discussion} where token=%(token)s and token is not NULL and token != '';"""
+        resp = execute_query(query=query, params={'token': token})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+
+#Get Discussion data by id for update fields Mapping
+    def get_discussion_by_id(id):
+        query = f"""SELECT * FROM discussion WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
+#Add Discussion
+    @classmethod
+    def add_discussion(cls, params):
+        query = f"""   INSERT into {table_discussion} (topic,messg,file,access,discussion_allowed,auth_token,request_token,token) VALUES 
+                        (%(topic)s, %(messg)s, %(file)s, %(access)s, %(discussion_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+
+#Fetch Discussion
+    @classmethod
+    def get_all_discussions(cls):
+        query = """ SELECT * FROM discussion; """
+        return execute_query(query).fetchall()
+
+#Fetch Discussion By virtualname
+    @classmethod
+    def get_discussion_by_topic(cls, topic):
+        query = f"SELECT * FROM {table_discussion} WHERE topic = %(topic)s"
+        params = {"topic": topic}
+        resp = execute_query(query=query, params=params)
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(status_code=401, detail="Discussion not found")
+        else:
+            return data
+        
+#Update Discussion
+    @classmethod
+    def update_discussion_to_db(cls, id, topic, messg, file, access):
+        query = f"""   
+        UPDATE discussion SET
+            topic = %(topic)s,
+            messg = %(messg)s,
+            file = %(file)s,
+            access = %(access)s
+        WHERE id = %(id)s;
+        """
+        params = {
+        "id":id,
+        "topic": topic,
+        "messg": messg,
+        "file":file,
+        "access": access,
+    }
+        return execute_query(query, params=params)
+    
+#Delete Discussion
+    @classmethod
+    def delete_discussion(cls, id):
+        query = f""" DELETE FROM discussion WHERE id = '{id}'; """
+        return execute_query(query)
+    
+    
+    
+
+
 
     

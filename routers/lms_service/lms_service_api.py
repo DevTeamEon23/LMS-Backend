@@ -4,12 +4,13 @@ import json
 import time
 import os
 import base64
+import subprocess
 from zipfile import ZipFile
 from PIL import Image
 from io import BytesIO
 import routers.lms_service.lms_service_ops as model
 from fastapi.responses import JSONResponse,HTMLResponse,FileResponse
-from fastapi import APIRouter, Depends,UploadFile, File,Form, Query
+from fastapi import APIRouter, Depends,UploadFile, File,Form, Query,HTTPException
 from starlette import status
 from sqlalchemy.orm import Session
 from starlette.requests import Request
@@ -17,9 +18,9 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id
 from routers.lms_service.lms_db_ops import LmsHandler
-from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual)
+from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion)
 from utils import success_response
 from config.logconfig import logger
 
@@ -707,6 +708,93 @@ def delete_virtualtrainings(payload: DeleteVirtual):
             "message": "Failed to Delete virtualtrainings data"
         })
     
+############################################################################################################################
+
+# Create Discussion
+@service.post('/add_discussions')
+async def create_discussion(topic: str = Form(...),messg: str = Form(...), file : UploadFile = File(...), access: str = Form(...),generate_token: bool = Form(...)):
+    with open("files/"+file.filename, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    url = str("files/"+file.filename)
+    try:
+        return add_discussion(topic,generate_token, auth_token="", inputs={
+                'topic': topic,'messg': messg, 'file': url, 'access': access, 'group_allowed': '[]','picture': ""})
+    except Exception as exc: 
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Discussion registration failed Alreadly Exists"
+        })
+    
+# Read Discussion list
+@service.get("/discussions")
+def fetch_all_discussions():
+    try:
+        # Fetch all discussion's data here
+        discussions = fetch_all_discussion_data()
+
+        return {
+            "status": "success",
+            "data": discussions
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch discussion's data"
+        })
+
+#Get Discussion data by id for update fields Mapping
+@service.get("/discussions_by_onlyid")
+def fetch_discussions_by_onlyid(id):
+    try:
+        # Fetch all discussion's data here
+        discussions = fetch_discussion_by_onlyid(id)
+
+        return {
+            "status": "success",
+            "data": discussions
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch discussion's data"
+        }) 
+    
+@service.post("/update_discussions")
+def update_discussions(id: int = Form(...),topic: str = Form(...),messg: str = Form(...), file : UploadFile = File(...), access: str = Form(...)):
+    with open("files/"+file.filename, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    file = str("files/"+file.filename)
+    try:
+        if change_discussion_details(id, topic, messg, file, access):
+            return JSONResponse(status_code=status.HTTP_200_OK, content={
+                "status": "success",
+                "message": "Updated Discussion successfully"
+            })
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
+            "status": "failure",
+            "message": exc.args[0]
+        })
+    
+@service.delete("/delete_discussion")
+def delete_discussions(payload: DeleteDiscussion):
+    try:
+        discussions = delete_discussion_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": discussions
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Delete discussions data"
+        })
+    
 
 ##########################################################################################################################
 
@@ -743,8 +831,40 @@ async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str =
 #             base64data = base64.b64encode(f.read()).decode('utf-8')
 #         image_tags.append(f'<img src="data:image/jpeg;base64,{base64data}" alt="{filename}">')
 
-#     return "\n".join(image_tags)
+#     return "\n".join(image_tags) C:\Users\Admin\Desktop\LIVE\LMS-Backend\1690201087\story.html
 
+# @service.get("/scorm_video")
+# def list_videos():
+#     videopath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/1690201087/"
+#     video_tags = []
+#     for filename in os.listdir(videopath):
+#         if filename.endswith(".html"):  # Change the extension to match your video format if needed
+#             video_tags.append(f'<video controls><source src="/videos/{filename}" type="video/mp4"></video>')
+
+#     return "\n".join(video_tags)
+
+# Function to check if a file exists in the specified path
+# def file_exists(file_path: str):
+#     return os.path.isfile(file_path)
+
+# @service.get("/1690201087/{filename}")
+# def get_video(filename: str):
+#     videopath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/videos/"
+#     video_path = os.path.join(videopath, filename)
+#     if file_exists(video_path):
+#         return FileResponse(video_path, media_type="video/mp4")
+#     else:
+#         raise HTTPException(status_code=404, detail="Video not found")
+    
+@service.get("/scorm_video")
+def get_story_html():
+    filepath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/1690201087/story.html"
+    
+    with open(filepath, "r", encoding="utf-8") as file:
+        story_html_content = file.read()
+
+    return story_html_content
+    
 @service.get("/images")
 def list_images():
     imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
@@ -762,3 +882,23 @@ def get_image(filename: str):
         return FileResponse(image_path, media_type="image/jpeg")
     else:
         return {"error": "Image not found"}
+
+############################################   SCORM VIEW API   ####################################################
+# Function to check if a file exists in the specified path
+def file_exists(file_path: str):
+    return os.path.isfile(file_path)
+
+@service.get("/scorm")
+def list_video():
+    scorm_videopath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/1690201087/"
+    scorm_video_tags = []
+    for filename in os.listdir(scorm_videopath):
+        if filename.endswith(".html"):
+            story_path = os.path.join(scorm_videopath, filename)
+            if file_exists(story_path):
+                with open(story_path, "r") as file:
+                    content = file.read()
+                    scorm_video_tags.append(content)
+
+    return HTMLResponse(content="\n".join(scorm_video_tags))
+    

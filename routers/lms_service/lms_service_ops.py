@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining
+from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import AddUser
@@ -80,6 +80,11 @@ def create_conference_token(confname):
 
 def create_virtualtraining_token(virtualname):
     base = random_string(8) + virtualname + random_string(8)
+    token = md5(base)
+    return token
+
+def create_discussion_token(topic):
+    base = random_string(8) + topic + random_string(8)
     token = md5(base)
     return token
 
@@ -1558,3 +1563,157 @@ def delete_virtualtraining_by_id(id):
             "status": "failure",
             "message": "Failed to delete virtualtraining data"
         })
+    
+##########################################################################################################################
+
+def check_existing_discussion(topic):
+
+    query = f"""
+    select * from {table_discussion} where topic=%(topic)s;
+    """
+    response = execute_query(query, params={'topic': topic})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+        
+def check_existing_discussion_by_id(id):
+
+    query = f"""
+    select * from {table_discussion} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+def add_discussion(topic: str,file: bytes,generate_tokens: bool = False, auth_token="", inputs={},skip_new_category=False):
+    try:
+
+        # Check discussion existence and status
+        is_existing = check_existing_discussion(topic)
+
+        # If discussion Already Exists
+        if is_existing:
+            # Check discussion
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "message": "Discussion Already Exists"
+            })
+
+        elif not is_existing and skip_new_category == False:
+
+            topic = inputs.get('topic')
+            messg = inputs.get('messg')
+            file = inputs.get('file')
+            access = inputs.get('access')
+
+            # Token Generation
+            token = create_discussion_token(topic)
+
+            request_token = ''
+            
+            # Add New Discussion to the list of Discussions
+            data = {'topic': topic, 'messg': messg, 'file': file, 'access': access,
+                    'discussion_allowed': inputs.get('discussion_allowed', ''), 'auth_token': auth_token,
+                    'request_token': request_token, 'token': token}
+
+            resp = LmsHandler.add_discussion(data)
+            # # If token not required,
+            if not generate_tokens and len(auth_token) == 0:
+                token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Discussion added successfully'))
+
+
+def fetch_all_discussion_data():
+    try:
+        # Query all discussion from the database
+        discussions = LmsHandler.get_all_discussions()
+
+        # Transform the discussion objects into a list of dictionaries
+        discussions_data = []
+        for discussion in discussions:
+
+            discussion_data = {
+                "id": discussion.id,
+                "instname": discussion.topic,
+                "virtualname": discussion.messg,
+                "date": discussion.file,
+                "starttime": discussion.access,
+                "created_at": discussion.created_at,
+                "updated_at": discussion.updated_at,
+                # Include other discussion attributes as needed
+            }
+            discussions_data.append(discussion_data)
+
+        return discussions_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch discussions data"
+        })
+    
+#Get Discussion data by id for update fields Mapping
+def fetch_discussion_by_onlyid(id):
+
+    try:
+        # Query discussion from the database for the specified id
+        discussion = LmsHandler.get_discussion_by_id(id)
+
+        if not discussion:
+            # Handle the case when no discussion is found for the specified id
+            return None
+
+        # Transform the discussion object into a dictionary
+        discussion_data = {
+                "id": discussion.id,
+                "instname": discussion.topic,
+                "virtualname": discussion.messg,
+                "date": discussion.file,
+                "starttime": discussion.access,
+                "created_at": discussion.created_at,
+                "updated_at": discussion.updated_at,
+            # Include other discussion attributes as needed
+        }
+
+        return discussion_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch discussion data"
+        })
+    
+def change_discussion_details(id, topic, messg, file, access):
+    is_existing = check_existing_discussion_by_id(id)
+    if is_existing:
+        # Update discussions
+        LmsHandler.update_discussion_to_db(id, topic, messg, file, access)
+        return True
+    else:
+        raise ValueError("Discussion does not exists")
+    
+
+def delete_discussion_by_id(id):
+    try:
+        # Delete the discussion by ID
+        discussions = LmsHandler.delete_discussion(id)
+        return discussions
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to delete discussion data"
+        })
+    
