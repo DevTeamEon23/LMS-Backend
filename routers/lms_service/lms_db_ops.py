@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -746,7 +746,86 @@ class LmsHandler:
         query = f""" DELETE FROM discussion WHERE id = '{id}'; """
         return execute_query(query)
     
+###############################################################################################################
+
+#Calender CRUD
+    def get_calender_by_token(token):
+        query = f"""SELECT * FROM {table_calender} where token=%(token)s and token is not NULL and token != '';"""
+        resp = execute_query(query=query, params={'token': token})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+
+#Get Calender data by id for update fields Mapping
+    def get_calender_by_id(id):
+        query = f"""SELECT * FROM calender WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
+#Add Calender
+    @classmethod
+    def add_calender(cls, params):
+        query = f"""   INSERT into {table_calender} (cal_eventname,date,starttime,duration,audience,messg,calender_allowed,auth_token,request_token,token) VALUES 
+                        (%(cal_eventname)s, %(date)s, %(starttime)s, %(duration)s, %(audience)s, %(messg)s, %(calender_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+
+#Fetch Calender
+    @classmethod
+    def get_all_calenders(cls):
+        query = """ SELECT * FROM calender; """
+        return execute_query(query).fetchall()
+
+#Fetch Calender By cal_eventname
+    @classmethod
+    def get_calender_by_cal_eventname(cls, cal_eventname):
+        query = f"SELECT * FROM {table_calender} WHERE cal_eventname = %(cal_eventname)s"
+        params = {"cal_eventname": cal_eventname}
+        resp = execute_query(query=query, params=params)
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(status_code=401, detail="calender not found")
+        else:
+            return data
+        
+#Update Calender
+    @classmethod
+    def update_calender_to_db(cls, id, cal_eventname,date,starttime,duration,audience,messg):
+        query = f"""   
+        UPDATE calender SET
+            cal_eventname = %(cal_eventname)s,
+            date = %(date)s,
+            starttime = %(starttime)s,
+            duration = %(duration)s,
+            audience = %(audience)s,
+            messg = %(messg)s
+        WHERE id = %(id)s;
+        """
+        params = {
+        "id":id,
+        "cal_eventname": cal_eventname,
+        "date": date,
+        "starttime":starttime,
+        "duration": duration,
+        "audience":audience,
+        "messg": messg,
+    }
+        return execute_query(query, params=params)
     
+#Delete Calender
+    @classmethod
+    def delete_calender(cls, id):
+        query = f""" DELETE FROM calender WHERE id = '{id}'; """
+        return execute_query(query)    
     
 
 

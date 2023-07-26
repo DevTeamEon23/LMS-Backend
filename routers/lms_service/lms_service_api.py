@@ -18,9 +18,9 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id
 from routers.lms_service.lms_db_ops import LmsHandler
-from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion)
+from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender)
 from utils import success_response
 from config.logconfig import logger
 
@@ -390,7 +390,7 @@ def delete_category(payload: DeleteCategory):
 async def create_event(ename: str = Form(...),eventtype: str = Form(...), recipienttype: str = Form(...), descp: str = Form(...),generate_token: bool = Form(...)):
     try:
         return add_event(generate_token, auth_token="", inputs={
-                'ename': ename, 'eventtype': eventtype, 'recipienttype': recipienttype, "descp": descp, 'group_allowed': '[]','picture': ""})
+                'ename': ename, 'eventtype': eventtype, 'recipienttype': recipienttype, "descp": descp, 'event_allowed ': '[]','picture': ""})
     except Exception as exc: 
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -471,7 +471,7 @@ def delete_event(payload: DeleteEvent):
 async def create_classroom(instname: str = Form(...),classname: str = Form(...), date: str = Form(...), starttime: str = Form(...), venue: str = Form(...), messg: str = Form(...), duration: str = Form(...),generate_token: bool = Form(...)):
     try:
         return add_classroom(generate_token, auth_token="", inputs={
-                'instname': instname, 'classname': classname, 'date': date, 'starttime': starttime, 'venue': venue, 'messg': messg, 'duration': duration, 'group_allowed': '[]','picture': ""})
+                'instname': instname, 'classname': classname, 'date': date, 'starttime': starttime, 'venue': venue, 'messg': messg, 'duration': duration, 'classroom_allowed': '[]','picture': ""})
     except Exception as exc: 
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -552,7 +552,7 @@ def delete_classroom(payload: DeleteClassroom):
 async def create_conference(instname: str = Form(...),confname: str = Form(...), date: str = Form(...), starttime: str = Form(...), meetlink: str = Form(...), messg: str = Form(...), duration: str = Form(...),generate_token: bool = Form(...)):
     try:
         return add_conference(generate_token, auth_token="", inputs={
-                'instname': instname, 'confname': confname, 'date': date, 'starttime': starttime, 'meetlink': meetlink, 'messg': messg, 'duration': duration, 'group_allowed': '[]','picture': ""})
+                'instname': instname, 'confname': confname, 'date': date, 'starttime': starttime, 'meetlink': meetlink, 'messg': messg, 'duration': duration, 'conference_allowed': '[]','picture': ""})
     except Exception as exc: 
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -634,7 +634,7 @@ def delete_conference(payload: DeleteConference):
 async def create_virtualtraining(instname: str = Form(...),virtualname: str = Form(...), date: str = Form(...), starttime: str = Form(...), meetlink: str = Form(...), messg: str = Form(...), duration: str = Form(...),generate_token: bool = Form(...)):
     try:
         return add_virtualtraining(generate_token, auth_token="", inputs={
-                'instname': instname, 'virtualname': virtualname, 'date': date, 'starttime': starttime, 'meetlink': meetlink, 'messg': messg, 'duration': duration, 'group_allowed': '[]','picture': ""})
+                'instname': instname, 'virtualname': virtualname, 'date': date, 'starttime': starttime, 'meetlink': meetlink, 'messg': messg, 'duration': duration, 'virtualtraining_allowed': '[]','picture': ""})
     except Exception as exc: 
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -718,7 +718,7 @@ async def create_discussion(topic: str = Form(...),messg: str = Form(...), file 
     url = str("files/"+file.filename)
     try:
         return add_discussion(topic,generate_token, auth_token="", inputs={
-                'topic': topic,'messg': messg, 'file': url, 'access': access, 'group_allowed': '[]','picture': ""})
+                'topic': topic,'messg': messg, 'file': url, 'access': access, 'discussion_allowed': '[]','picture': ""})
     except Exception as exc: 
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -795,7 +795,88 @@ def delete_discussions(payload: DeleteDiscussion):
             "message": "Failed to Delete discussions data"
         })
     
+############################################################################################################################
 
+# Create Calender
+@service.post('/add_calenders')
+async def create_calender(cal_eventname: str = Form(...),date: str = Form(...), starttime : str = Form(...), duration: str = Form(...), audience: str = Form(...), messg: str = Form(...),generate_token: bool = Form(...)):
+
+    try:
+        return add_calender(cal_eventname,generate_token, auth_token="", inputs={
+                'cal_eventname': cal_eventname,'date': date, 'starttime': starttime, 'duration': duration, 'audience': audience, 'messg': messg, 'calender_allowed': '[]','picture': ""})
+    except Exception as exc: 
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Calender registration failed Alreadly Exists"
+        })
+    
+# Read calender list
+@service.get("/calenders")
+def fetch_all_calenders():
+    try:
+        # Fetch all calender's data here
+        calenders = fetch_all_calender_data()
+
+        return {
+            "status": "success",
+            "data": calenders
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch Calender's data"
+        })
+
+#Get Calender data by id for update fields Mapping
+@service.get("/calenders_by_onlyid")
+def fetch_calenders_by_onlyid(id):
+    try:
+        # Fetch all calender's data here
+        calenders = fetch_calender_by_onlyid(id)
+
+        return {
+            "status": "success",
+            "data": calenders
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch Calender's data"
+        }) 
+    
+@service.post("/update_calenders")
+def update_calenders(id: int = Form(...),cal_eventname: str = Form(...),date: str = Form(...), starttime : str = Form(...), duration: str = Form(...), audience: str = Form(...), messg: str = Form(...)):
+    try:
+        if change_calender_details(id, cal_eventname, date, starttime, duration, audience, messg):
+            return JSONResponse(status_code=status.HTTP_200_OK, content={
+                "status": "success",
+                "message": "Updated Calender successfully"
+            })
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
+            "status": "failure",
+            "message": exc.args[0]
+        })
+    
+@service.delete("/delete_calender")
+def delete_calenders(payload: DeleteCalender):
+    try:
+        calenders = delete_calender_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": calenders
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Delete Calenders data"
+        })
+    
 ##########################################################################################################################
 
 # To Upload Zip File of SCORM 

@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion
+from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import AddUser
@@ -85,6 +85,11 @@ def create_virtualtraining_token(virtualname):
 
 def create_discussion_token(topic):
     base = random_string(8) + topic + random_string(8)
+    token = md5(base)
+    return token
+
+def create_calender_token(cal_eventname):
+    base = random_string(8) + cal_eventname + random_string(8)
     token = md5(base)
     return token
 
@@ -1715,5 +1720,164 @@ def delete_discussion_by_id(id):
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
             "message": "Failed to delete discussion data"
+        })
+    
+##########################################################################################################################
+
+def check_existing_calender(cal_eventname):
+
+    query = f"""
+    select * from {table_calender} where cal_eventname=%(cal_eventname)s;
+    """
+    response = execute_query(query, params={'cal_eventname': cal_eventname})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+        
+def check_existing_calender_by_id(id):
+
+    query = f"""
+    select * from {table_calender} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+def add_calender(cal_eventname: str,generate_tokens: bool = False, auth_token="", inputs={},skip_new_category=False):
+    try:
+
+        # Check calender existence and status
+        is_existing = check_existing_calender(cal_eventname)
+
+        # If calender Already Exists
+        if is_existing:
+            # Check calender
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "message": "calender Already Exists"
+            })
+
+        elif not is_existing and skip_new_category == False:
+
+            cal_eventname = inputs.get('cal_eventname')
+            date = inputs.get('date')
+            starttime = inputs.get('starttime')
+            duration = inputs.get('duration')
+            audience = inputs.get('audience')
+            messg = inputs.get('messg')
+
+            # Token Generation
+            token = create_calender_token(cal_eventname)
+
+            request_token = ''
+            
+            # Add New calender to the list of calenders
+            data = {'cal_eventname': cal_eventname, 'date': date, 'starttime': starttime, 'duration': duration, 'audience': audience, 'messg': messg,
+                    'calender_allowed': inputs.get('calender_allowed', ''), 'auth_token': auth_token,
+                    'request_token': request_token, 'token': token}
+
+            resp = LmsHandler.add_calender(data)
+            # # If token not required,
+            if not generate_tokens and len(auth_token) == 0:
+                token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Calender added successfully'))
+
+
+def fetch_all_calender_data():
+    try:
+        # Query all calender from the database
+        calenders = LmsHandler.get_all_calenders()
+
+        # Transform the calender objects into a list of dictionaries
+        calenders_data = []
+        for calender in calenders:
+
+            calender_data = {
+                "id": calender.id,
+                "cal_eventname": calender.cal_eventname,
+                "date": calender.date,
+                "starttime": calender.starttime,
+                "duration": calender.duration,
+                "audience": calender.audience,
+                "messg": calender.messg,
+                "created_at": calender.created_at,
+                "updated_at": calender.updated_at,
+                # Include other calender attributes as needed
+            }
+            calenders_data.append(calender_data)
+
+        return calenders_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch Calenders data"
+        })
+    
+#Get Calender data by id for update fields Mapping
+def fetch_calender_by_onlyid(id):
+
+    try:
+        # Query Calender from the database for the specified id
+        calender = LmsHandler.get_calender_by_id(id)
+
+        if not calender:
+            # Handle the case when no Calender is found for the specified id
+            return None
+
+        # Transform the Calender object into a dictionary
+        calender_data = {
+                "id": calender.id,
+                "cal_eventname": calender.cal_eventname,
+                "date": calender.date,
+                "starttime": calender.starttime,
+                "duration": calender.duration,
+                "audience": calender.audience,
+                "messg": calender.messg,
+                "created_at": calender.created_at,
+                "updated_at": calender.updated_at,
+            # Include other Calender attributes as needed
+        }
+
+        return calender_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch Calender data"
+        })
+    
+def change_calender_details(id, cal_eventname, date, starttime, duration, audience, messg):
+    is_existing = check_existing_calender_by_id(id)
+    if is_existing:
+        # Update calenders
+        LmsHandler.update_calender_to_db(id, cal_eventname, date, starttime, duration, audience, messg)
+        return True
+    else:
+        raise ValueError("Calender does not exists")
+    
+
+def delete_calender_by_id(id):
+    try:
+        # Delete the calender by ID
+        calenders = LmsHandler.delete_calender(id)
+        return calenders
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to delete Calender data"
         })
     

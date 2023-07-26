@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from enum import Enum
-
+# from dateutil import tz
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
@@ -20,6 +20,17 @@ status = [os.makedirs(_dir, exist_ok=True) for _dir in dirs if not os.path.exist
 
 app_dir = os.path.join(root_dir, 'app')
 
+# # Get the current time in UTC
+# current_time_utc = datetime.utcnow()
+
+# # Define the UTC timezone
+# utc_tz = tz.tzutc()
+
+# # Define the IST timezone
+# ist_tz = tz.gettz('Asia/Kolkata')
+
+# # Convert the current time from UTC to IST
+# current_time_ist = current_time_utc.astimezone(ist_tz)
 
 env_file = os.path.join(root_dir, '.env')
 

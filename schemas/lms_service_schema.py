@@ -135,3 +135,8 @@ class DeleteVirtual(BaseModel):
 
 class DeleteDiscussion(BaseModel):
     id: int
+
+####################                    Calender                     ##############################
+
+class DeleteCalender(BaseModel):
+    id: int
