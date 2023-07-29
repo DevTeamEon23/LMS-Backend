@@ -435,7 +435,7 @@ async def create_upload_file(file: UploadFile = File(...), uname: str = Form(...
 
     #Create unique folder for uploading Scorm zip
     mode = 0o666
-    parent_dir = "C:/Users/Admin/Desktop/LIVE/LMS-Backend"
+    parent_dir = "/home/ubuntu/LMS-Backend"
     file_dir = str(int(time.time()))
     path = os.path.join(parent_dir, file_dir)
     os.mkdir(path, mode)
@@ -465,7 +465,7 @@ async def create_upload_file(file: UploadFile = File(...), uname: str = Form(...
 
 @service.get("/images")
 def list_images():
-    imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
+    imgpath = "/home/ubuntu/LMS-Backend/media/"
     image_tags = []
     for filename in os.listdir(imgpath):
         image_tags.append(f'<img src="/images/{filename}" alt="{filename}">')
@@ -474,7 +474,7 @@ def list_images():
 
 @service.get("/images/{filename}")
 def get_image(filename: str):
-    imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
+    imgpath = "/home/ubuntu/LMS-Backend/media/"
     image_path = os.path.join(imgpath, filename)
     if os.path.isfile(image_path):
         return FileResponse(image_path, media_type="image/jpeg")
