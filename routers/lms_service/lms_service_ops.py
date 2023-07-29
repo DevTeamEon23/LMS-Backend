@@ -119,7 +119,6 @@ def fetch_all_users_data():
                 "role": user.role,
                 "timezone": user.timezone,
                 "langtype": user.langtype,
-                "token": user.token,
                 "active": True if user.active == 1 else False,
                 "deactive": True if user.deactive == 1 else False,
                 "exclude_from_email": True if user.exclude_from_email == 1 else False,
@@ -172,12 +171,9 @@ def fetch_users_by_onlyid(id):
             "role": user.role,
             "timezone": user.timezone,
             "langtype": user.langtype,
-            "token": user.token,
             "active": True if user.active == 1 else False,
             "deactive": True if user.deactive == 1 else False,
             "exclude_from_email": True if user.exclude_from_email == 1 else False,
-            "created_at": user.created_at,
-            "updated_at": user.updated_at,
             # Include other user attributes as needed
         }
 
@@ -547,7 +543,6 @@ def fetch_all_courses_data():
                 "certificate": course.certificate,
                 "level": course.level,
                 "category": course.category,
-                "token": course.token,
                 "isActive": course.isActive,
                 "isHide": course.isHide,
                 "created_at": course.created_at,
@@ -592,7 +587,6 @@ def fetch_course_by_onlyid(id):
                 "certificate": course.certificate,
                 "level": course.level,
                 "category": course.category,
-                "token": course.token,
                 "isActive": course.isActive,
                 "isHide": course.isHide,
                 "created_at": course.created_at,
@@ -708,7 +702,6 @@ def fetch_all_groups_data():
                 "groupname": group.groupname,
                 "groupdesc": group.groupdesc,
                 "groupkey": group.groupkey,
-                "token": group.token,
                 "created_at": group.created_at,
                 "updated_at": group.updated_at,
                 # Include other group attributes as needed
@@ -740,7 +733,6 @@ def fetch_group_by_onlyid(id):
                 "groupname": group.groupname,
                 "groupdesc": group.groupdesc,
                 "groupkey": group.groupkey,
-                "token": group.token,
                 "created_at": group.created_at,
                 "updated_at": group.updated_at,
             # Include other group attributes as needed

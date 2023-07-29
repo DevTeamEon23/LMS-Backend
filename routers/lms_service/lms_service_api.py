@@ -185,9 +185,9 @@ def fetch_courses_by_onlyid(id):
     
 @service.post("/update_courses")
 def update_courses(id: int = Form(...),coursename: str = Form(...),description: str = Form(...), coursecode: str = Form(...), price: str = Form(...),courselink: str = Form(...), capacity: str = Form(...), startdate: str = Form(...), enddate: str = Form(...),timelimit: str = Form(...), certificate: str = Form(...), level: str = Form(...), category: str = Form(...), isActive: bool = Form(...), isHide: bool = Form(...),file: UploadFile = File(...),coursevideo: UploadFile = File(...)):
-    with open("media/"+file.filename, "wb") as buffer:
+    with open("course/"+file.filename, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    file = str("media/"+file.filename)
+    file = str("course/"+file.filename)
     with open("coursevideo/"+coursevideo.filename, "wb") as buffer:
         shutil.copyfileobj(coursevideo.file, buffer)
     coursevideo = str("coursevideo/"+coursevideo.filename)
@@ -939,7 +939,7 @@ async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str =
     
 @service.get("/scorm_video")
 def get_story_html():
-    filepath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/1690201087/story.html"
+    filepath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/1690444926/story.html"
     
     with open(filepath, "r", encoding="utf-8") as file:
         story_html_content = file.read()
@@ -964,14 +964,16 @@ def get_image(filename: str):
     else:
         return {"error": "Image not found"}
 
+
 ############################################   SCORM VIEW API   ####################################################
 # Function to check if a file exists in the specified path
+
 def file_exists(file_path: str):
     return os.path.isfile(file_path)
 
 @service.get("/scorm")
 def list_video():
-    scorm_videopath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/1690201087/"
+    scorm_videopath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/1690444926/"
     scorm_video_tags = []
     for filename in os.listdir(scorm_videopath):
         if filename.endswith(".html"):

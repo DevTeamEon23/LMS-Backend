@@ -23,6 +23,8 @@ app = FastAPI(title="EonLearnings", debug=settings.DEBUG, docs_url=settings.DOCS
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
 app.mount("/media/", StaticFiles(directory="media/"), name="media")
+app.mount("/course/", StaticFiles(directory="course/"), name="course")
+app.mount("/coursevideo/", StaticFiles(directory="coursevideo/"), name="coursevideo")
 
 # Modify Default Exception Handler
 @app.exception_handler(RequestValidationError)
