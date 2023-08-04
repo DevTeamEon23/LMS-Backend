@@ -4,6 +4,7 @@ import json
 import time
 import os
 import base64
+import pandas as pd
 import subprocess
 from zipfile import ZipFile
 from PIL import Image
@@ -18,7 +19,7 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender)
 from utils import success_response
@@ -53,6 +54,57 @@ async def create_user(eid: str = Form(...),sid: str = Form(...), full_name: str 
             "status": "failure",
             "message": "User registration failed"
         })
+
+
+# Create User via excel
+@service.post('/addusers_excel')
+async def create_users_from_excel(file: UploadFile = File(...)):
+    try:
+        # Create a temporary file to save the uploaded content
+        temp_file_path = "users.xlsx"
+        with open(temp_file_path, "wb") as temp_file:
+            while content := await file.read(1024):
+                temp_file.write(content)
+
+        # Read the uploaded Excel file using pandas (defaulting to the first sheet)
+        df = pd.read_excel(temp_file_path)
+        
+        # Process and insert the data from the DataFrame
+        for _, row in df.iterrows():
+            # Assuming your data is in the same order as column names in the DataFrame
+            data = {
+                'eid': row['eid'],
+                'sid': row['sid'],
+                'full_name': row['full_name'],
+                'email': row['email'],
+                'dept': row['dept'],
+                'adhr': row['adhr'],
+                'username': row['username'],
+                'password': row['password'],
+                'bio': row['bio'],
+                'role': row['role'],
+                'timezone': row['timezone'],
+                'langtype': row['langtype'],
+                'active': row['active'],
+                'deactive': row['deactive'],
+                'exclude_from_email': row['exclude_from_email'],
+                'generate_token': row['generate_token']
+            }
+            
+            # Call your add_new function with the data
+            add_new_excel(row['email'], password=row['password'], auth_token="", inputs=data)
+
+        return JSONResponse(status_code=status.HTTP_200_OK, content={
+            "status": "success",
+            "message": "Users added successfully from the Excel file."
+        })
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to process the Excel file."
+        })
+    
 
 # Read Users list
 @service.get("/users")
@@ -124,7 +176,6 @@ def delete_user(payload: DeleteUser):
             "status": "failure",
             "message": "Failed to Delete user data"
         })
-    
 
 ############################################################################################################################
 
@@ -984,4 +1035,3 @@ def list_video():
                     scorm_video_tags.append(content)
 
     return HTMLResponse(content="\n".join(scorm_video_tags))
-    

@@ -35,6 +35,14 @@ class LmsHandler:
                     """
         return execute_query(query, params=params)
 
+    @classmethod
+    def add_users_excel(cls, params):
+        query = f"""   INSERT into {n_table_user}(eid, sid, full_name, email,dept,adhr, username, password, bio, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email) VALUES 
+                        (%(eid)s, %(sid)s, %(full_name)s, %(dept)s, %(adhr)s, %(username)s, %(email)s,%(password)s, %(bio)s, %(role)s, %(timezone)s, %(langtype)s, %(users_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s, %(exclude_from_email)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+    
 #Update Users
     @classmethod
     def update_user_to_db(cls,id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, active, deactive, exclude_from_email):
@@ -90,7 +98,9 @@ class LmsHandler:
     def delete_users(cls, id):
         query = f""" DELETE FROM users WHERE id = '{id}'; """
         return execute_query(query)
-    
+
+
+
 
 ############################################################################################################################
 
