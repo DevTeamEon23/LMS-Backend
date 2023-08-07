@@ -136,10 +136,16 @@ class LmsHandler:
                     """
         return execute_query(query, params=params)
 
-#Fetch Courses
+#Fetch All Courses for Superadmin Course Store page
     @classmethod
     def get_all_courses(cls):
         query = """ SELECT * FROM course; """
+        return execute_query(query).fetchall()
+    
+#Fetch Only Active Courses for Admin Courses page
+    @classmethod
+    def get_active_courses(cls):
+        query = """ SELECT * FROM course WHERE isActive = true; """
         return execute_query(query).fetchall()
     
 #Fetch Course by Course Name

@@ -619,7 +619,49 @@ def fetch_all_courses_data():
             "status": "failure",
             "message": "Failed to fetch courses data"
         })
+
+def fetch_active_courses_data():
+    try:
+        # Query for active courses from the database
+        courses = LmsHandler.get_active_courses()
+
+        # Transform the user objects into a list of dictionaries
+        courses_data = []
+        for course in courses:
+
+            course_data = {
+                "id": course.id,
+                "coursename": course.coursename,
+                "file": course.file,
+                "description": course.description,
+                "coursecode": course.coursecode,
+                "price": course.price ,
+                "courselink": course.courselink,
+                "coursevideo": course.coursevideo,
+                "capacity": course.capacity,
+                "startdate": course.startdate,
+                "enddate": course.enddate,
+                "timelimit": course.timelimit,
+                "certificate": course.certificate,
+                "level": course.level,
+                "category": course.category,
+                "isActive": course.isActive,
+                "isHide": course.isHide,
+                "created_at": course.created_at,
+                "updated_at": course.updated_at,
+                # Include other course attributes as needed
+            }
+            courses_data.append(course_data)
+
+        return courses_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch courses data"
+        })
     
+
 #Get Course data by id for update fields Mapping
 def fetch_course_by_onlyid(id):
 
@@ -1098,6 +1140,8 @@ def fetch_event_by_onlyid(id):
                 "ename": event.ename,
                 "eventtype": event.eventtype,
                 "recipienttype": event.recipienttype,
+                "descp": event.descp,
+                "isActive": event.isActive,
                 "created_at": event.created_at,
                 "updated_at": event.updated_at,
             # Include other event attributes as needed
