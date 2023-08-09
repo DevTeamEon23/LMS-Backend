@@ -221,6 +221,16 @@ def generate_email_token_2fa(email, request_token="", skip_check=False):
         message = 'token generated'
     return token, message
 
+# FETCHING ID for Profile page data fullfillment
+def fetch_user_id_from_db(email: str) -> int:
+    query = f"SELECT id FROM {n_table_user} WHERE email = %(email)s"
+    params = {'email': email}
+    result = execute_query(query, params=params)  # Modify this line to match your execute_query function
+    
+    # Iterate over the MappingResult to extract the user IDs
+    user_ids = [row['id'] for row in result]
+    
+    return user_ids[0] if user_ids else None
 
 def add_new_user(email: str, generate_tokens: bool = False, auth_token="", inputs={}, password=None, skip_new_user=False):
     message, active, is_mfa_enabled, request_token, token, details = None, False, False, None, None, {}

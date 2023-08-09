@@ -157,8 +157,7 @@ s_table_course = Table(
     Column('timelimit', VARCHAR(20)),
     Column('certificate', Enum(Certificate), server_default='Certificate1', nullable=False),
     Column('level', Enum(Level), server_default='level1', nullable=False),
-    # Column('category', Enum(ParentCategory), server_default='ParentCategory1', nullable=False),
-    Column('category', Integer, ForeignKey('category.id'), nullable=False),
+    Column('category', VARCHAR(50), unique=True),
     Column('course_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
     Column('request_token', VARCHAR(2500), nullable=False),
@@ -168,6 +167,7 @@ s_table_course = Table(
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     UniqueConstraint('coursecode', name=f'uq_{table_course}_couref'),
+    UniqueConstraint('category', name=f'uq_{table_course}_categoryref'),
     Index(f'idx_{table_course}_token', 'token'),
 )
 

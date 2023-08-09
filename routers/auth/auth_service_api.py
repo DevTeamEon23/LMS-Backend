@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from starlette.requests import Request
 from routers.auth.auth_db_ops import UserDBHandler
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from .auth_service_ops import verify_token, admin_add_new_user,add_new_user, change_user_password, flush_tokens
+from .auth_service_ops import verify_token, admin_add_new_user,add_new_user, change_user_password, flush_tokens,fetch_user_id_from_db
 from config.logconfig import logger
 from dotenv import load_dotenv
 from schemas.auth_service_schema import (Email, NewUser, User,EmailSchema, UserPassword)
@@ -29,38 +29,89 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+# Original code by Sai
+# def loginResponse(message, active, is_mfa_enabled, request_token, token, details={}):
+#     if token is None and request_token is None:
+#         return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"status": "failure", 'message': message})
+#     if is_mfa_enabled:
+#         return {"status": "success", 'message': message, "is_active": active, "is_mfa_enabled": is_mfa_enabled,
+#                 'request_token': request_token, 'error': None}
+#     else:
+#         if details.keys():
+#             user_detail = {
+#                 "user": {
+#                     "role": details['role'],
+#                     "data": {
+#                         "displayName": details['displayName'],
+#                         "email": details['email'],
+#                         "photoURL": ""  # details['photoURL']
+#                     }},
+#             }
+#         else:
+#             user_detail = {}
+#         return {"status": "success", 'message': message, "is_active": active, "is_mfa_enabled": is_mfa_enabled, "token": token,
+#                 'data': user_detail, 'error': None}
 
-def loginResponse(message, active, is_mfa_enabled, request_token, token, details={}):
+def create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id):
     if token is None and request_token is None:
-        return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"status": "failure", 'message': message})
+        return {"status": "failure", "message": message}
+
     if is_mfa_enabled:
-        return {"status": "success", 'message': message, "is_active": active, "is_mfa_enabled": is_mfa_enabled,
-                'request_token': request_token, 'error': None}
+        return {"status": "success", "message": message, "is_active": active, "is_mfa_enabled": is_mfa_enabled,
+                "request_token": request_token}
     else:
-        if details.keys():
-            user_detail = {
-                "user": {
-                    "role": details['role'],
-                    "data": {
-                        "displayName": details['displayName'],
-                        "email": details['email'],
-                        "photoURL": ""  # details['photoURL']
-                    }},
+        user_detail = {
+            "user": {
+                "role": details.get('role', ''),
+                "data": {
+                    "displayName": details.get('displayName', ''),
+                    "id": details.get('id', ''),
+                    "email": details.get('email', ''),
+                    "photoURL": ""  # details.get('photoURL', '')
+                }
             }
-        else:
-            user_detail = {}
-        return {"status": "success", 'message': message, "is_active": active, "is_mfa_enabled": is_mfa_enabled, "token": token,
-                'data': user_detail, 'error': None}
+        }
+
+        return {
+            "status": "success",
+            "message": message,
+            "is_active": active,
+            "is_mfa_enabled": is_mfa_enabled,
+            "user_id": user_id,
+            "token": token,
+            "data": user_detail,
+            "error": None
+        }
+    
+# @auth.post('/login')
+# def login(user: User):
+#     message, active, is_mfa_enabled, request_token, token, details = add_new_user(user.email, password=user.password, auth_token="",
+#                                                                                   inputs={
+#                                                                                       'full_name': user.fullname, 'role': 'user',
+#                                                                                       'users_allowed': '[]', 'active': False,
+#                                                                                       'picture': ""}, skip_new_user=True)
+#     return loginResponse(message, active, is_mfa_enabled, request_token, token, details)
 
 # Login API
 @auth.post('/login')
 def login(user: User):
-    message, active, is_mfa_enabled, request_token, token, details = add_new_user(user.email, password=user.password, auth_token="",
+    email = user.email
+    password = user.password
+
+    # Verify the email and password
+    message, active, is_mfa_enabled, request_token, token, details = add_new_user(email, password=password, auth_token="",
                                                                                   inputs={
                                                                                       'full_name': user.fullname, 'role': 'user',
                                                                                       'users_allowed': '[]', 'active': False,
                                                                                       'picture': ""}, skip_new_user=True)
-    return loginResponse(message, active, is_mfa_enabled, request_token, token, details)
+    
+    # Fetch the user's ID based on the provided email
+    user_id = fetch_user_id_from_db(email)
+
+    # Create a login response including the user ID
+    login_response = create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id)
+
+    return JSONResponse(content=login_response)
 
 # Token Verification for Other apis
 @auth.get('/verify-token')
@@ -70,6 +121,7 @@ def verify_access_token(request: Request):
         if is_valid:
             user = {}
             details = {}
+            details['user_id'] = data['id']
             details['displayName'] = data['full_name']
             details['email'] = data['email']
             # details['photoURL'] = "assets/images/avatars/brian-hughes.jpg"
@@ -80,7 +132,7 @@ def verify_access_token(request: Request):
             user['user']['role'] = data['role']
             user['user']['data'] = details
 
-            return {"status": "success", 'message': "", 'token': request.headers['auth-token'], 'data': user}
+            return {"status": "success", 'message': "", 'user_id': user['id'] ,'token': request.headers['auth-token'], 'data': user}
 
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
