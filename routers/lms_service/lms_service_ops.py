@@ -2,6 +2,8 @@ import os
 import secrets
 import shutil
 import random
+import uuid
+import hashlib
 import base64
 import json
 from enum import Enum
@@ -566,8 +568,46 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
         logger.error(message)
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course added successfully'))
+            
+def clone_course(id):
+    try:
+        course_data = LmsHandler.get_course_by_id(id)
+        if course_data:
+            course_data = dict(course_data)
+            course_data.pop('id', None)
+            course_data['coursename'] = f"{course_data['coursename']} (Clone)"
 
+            # # Generate MD5 hash of the coursename
+            # md5_hash = hashlib.md5(course_data['coursename'].encode()).hexdigest()
+            # course_data['coursecode'] = f"{md5_hash}_clone"
+            # Generate MD5 hash of the coursename
+            md5_hash = md5(course_data['coursename'])  # Using your md5 function here
+            course_data['coursecode'] = f"{md5_hash}_clone"
+            
+            new_course_id = LmsHandler.add_courses(course_data)
 
+            if new_course_id:
+                return JSONResponse(status_code=status.HTTP_200_OK, content={
+                    "status": "success",
+                    "message": "Course cloned and added successfully"
+                })
+            else:
+                return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+                    "status": "failure",
+                    "message": "Failed to clone course"
+                })
+        else:
+            return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
+                "status": "failure",
+                "message": "Course not found"
+            })
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "error",
+            "message": "An error occurred while cloning the course"
+        })
+    
 def change_course_details(id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):
     is_existing, _ = check_existing_course_by_id(id)
     if is_existing:

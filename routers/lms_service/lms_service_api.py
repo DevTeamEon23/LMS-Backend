@@ -19,7 +19,7 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender)
 from utils import success_response
@@ -33,6 +33,9 @@ def get_database_session():
         db.close()
 
 service = APIRouter(tags=["Service :  Service Name"], dependencies=[Depends(verify_user)])
+
+# Variable to store the path of the latest extracted folder
+latest_extracted_folder = None
 
 
 @service.post("/list-data")
@@ -197,7 +200,19 @@ async def create_course(coursename: str = Form(...),description: str = Form(...)
             "status": "failure",
             "message": "Course registration failed"
         })
-    
+
+
+@service.post('/clonecourse/{id}')
+async def clone_course_endpoint(id: int):
+    try:
+        return clone_course(id)
+    except Exception as exc: 
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Course Cloning failed"
+        })
+
 # Read All Courses list
 @service.get("/courses")
 def fetch_all_courses():
@@ -971,49 +986,58 @@ async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str =
 #     # YOu got all relevance data for iframe and database entry
     return {"filename": file.filename, "name": uname, "url": parent_dir+"/"+file_dir+"/story.html"}
 
-# @service.get("/images", response_class=HTMLResponse)
-# def images():
-#     imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
-#     image_tags = []
-#     for filename in os.listdir(imgpath):
-#         image_path = os.path.join(imgpath, filename)
-#         with open(image_path, 'rb') as f:
-#             base64data = base64.b64encode(f.read()).decode('utf-8')
-#         image_tags.append(f'<img src="data:image/jpeg;base64,{base64data}" alt="{filename}">')
 
-#     return "\n".join(image_tags) C:\Users\Admin\Desktop\LIVE\LMS-Backend\1690201087\story.html
+@service.post("/scorm_zip_upload/")
+async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str = Form(...)):
 
-# @service.get("/scorm_video")
-# def list_videos():
-#     videopath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/1690201087/"
-#     video_tags = []
-#     for filename in os.listdir(videopath):
-#         if filename.endswith(".html"):  # Change the extension to match your video format if needed
-#             video_tags.append(f'<video controls><source src="/videos/{filename}" type="video/mp4"></video>')
+    # Create unique folder for uploading SCORM zip
+    mode = 0o666
+    parent_dir = "C:/Users/Admin/Desktop/LIVE/LMS-Backend"
+    file_dir = str(int(time.time()))
+    path = os.path.join(parent_dir, file_dir)
+    os.mkdir(path, mode)
 
-#     return "\n".join(video_tags)
-
-# Function to check if a file exists in the specified path
-# def file_exists(file_path: str):
-#     return os.path.isfile(file_path)
-
-# @service.get("/1690201087/{filename}")
-# def get_video(filename: str):
-#     videopath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/videos/"
-#     video_path = os.path.join(videopath, filename)
-#     if file_exists(video_path):
-#         return FileResponse(video_path, media_type="video/mp4")
-#     else:
-#         raise HTTPException(status_code=404, detail="Video not found")
+    # Move uploaded file to the created unique folder
+    with open(os.path.join(path, file.filename), "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
     
-@service.get("/scorm_video")
-def get_story_html():
-    filepath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/1690444926/story.html"
-    
-    with open(filepath, "r", encoding="utf-8") as file:
-        story_html_content = file.read()
+    # Extract zip file in the unique folder
+    with ZipFile(os.path.join(path, file.filename), 'r') as zObject:
+        zObject.extractall(path=path)
 
-    return story_html_content
+    # Update the latest extracted folder
+    global latest_extracted_folder
+    latest_extracted_folder = path
+
+    # Return relevant data for iframe and database entry
+    return {"filename": file.filename, "name": uname, "url": parent_dir+"/"+file_dir+"/story.html"}
+
+@service.get("/launch_course")
+async def launch_course():
+    global latest_extracted_folder
+
+    if latest_extracted_folder:
+        story_html_path = os.path.join(latest_extracted_folder, "story.html")
+        if os.path.exists(story_html_path):
+            # Here, you can generate the HTML page to launch the course automatically
+            # You can use frameworks like Flask, Django, or even just pure HTML/JS to do this
+            # For simplicity, let's assume you are using a simple HTML page to display the story.html content
+            html_content = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Course Launcher</title>
+                </head>
+                <body>
+                    <iframe src="{story_html_path}" width="100%" height="100%"></iframe>
+                </body>
+                </html>
+            """
+            return HTMLResponse(content=html_content, status_code=200)
+        else:
+            raise HTTPException(status_code=404, detail="story.html not found")
+    else:
+        raise HTTPException(status_code=404, detail="No course available")
     
 @service.get("/images")
 def list_images():
@@ -1034,22 +1058,3 @@ def get_image(filename: str):
         return {"error": "Image not found"}
 
 
-############################################   SCORM VIEW API   ####################################################
-# Function to check if a file exists in the specified path
-
-def file_exists(file_path: str):
-    return os.path.isfile(file_path)
-
-@service.get("/scorm")
-def list_video():
-    scorm_videopath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/1690444926/"
-    scorm_video_tags = []
-    for filename in os.listdir(scorm_videopath):
-        if filename.endswith(".html"):
-            story_path = os.path.join(scorm_videopath, filename)
-            if file_exists(story_path):
-                with open(story_path, "r") as file:
-                    content = file.read()
-                    scorm_video_tags.append(content)
-
-    return HTMLResponse(content="\n".join(scorm_video_tags))

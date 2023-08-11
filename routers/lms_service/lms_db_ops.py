@@ -126,7 +126,22 @@ class LmsHandler:
                 status_code=401, detail="Token Expired or Invalid Token")
         else:
             return data
-        
+
+    def get_course_by_id_clone(id):
+        query = f"""SELECT * FROM course WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            # Replace this with the appropriate method to get column names
+            column_names = ['id', 'coursename', 'file', 'description', ...]  # List of all column names
+
+            data_dict = dict(zip(column_names, data))
+            return data_dict
+    
+
 # Add Courses 
     @classmethod
     def add_courses(cls, params):
