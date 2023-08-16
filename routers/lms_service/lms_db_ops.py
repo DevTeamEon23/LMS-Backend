@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,course_enrollment
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -99,7 +99,49 @@ class LmsHandler:
         query = f""" DELETE FROM users WHERE id = '{id}'; """
         return execute_query(query)
 
+###########################################################################################################################
 
+    def get_user_course_enrollment_by_token(token):
+        query = f"""SELECT * FROM {course_enrollment} where token=%(token)s and token is not NULL and token != '';"""
+        resp = execute_query(query=query, params={'token': token})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+
+#Get user_course_enrollment data by id for update fields Mapping
+    def get_user_course_enrollment_by_id(id):
+        query = f"""SELECT * FROM user_course_enrollment WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
+#Add user_course_enrollment
+    @classmethod
+    def add_user_course_enrollment(cls, params):
+        query = f"""   INSERT into {course_enrollment}(user_id, course_id, enrollment_allowed, auth_token, request_token, token) VALUES 
+                        (%(user_id)s, %(course_id)s, %(enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+
+#Fetch Enrolled & UnEnrolled Users of courses
+    @classmethod
+    def get_all_user_course_enrollment(cls):
+        query = """ SELECT u.*,c.* FROM user_course_enrollment e JOIN users u ON e.user_id = u.id JOIN course c ON e.course_id = c.id; """
+        return execute_query(query).fetchall()
+    
+#Delete or Remove Enrolled User from Course
+    @classmethod
+    def delete_user_course_enrollment(cls, id):
+        query = f""" DELETE FROM user_course_enrollment WHERE id = '{id}'; """
+        return execute_query(query)
 
 
 ############################################################################################################################

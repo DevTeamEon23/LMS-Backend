@@ -13,7 +13,7 @@ from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender
+from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,course_enrollment
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import AddUser
@@ -23,7 +23,7 @@ from sqlalchemy.schema import Column
 from sqlalchemy import String, Integer, Text, Enum, Boolean
 from sqlalchemy_utils import EmailType, URLType
 from ..authenticators import get_user_by_token
-from utils import md5, random_string, validate_email,validate_emails
+from utils import md5, random_string, validate_email,validate_emails,MD5
 
 # This is used for the password hashing and validation
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -93,6 +93,11 @@ def create_discussion_token(topic):
 def create_calender_token(cal_eventname):
     base = random_string(8) + cal_eventname + random_string(8)
     token = md5(base)
+    return token
+
+def create_courseenroll_token(user_id):
+    base = random_string(8) + str(user_id) + random_string(8)
+    token = MD5(base)
     return token
 
 def random_password(password_length=12):
@@ -479,6 +484,50 @@ def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, pa
         return True
     else:
         raise ValueError("User does not exists")
+
+################################################# Enroll Course to User  ###################################################
+
+def check_existing_userid(id):
+
+    query = f"""
+    select * from {course_enrollment} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+
+def enroll_course(id= int,generate_tokens: bool = False, auth_token="", inputs={},skip_new_courseenroll=False):
+    try:
+
+        user_id = inputs.get('user_id')
+        course_id = inputs.get('course_id')
+
+        # Generate the token here
+        token = create_courseenroll_token(user_id) 
+
+        request_token = ''
+        
+        # Add New User to the list of users
+        data = {'user_id': user_id, 'course_id': course_id,
+                'enrollment_allowed': inputs.get('enrollment_allowed', ''), 'auth_token': auth_token,
+                'request_token': request_token, 'token': token}
+
+        resp = LmsHandler.add_user_course_enrollment(data)
+        # If token not required,
+        if not generate_tokens and len(auth_token) == 0:
+            token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course has been enrolled to user successfully'))
 
 
 ##################################################   COURSES  ###########################################################################

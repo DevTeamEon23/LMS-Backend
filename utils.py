@@ -97,6 +97,18 @@ def md5(data: str) -> str:
     return encrypt
 
 
+def MD5(data) -> str:
+    if isinstance(data, str):
+        data = data.encode()
+    elif isinstance(data, int):
+        data = str(data).encode()
+    else:
+        raise ValueError("Input must be a string or an integer")
+    
+    e = hashlib.md5(data)
+    encrypt = e.hexdigest()
+    return encrypt
+
 def validate_email(email):
     # pass the regular expression
     # and the string into the fullmatch() method

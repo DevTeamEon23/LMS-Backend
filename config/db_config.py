@@ -1,5 +1,5 @@
 import sqlalchemy as sql
-from sqlalchemy import MetaData, Table, Column, String, Integer, DECIMAL, VARCHAR, Index, UniqueConstraint, \
+from sqlalchemy import MetaData, Table, Column, String, Integer, DECIMAL, VARCHAR, Index, UniqueConstraint,ForeignKeyConstraint, \
     func, BOOLEAN, create_engine, Date, BigInteger, event, DDL, Float, ForeignKey,Enum
 from sqlalchemy.dialects.postgresql import JSONB, UUID, TIMESTAMP,BYTEA
 from sqlalchemy.dialects.mysql import LONGBLOB
@@ -329,6 +329,28 @@ s_table_calender = Table(
     Column('audience', Enum(Audience), server_default='Audience1', nullable=True),
     Column('messg', VARCHAR(655)),
     Column('calender_allowed', VARCHAR(150), nullable=False),
+    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+    Column('request_token', VARCHAR(2500), nullable=False),
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Index(f'idx_{table_calender}_token', 'token'),
+)
+
+# Users Course Enrollment table
+course_enrollment = 'user_course_enrollment'
+s_table_enrollment = Table(
+    course_enrollment, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+
+    # Adding user_id column with foreign key reference
+    Column('user_id', Integer, nullable=False),
+    ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_user_id'),
+
+    # Adding course_id column with foreign key reference
+    Column('course_id', Integer, nullable=False),
+    ForeignKeyConstraint(['course_id'], ['course.id'], name='fk_course_id'),
+    Column('enrollment_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
     Column('request_token', VARCHAR(2500), nullable=False),
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
