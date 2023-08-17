@@ -359,6 +359,50 @@ s_table_enrollment = Table(
     Index(f'idx_{table_calender}_token', 'token'),
 )
 
+# Users Group Enrollment table
+group_enrollment = 'user_group_enrollment'
+g_table_enrollment = Table(
+    group_enrollment, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+
+    # Adding user_id column with foreign key reference
+    Column('user_id', Integer, nullable=False),
+    ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_user_grp_id'),
+
+    # Adding group_id column with foreign key reference
+    Column('group_id', Integer, nullable=False),
+    ForeignKeyConstraint(['group_id'], ['lmsgroup.id'], name='fk_group_id'),
+    Column('enrollment_allowed', VARCHAR(150), nullable=False),
+    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+    Column('request_token', VARCHAR(2500), nullable=False),
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Index(f'idx_{table_calender}_token', 'token'),
+)
+
+# Course Group Enrollment table
+course_group_enroll = 'course_group_enrollment'
+cg_table_enrollment = Table(
+    course_group_enroll, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+
+    # Adding course_id column with foreign key reference
+    Column('course_id', Integer, nullable=False),
+    ForeignKeyConstraint(['course_id'], ['course.id'], name='fk_course_grp_id'),
+
+    # Adding group_id column with foreign key reference
+    Column('group_id', Integer, nullable=False),
+    ForeignKeyConstraint(['group_id'], ['lmsgroup.id'], name='fk_cr_group_id'),
+    Column('cr_grp_allowed', VARCHAR(150), nullable=False),
+    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+    Column('request_token', VARCHAR(2500), nullable=False),
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Index(f'idx_{table_calender}_token', 'token'),
+)
+
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')
 metadata.create_all(meta_engine, checkfirst=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=meta_engine)

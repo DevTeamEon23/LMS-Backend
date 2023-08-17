@@ -13,7 +13,7 @@ from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,course_enrollment
+from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,course_enrollment,group_enrollment,course_group_enroll
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import AddUser
@@ -97,6 +97,16 @@ def create_calender_token(cal_eventname):
 
 def create_courseenroll_token(user_id):
     base = random_string(8) + str(user_id) + random_string(8)
+    token = MD5(base)
+    return token
+
+def create_groupenroll_token(user_id):
+    base = random_string(8) + str(user_id) + random_string(8)
+    token = MD5(base)
+    return token
+
+def create_course_groupenroll_token(course_id):
+    base = random_string(8) + str(course_id) + random_string(8)
     token = MD5(base)
     return token
 
@@ -528,6 +538,94 @@ def enroll_course(id= int,generate_tokens: bool = False, auth_token="", inputs={
         logger.error(message)
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course has been enrolled to user successfully'))
+
+################################################# Enroll Groups to User  ###################################################
+
+def check_existing_userid(id):
+
+    query = f"""
+    select * from {group_enrollment} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+
+def enroll_group(id= int,generate_tokens: bool = False, auth_token="", inputs={},skip_new_groupenroll=False):
+    try:
+
+        user_id = inputs.get('user_id')
+        group_id = inputs.get('group_id')
+
+        # Generate the token here
+        token = create_groupenroll_token(user_id) 
+
+        request_token = ''
+        
+        # Add New User to the list of users
+        data = {'user_id': user_id, 'group_id': group_id,
+                'enrollment_allowed': inputs.get('enrollment_allowed', ''), 'auth_token': auth_token,
+                'request_token': request_token, 'token': token}
+
+        resp = LmsHandler.add_user_group_enrollment(data)
+        # If token not required,
+        if not generate_tokens and len(auth_token) == 0:
+            token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='group has been enrolled to user successfully'))
+
+################################################# Enroll Course to Group  ###################################################
+
+def check_existing_courseid(id):
+
+    query = f"""
+    select * from {course_group_enroll} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+
+def enroll_coursegroup(id= int,generate_tokens: bool = False, auth_token="", inputs={},skip_new_crgroupenroll=False):
+    try:
+
+        course_id = inputs.get('course_id')
+        group_id = inputs.get('group_id')
+
+        # Generate the token here
+        token = create_course_groupenroll_token(course_id) 
+
+        request_token = ''
+        
+        # Add New course to the list of group
+        data = {'course_id': course_id, 'group_id': group_id,
+                'cr_grp_allowed': inputs.get('cr_grp_allowed', ''), 'auth_token': auth_token,
+                'request_token': request_token, 'token': token}
+
+        resp = LmsHandler.add_course_group_enrollment(data)
+        # If token not required,
+        if not generate_tokens and len(auth_token) == 0:
+            token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='course has been enrolled to group successfully'))
 
 
 ##################################################   COURSES  ###########################################################################

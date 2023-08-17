@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,course_enrollment
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,course_enrollment,group_enrollment,course_group_enroll
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -146,6 +146,95 @@ class LmsHandler:
 
 ############################################################################################################################
 
+
+    def get_user_group_enrollment_by_token(token):
+        query = f"""SELECT * FROM {group_enrollment} where token=%(token)s and token is not NULL and token != '';"""
+        resp = execute_query(query=query, params={'token': token})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+
+#Get user_group_enrollment data by id for update fields Mapping
+    def get_user_group_enrollment_by_id(id):
+        query = f"""SELECT * FROM user_group_enrollment WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
+#Add user_group_enrollment
+    @classmethod
+    def add_user_group_enrollment(cls, params):
+        query = f"""   INSERT into {group_enrollment}(user_id, group_id, enrollment_allowed, auth_token, request_token, token) VALUES 
+                        (%(user_id)s, %(group_id)s, %(enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+
+#Fetch Enrolled & UnEnrolled Users of groups
+    @classmethod
+    def get_all_user_group_enrollment(cls):
+        query = """ SELECT u.*,g.* FROM user_group_enrollment e JOIN users u ON e.user_id = u.id JOIN lmsgroup g ON e.group_id = g.id; """
+        return execute_query(query).fetchall()
+    
+#Delete or Remove Enrolled User from group
+    @classmethod
+    def delete_user_group_enrollment(cls, id):
+        query = f""" DELETE FROM user_group_enrollment WHERE id = '{id}'; """
+        return execute_query(query)
+    
+############################################################################################################################
+
+
+    def get_course_group_enrollment_by_token(token):
+        query = f"""SELECT * FROM {course_group_enroll} where token=%(token)s and token is not NULL and token != '';"""
+        resp = execute_query(query=query, params={'token': token})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+
+#Get course_group_enrollment data by id for update fields Mapping
+    def get_course_group_enrollment_by_id(id):
+        query = f"""SELECT * FROM course_group_enrollment WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
+#Add course_group_enrollment
+    @classmethod
+    def add_course_group_enrollment(cls, params):
+        query = f"""   INSERT into {course_group_enroll}(course_id, group_id, cr_grp_allowed, auth_token, request_token, token) VALUES 
+                        (%(course_id)s, %(group_id)s, %(cr_grp_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+
+#Fetch Enrolled & UnEnrolled Course of groups
+    @classmethod
+    def get_all_course_group_enrollment(cls):
+        query = """ SELECT c.*,g.* FROM course_group_enrollment e JOIN course c ON e.user_id = c.id JOIN lmsgroup g ON e.group_id = g.id; """
+        return execute_query(query).fetchall()
+    
+#Delete or Remove Enrolled course from group
+    @classmethod
+    def delete_course_group_enrollment(cls, id):
+        query = f""" DELETE FROM course_group_enrollment WHERE id = '{id}'; """
+        return execute_query(query)
+
+############################################################################################################################
 
 # Courses CRUD
     def get_course_by_token(token):
