@@ -414,6 +414,17 @@ def add_new(email: str,file: bytes,generate_tokens: bool = False, auth_token="",
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='User added successfully'))
 
+def user_exists(email):
+    query = f"SELECT COUNT(*) FROM {n_table_user} WHERE email = %(email)s;"
+    result = execute_query(query, params={'email': email})
+    
+    # Check if the query returned a result
+    if result:
+        count = result.scalar()  # Fetch the scalar value (single value) from the result
+        return count > 0  # Return True if count is greater than 0 (user exists)
+    else:
+        return False  # Return False if result is empty
+
 # for excel import 
 def add_new_excel(email: str,generate_tokens: bool = False, auth_token="", inputs={},password=None, skip_new_user=False):
     try:
@@ -539,6 +550,51 @@ def enroll_course(id= int,generate_tokens: bool = False, auth_token="", inputs={
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course has been enrolled to user successfully'))
 
+#Get Users enrolled course data by id
+def fetch_users_course_by_onlyid(id):
+
+    try:
+        # Query user from the database for the specified id
+        user = LmsHandler.get_user_course_enrollment_by_id(id)
+        # role = LmsHandler.get_user_by_id(id)
+
+        if not user:
+            # Handle the case when no user or role is found for the specified id
+            return None
+
+
+        # Transform the user object into a dictionary
+        user_data = {
+            "id": user.id,
+            "user_id": user.user_id,
+            "course_id": user.course_id,
+            # "role": role.role,
+            "created_at": user.created_at,
+            "updated_at": user.updated_at,
+            # Include other user attributes as needed
+        }
+
+        return user_data
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user enrolled course data"
+        })
+
+def delete_user_course_by_id(id):
+    try:
+        # Delete the user by ID
+        users = LmsHandler.delete_user_course_enrollment(id)
+        return users
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled user data from course"
+        })
+
 ################################################# Enroll Groups to User  ###################################################
 
 def check_existing_userid(id):
@@ -582,6 +638,51 @@ def enroll_group(id= int,generate_tokens: bool = False, auth_token="", inputs={}
         logger.error(message)
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='group has been enrolled to user successfully'))
+
+#Get Users enrolled course data by id
+def fetch_users_group_by_onlyid(id):
+
+    try:
+        # Query user from the database for the specified id
+        user = LmsHandler.get_user_group_enrollment_by_id(id)
+        # role = LmsHandler.get_user_by_id(id)
+
+        if not user:
+            # Handle the case when no user or role is found for the specified id
+            return None
+
+
+        # Transform the user object into a dictionary
+        user_data = {
+            "id": user.id,
+            "user_id": user.user_id,
+            "group_id": user.group_id,
+            # "role": role.role,
+            "created_at": user.created_at,
+            "updated_at": user.updated_at,
+            # Include other user attributes as needed
+        }
+
+        return user_data
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user enrolled group data"
+        })
+
+def delete_user_group_by_id(id):
+    try:
+        # Delete the user by ID
+        users = LmsHandler.delete_user_group_enrollment(id)
+        return users
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled user data from group"
+        })
 
 ################################################# Enroll Course to Group  ###################################################
 
@@ -627,7 +728,51 @@ def enroll_coursegroup(id= int,generate_tokens: bool = False, auth_token="", inp
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='course has been enrolled to group successfully'))
 
+#Get courses enrolled course data by id
+def fetch_course_group_by_onlyid(id):
 
+    try:
+        # Query course from the database for the specified id
+        course = LmsHandler.get_course_group_enrollment_by_id(id)
+        # role = LmsHandler.get_course_by_id(id)
+
+        if not course:
+            # Handle the case when no course or role is found for the specified id
+            return None
+
+
+        # Transform the course object into a dictionary
+        course_data = {
+            "id": course.id,
+            "course_id": course.course_id,
+            "group_id": course.group_id,
+            # "role": role.role,
+            "created_at": course.created_at,
+            "updated_at": course.updated_at,
+            # Include other course attributes as needed
+        }
+
+        return course_data
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch course enrolled group data"
+        })
+
+def delete_course_group_by_id(id):
+    try:
+        # Delete the course by ID
+        courses = LmsHandler.delete_course_group_enrollment(id)
+        return courses
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled course data from group"
+        })
+        
 ##################################################   COURSES  ###########################################################################
 
 #Function for Add Course to stop the Course name unique voilation
