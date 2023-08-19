@@ -6,6 +6,7 @@ import os
 import base64
 import pandas as pd
 import subprocess
+from typing import List
 from zipfile import ZipFile
 from PIL import Image
 from io import BytesIO
@@ -75,12 +76,15 @@ async def create_users_from_excel(file: UploadFile = File(...)):
         success_count = 0
         duplicate_count = 0
         
+        # Create a set to keep track of seen emails
+        seen_emails = set()
+
         # Process and insert the data from the DataFrame
         for _, row in df.iterrows():
-            email = user_exists(row['email'])
+            email = row['email']
             
-            # Check if the user with the same email already exists
-            if user_exists(email):
+            # Call your user_exists function to check for duplicates
+            if user_exists(email) > 0:
                 duplicate_count += 1
                 continue  # Skip adding duplicate users
             
@@ -102,14 +106,20 @@ async def create_users_from_excel(file: UploadFile = File(...)):
                 'exclude_from_email': row['exclude_from_email'],
                 'generate_token': row['generate_token']
             }
-            
+
+
+
             # Call your add_new function with the data
             add_new_excel(email, password=row['password'], auth_token="", inputs=data)
             success_count += 1
 
-        message = f"{success_count} users added successfully from the Excel file."
+            # Add the email to the set of seen emails
+            seen_emails.add(email)
+
+
+        message = f"{success_count} users added successfully from the Excel file & Rest Duplicate user enries are skipped."
         if duplicate_count > 0:
-            message += f" {duplicate_count} users were skipped due to duplicates."
+            message += f" {duplicate_count} users were skipped due to duplicates in the users' table."
 
         return JSONResponse(status_code=status.HTTP_200_OK, content={
             "status": "success",
@@ -294,18 +304,44 @@ def unenroll_user_group(payload: UnenrolledUsers_Group):
 ###################################################################################################################
 
 # Create enroll_course_group
-@service.post('/enroll_course_group')
-async def enroll_course_group(course_id: int = Form(...),group_id: int = Form(...), generate_token: bool = Form(...)):
-    try:
-        return enroll_coursegroup(course_id,generate_token, auth_token="", inputs={
-                'course_id': course_id,'group_id': group_id,'cr_grp_allowed': '[]', 'picture': ""})
-    except Exception as exc: 
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "course enrolled to group failed"
-        })
+# @service.post('/enroll_course_group')
+# async def enroll_course_group(course_id: int = Form(...),group_id: int = Form(...), generate_token: bool = Form(...)):
+#     try:
+#         return enroll_coursegroup(course_id,generate_token, auth_token="", inputs={
+#                 'course_id': course_id,'group_id': group_id,'cr_grp_allowed': '[]', 'picture': ""})
+#     except Exception as exc: 
+#         logger.error(traceback.format_exc())
+#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#             "status": "failure",
+#             "message": "course enrolled to group failed"
+#         })
     
+@service.post('/enroll_course_group')
+async def enroll_course_group(course_id: int = Form(...), group_id: List[int] = Form(...), generate_token: bool = Form(...)):
+    print(f"course_id: {course_id}")
+    print(f"group_id: {group_id}")
+    try:
+        # Check if course_id is a valid integer
+        if not isinstance(course_id, int):
+            raise HTTPException(status_code=422, detail="course_id is not a valid integer")
+
+        # Check if group_id contains valid integers
+        for group_id in group_id:
+            if not isinstance(group_id, int):
+                raise HTTPException(status_code=422, detail=f"Group ID '{group_id}' is not a valid integer")
+
+        # Call the enroll_coursegroup function with proper error handling
+        result = enroll_coursegroup(course_id, generate_token, auth_token="", inputs={
+            'course_id': course_id, 'cr_grp_allowed': '[]', 'picture': ""}, group_id=group_id)
+
+        # If no exceptions occurred, return a success response
+        return {"status": "success", "message": "Course enrolled to groups successfully", "result": result}
+
+    except Exception as exc:
+        # Handle other exceptions and return an appropriate error response
+        return HTTPException(status_code=500, detail="Internal Server Error")
+
+
 @service.get("/enrollcourses_group_by_onlyid")
 def fetch_user_enrollgroup_by_onlyid(id):
     try:

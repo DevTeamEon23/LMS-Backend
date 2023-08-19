@@ -418,13 +418,11 @@ def add_new(email: str,file: bytes,generate_tokens: bool = False, auth_token="",
 def user_exists(email):
     query = f"SELECT COUNT(*) FROM {n_table_user} WHERE email = %(email)s;"
     result = execute_query(query, params={'email': email})
-    
-    # Check if the query returned a result
-    if result:
-        count = result.scalar()  # Fetch the scalar value (single value) from the result
-        return count > 0  # Return True if count is greater than 0 (user exists)
-    else:
-        return False  # Return False if result is empty
+    try:
+        result_list = list(result)  # Convert MappingResult to a list
+        return result_list[0][0]  # Get the count from the first row and first column
+    except (IndexError, KeyError):
+        return 0  # Return 0 if no rows were found or an error occurred
 
 # for excel import 
 def add_new_excel(email: str,generate_tokens: bool = False, auth_token="", inputs={},password=None, skip_new_user=False):
@@ -701,23 +699,51 @@ def check_existing_courseid(id):
         return True
     
 
-def enroll_coursegroup(id= int,generate_tokens: bool = False, auth_token="", inputs={},skip_new_crgroupenroll=False):
-    try:
+# def enroll_coursegroup(id= int,generate_tokens: bool = False, auth_token="", inputs={},skip_new_crgroupenroll=False):
+#     try:
 
+#         course_id = inputs.get('course_id')
+#         group_id = inputs.get('group_id')
+
+#         # Generate the token here
+#         token = create_course_groupenroll_token(course_id) 
+
+#         request_token = ''
+        
+#         # Add New course to the list of group
+#         data = {'course_id': course_id, 'group_id': group_id,
+#                 'cr_grp_allowed': inputs.get('cr_grp_allowed', ''), 'auth_token': auth_token,
+#                 'request_token': request_token, 'token': token}
+
+#         resp = LmsHandler.add_course_group_enrollment(data)
+#         # If token not required,
+#         if not generate_tokens and len(auth_token) == 0:
+#             token = None
+
+#     except ValueError as exc:
+#         logger.error(traceback.format_exc())
+#         message = exc.args[0]
+#         logger.error(message)
+
+#     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='course has been enrolled to group successfully'))
+
+def enroll_coursegroup(id=int, generate_tokens: bool = False, auth_token="", inputs={}, skip_new_crgroupenroll=False):
+    try:
         course_id = inputs.get('course_id')
-        group_id = inputs.get('group_id')
+        group_ids = inputs.get('group_id')  # Use () instead of []
 
         # Generate the token here
-        token = create_course_groupenroll_token(course_id) 
+        token = create_course_groupenroll_token(course_id)
 
         request_token = ''
-        
-        # Add New course to the list of group
-        data = {'course_id': course_id, 'group_id': group_id,
-                'cr_grp_allowed': inputs.get('cr_grp_allowed', ''), 'auth_token': auth_token,
-                'request_token': request_token, 'token': token}
 
-        resp = LmsHandler.add_course_group_enrollment(data)
+        for group_id in group_ids:
+            # Add the course to each group
+            data = {'course_id': course_id, 'group_id': group_id,
+                    'cr_grp_allowed': inputs.get('cr_grp_allowed', ''), 'auth_token': auth_token,
+                    'request_token': request_token, 'token': token}
+            resp = LmsHandler.add_course_group_enrollment(data)
+
         # If token not required,
         if not generate_tokens and len(auth_token) == 0:
             token = None
@@ -727,7 +753,7 @@ def enroll_coursegroup(id= int,generate_tokens: bool = False, auth_token="", inp
         message = exc.args[0]
         logger.error(message)
 
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='course has been enrolled to group successfully'))
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='course has been enrolled to groups successfully'))
 
 #Get courses enrolled course data by id
 def fetch_course_group_by_onlyid(id):
