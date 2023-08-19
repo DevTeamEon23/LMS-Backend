@@ -19,9 +19,9 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_course,enroll_group,check_existing_user,enroll_coursegroup
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_course,enroll_group,user_exists,enroll_coursegroup,fetch_users_course_by_onlyid,delete_user_course_by_id,fetch_users_group_by_onlyid,delete_user_group_by_id,fetch_course_group_by_onlyid,delete_course_group_by_id
 from routers.lms_service.lms_db_ops import LmsHandler
-from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender)
+from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender,UnenrolledUsers_Course,UnenrolledUsers_Group,UnenrolledCourse_Group,UnenrolledUsers_Group)
 from utils import success_response
 from config.logconfig import logger
 
@@ -72,14 +72,23 @@ async def create_users_from_excel(file: UploadFile = File(...)):
         # Read the uploaded Excel file using pandas (defaulting to the first sheet)
         df = pd.read_excel(temp_file_path)
         
+        success_count = 0
+        duplicate_count = 0
+        
         # Process and insert the data from the DataFrame
         for _, row in df.iterrows():
-            # Assuming your data is in the same order as column names in the DataFrame
+            email = user_exists(row['email'])
+            
+            # Check if the user with the same email already exists
+            if user_exists(email):
+                duplicate_count += 1
+                continue  # Skip adding duplicate users
+            
             data = {
                 'eid': row['eid'],
                 'sid': row['sid'],
                 'full_name': row['full_name'],
-                'email': row['email'],
+                'email': email,  # Use the email variable from above
                 'dept': row['dept'],
                 'adhr': row['adhr'],
                 'username': row['username'],
@@ -95,12 +104,18 @@ async def create_users_from_excel(file: UploadFile = File(...)):
             }
             
             # Call your add_new function with the data
-            add_new_excel(row['email'], password=row['password'], auth_token="", inputs=data)
+            add_new_excel(email, password=row['password'], auth_token="", inputs=data)
+            success_count += 1
+
+        message = f"{success_count} users added successfully from the Excel file."
+        if duplicate_count > 0:
+            message += f" {duplicate_count} users were skipped due to duplicates."
 
         return JSONResponse(status_code=status.HTTP_200_OK, content={
             "status": "success",
-            "message": "Users added successfully from the Excel file."
+            "message": message
         })
+    
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -195,6 +210,39 @@ async def enroll_course_user(user_id: int = Form(...),course_id: int = Form(...)
             "message": "User enrolled to course failed"
         })
 
+@service.get("/enrollusers_course_by_onlyid")
+def fetch_user_enrollcourse_by_onlyid(id):
+    try:
+        # Fetch all enrolled users' data of course here
+        users = fetch_users_course_by_onlyid(id)
+
+        return {
+            "status": "success",
+            "data": users
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled users' data"
+        }) 
+    
+# Unenrolled USER from Course
+@service.delete("/unenroll_user_course")
+def unenroll_user_course(payload: UnenrolledUsers_Course):
+    try:
+        users = delete_user_course_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": users
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled user data from course"
+        })
+
 ###################################################################################################################
 
 # Create enroll_group
@@ -209,7 +257,40 @@ async def enroll_group_user(user_id: int = Form(...),group_id: int = Form(...), 
             "status": "failure",
             "message": "User enrolled to group failed"
         })
+
+@service.get("/enrollusers_group_by_onlyid")
+def fetch_user_enrollgroup_by_onlyid(id):
+    try:
+        # Fetch all enrolled users' data of group here
+        users = fetch_users_group_by_onlyid(id)
+
+        return {
+            "status": "success",
+            "data": users
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled users' data"
+        }) 
     
+# Unenrolled USER from Group
+@service.delete("/unenroll_user_group")
+def unenroll_user_group(payload: UnenrolledUsers_Group):
+    try:
+        users = delete_user_group_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": users
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled user data from group"
+        })
+
 ###################################################################################################################
 
 # Create enroll_course_group
@@ -225,6 +306,39 @@ async def enroll_course_group(course_id: int = Form(...),group_id: int = Form(..
             "message": "course enrolled to group failed"
         })
     
+@service.get("/enrollcourses_group_by_onlyid")
+def fetch_user_enrollgroup_by_onlyid(id):
+    try:
+        # Fetch all enrolled courses' data of group here
+        courses = fetch_course_group_by_onlyid(id)
+
+        return {
+            "status": "success",
+            "data": courses
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled courses' data"
+        }) 
+    
+# Unenrolled Course from Group
+@service.delete("/unenroll_course_group")
+def unenroll_course_group(payload: UnenrolledCourse_Group):
+    try:
+        courses = delete_course_group_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": courses
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled course data from group"
+        })
+
 ############################################################################################################################
 
 # Create Course

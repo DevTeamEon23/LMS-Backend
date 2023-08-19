@@ -140,3 +140,18 @@ class DeleteDiscussion(BaseModel):
 
 class DeleteCalender(BaseModel):
     id: int
+    
+##################################### Unenroll Users from course #############################################
+
+class UnenrolledUsers_Course(BaseModel):
+    id: int
+
+##################################### Unenroll Users from course #############################################
+
+class UnenrolledUsers_Group(BaseModel):
+    id: int
+
+##################################### Unenroll Users from course #############################################
+
+class UnenrolledCourse_Group(BaseModel):
+    id: int
