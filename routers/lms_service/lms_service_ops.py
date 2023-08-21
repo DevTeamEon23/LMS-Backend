@@ -416,78 +416,74 @@ def add_new(email: str,file: bytes,generate_tokens: bool = False, auth_token="",
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='User added successfully'))
 
 def user_exists(email):
-    query = f"SELECT COUNT(*) FROM {n_table_user} WHERE email = %(email)s;"
-    result = execute_query(query, params={'email': email})
+    query = f"SELECT COUNT(*) FROM {n_table_user} WHERE email = %s LIMIT 1;"
     try:
-        result_list = list(result)  # Convert MappingResult to a list
-        return result_list[0][0]  # Get the count from the first row and first column
-    except (IndexError, KeyError):
-        return 0  # Return 0 if no rows were found or an error occurred
+        result = execute_query(query, params={'email': email})
+        count = result[0][0]  # Fetch the count from the first row and first column
+        return count > 0  # Return True if a user with the provided email exists, otherwise False
+    except Exception as e:
+        return False  # Return False if no rows were found or an error occurred
 
 # for excel import 
-def add_new_excel(email: str,generate_tokens: bool = False, auth_token="", inputs={},password=None, skip_new_user=False):
+def add_new_excel(email: str, generate_tokens: bool = False, auth_token="", inputs={}, password=None, skip_new_user=False):
     try:
         # Check Email Address
-        v_email = check_email(email)
-
-        # Check user existence and status
-        is_existing, is_active = check_existing_user(v_email)
+        v_email = user_exists(email)
 
         # If user Already Exists
-        if is_existing:
+        if v_email:
             # Check password
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
                 "message": "User Already Exists"
             })
 
-        elif not is_existing and not is_active and skip_new_user == False:
+        eid = inputs.get('eid')
+        sid = md5(email)
+        full_name = inputs.get('full_name', None)
+        full_name = v_email.split('@')[0] if full_name is None or full_name == '' else full_name
+        email = inputs.get('username')
+        dept = inputs.get('email')
+        adhr = inputs.get('dept')
+        username = inputs.get('adhr')
+        bio = inputs.get('bio')
+        role = inputs.get('role')
+        timezone = inputs.get('timezone')
+        langtype = inputs.get('langtype')
+        active = inputs.get('active')
+        deactive = inputs.get('deactive')
+        exclude_from_email = inputs.get('exclude_from_email')
+        
+        # Password for manual signing
+        if password is None:
+            password = random_password()
+        if password is None:
+            hash_password = ""
+        else:
+            hash_password = get_password_hash(password)
 
-            eid = inputs.get('eid')
-            sid = md5(v_email)
-            full_name = inputs.get('full_name', None)
-            full_name = v_email.split('@')[0] if full_name is None or full_name == '' else full_name
-            email = inputs.get('username')
-            dept = inputs.get('email')
-            adhr = inputs.get('dept')
-            username = inputs.get('adhr')
-            bio = inputs.get('bio')
-            role = inputs.get('role')
-            timezone = inputs.get('timezone')
-            langtype = inputs.get('langtype')
-            active = inputs.get('active')
-            deactive = inputs.get('deactive')
-            exclude_from_email = inputs.get('exclude_from_email')
+        # Token Generation
+        token = create_token(email)
 
-            # Password for manual signing
-            if password is None:
-                password = random_password()
-            if password is None:
-                hash_password = ""
-            else:
-                hash_password = get_password_hash(password)
+        request_token = ''
+        
+        # Add New User to the list of users
+        data = {'eid': eid, 'sid': sid, 'full_name': full_name, 'email': email, 'dept': dept, 'adhr': adhr,
+                'username': username, 'password': hash_password, 'bio': bio, 'role': role, 'timezone': timezone,
+                'langtype': langtype, "active": active, "deactive": deactive, "exclude_from_email": exclude_from_email,
+                'users_allowed': inputs.get('users_allowed', ''), 'auth_token': auth_token,
+                'request_token': request_token, 'token': token}
 
-            # Token Generation
-            token = create_token(v_email)
-
-            request_token = ''
-            
-            # Add New User to the list of users
-            data = {'eid': eid, 'sid': sid, 'full_name': full_name, 'email': v_email, 'dept': dept, 'adhr': adhr,'username': username, 'password': hash_password, 'bio': bio,
-                    'role': role, 'timezone': timezone, 'langtype': langtype, "active": active, "deactive": deactive, "exclude_from_email": exclude_from_email,
-                    'users_allowed': inputs.get('users_allowed', ''), 'auth_token': auth_token,
-                    'request_token': request_token, 'token': token}
-
-            resp = LmsHandler.add_users_excel(data)
-            # If token not required,
-            if not generate_tokens and len(auth_token) == 0:
-                token = None
+        resp = LmsHandler.add_users_excel(data)
+        # If token not required,
+        if not generate_tokens and len(auth_token) == 0:
+            token = None
 
     except ValueError as exc:
         logger.error(traceback.format_exc())
         message = exc.args[0]
         logger.error(message)
 
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='User added successfully'))
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='User added successfully'))
 
 def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, active, deactive, exclude_from_email):
     is_existing, _ = check_existing_user(email)
