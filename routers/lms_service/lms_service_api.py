@@ -5,14 +5,16 @@ import time
 import os
 import base64
 import pandas as pd
+import mysql.connector
 import subprocess
+import xlsxwriter
 from typing import List
 from zipfile import ZipFile
 from PIL import Image
 from io import BytesIO
 import routers.lms_service.lms_service_ops as model
 from fastapi.responses import JSONResponse,HTMLResponse,FileResponse
-from fastapi import APIRouter, Depends,UploadFile, File,Form, Query,HTTPException
+from fastapi import APIRouter, Depends,UploadFile, File,Form, Query,HTTPException, Response
 from starlette import status
 from sqlalchemy.orm import Session
 from starlette.requests import Request
@@ -20,7 +22,7 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_course,enroll_group,user_exists,enroll_coursegroup,fetch_users_course_by_onlyid,delete_user_course_by_id,fetch_users_group_by_onlyid,delete_user_group_by_id,fetch_course_group_by_onlyid,delete_course_group_by_id
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_course,enroll_group,user_exists,enroll_coursegroup,delete_user_course_by_id,fetch_users_group_by_onlyid,delete_user_group_by_id,fetch_course_group_by_onlyid,delete_course_group_by_id,fetch_users_data_export,fetch_courses_data_export,fetch_users_course_enrolled
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender,UnenrolledUsers_Course,UnenrolledUsers_Group,UnenrolledCourse_Group,UnenrolledUsers_Group)
 from utils import success_response
@@ -119,6 +121,19 @@ async def create_users_from_excel(file: UploadFile = File(...)):
             # Call your add_new function with the data
             add_new_excel(email, password=row['password'], auth_token="", inputs=data)
             success_count += 1
+
+            # Call your user_exists function to check for duplicates by email
+            if user_exists(email):
+                duplicate_count += 1
+                continue
+
+        message = f"{success_count} users added successfully from the Excel file."
+        if duplicate_count > 0:
+            message += f" {duplicate_count} users were skipped due to duplicates in the users' table."
+        return JSONResponse(status_code=status.HTTP_200_OK, content={
+            "status": "success",
+            "message": message
+        })
     
     except Exception as exc:
         logger.error(traceback.format_exc())
@@ -130,6 +145,170 @@ async def create_users_from_excel(file: UploadFile = File(...)):
             "status": "success",
             "message": message
         })
+
+##################################################################################################################
+def fetch_users_data():
+    try:
+        # Fetch all users' data using your existing function
+        users_data = fetch_users_data_export()
+
+        # Create a DataFrame from the fetched data
+        users_df = pd.DataFrame(users_data)
+
+        return users_df
+
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch users data"
+        })
+
+def fetch_courses_data():
+    try:
+        # Fetch all users' data using your existing function
+        users_data = fetch_courses_data_export()
+
+        # Create a DataFrame from the fetched data
+        users_df = pd.DataFrame(users_data)
+
+        return users_df
+
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch users data"
+        })
+    
+def fetch_groups_data():
+    try:
+        # Fetch all users' data using your existing function
+        users_data = fetch_all_groups_data()
+
+        # Create a DataFrame from the fetched data
+        users_df = pd.DataFrame(users_data)
+
+        return users_df
+
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch users data"
+        })
+    
+# Define a folder to store exported files
+EXPORT_FOLDER = "exported_files"
+
+# Ensure the export folder exists
+os.makedirs(EXPORT_FOLDER, exist_ok=True)
+
+    
+def export_to_excel_with_multiple_sheets():
+    try:
+        table_data = {
+            "users": fetch_users_data(),
+            "course": fetch_courses_data(),
+            "lmsgroup": fetch_groups_data()
+        }
+
+        # Specify the pre-defined file name
+        file_name = "exported_data.xlsx"
+
+        # Create the file path
+        file_path = os.path.join(EXPORT_FOLDER, file_name)
+
+        # Create an XlsxWriter workbook and add sheets
+        workbook = xlsxwriter.Workbook(file_path, {'nan_inf_to_errors': True})  # Add nan_inf_to_errors option
+
+        for table, data in table_data.items():
+            worksheet = workbook.add_worksheet(table)
+
+            # Write the data to the sheet
+            for row_num, row_data in enumerate(data.values):
+                for col_num, cell_value in enumerate(row_data):
+                    worksheet.write(row_num, col_num, cell_value)
+
+        # Close the workbook
+        workbook.close()
+
+        return file_name
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to export data: {e}")
+
+@service.get("/export_to_excel")
+async def export_data_to_excel():
+    try:
+        file_name = export_to_excel_with_multiple_sheets()
+        
+        # Return a JSON response with the download link
+        download_link = f"/{EXPORT_FOLDER}/{file_name}"
+        return JSONResponse(status_code=200, content={"message": "Data exported successfully.", "download_link": download_link})
+
+    except HTTPException as e:
+        return e
+    
+def export_data_to_excel_and_download():
+    try:
+        table_data = {
+            "users": fetch_users_data(),
+            "course": fetch_courses_data(),
+            "lmsgroup": fetch_groups_data()
+        }
+
+        # Specify the pre-defined file name
+        file_name = "exported_data.xlsx"
+
+        # Create the file path
+        file_path = os.path.join(EXPORT_FOLDER, file_name)
+
+        # Create an XlsxWriter workbook and add sheets
+        workbook = xlsxwriter.Workbook(file_path)
+
+        for table, data in table_data.items():
+            worksheet = workbook.add_worksheet(table)
+
+            # Write the data to the sheet
+            for row_num, row_data in enumerate(data.values):
+                for col_num, cell_value in enumerate(row_data):
+                    worksheet.write(row_num, col_num, cell_value)
+
+        # Close the workbook
+        workbook.close()
+
+        # Read the file and return it for download
+        with open(file_path, "rb") as file:
+            data = file.read()
+
+        # Delete the file after reading
+        os.remove(file_path)
+
+        return data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to export and download data: {e}")
+    
+
+@service.get("/export_and_download")
+def export_and_download():
+    try:
+        data = export_data_to_excel_and_download()
+        return Response(content=data, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+    except HTTPException as e:
+        raise e
+    
+    
+# Define an endpoint to download the exported Excel file
+# @service.get("/download/{file_name}")
+# async def download_exported_file(file_name: str):
+#     if file_name == "exported_data.xlsx":
+#         excel_data = export_to_excel_with_multiple_sheets()
+#         return FileResponse(BytesIO(excel_data), filename=file_name)
+#     else:
+#         raise HTTPException(status_code=404, detail=f"File {file_name} not found.")
 
 
 # Read Users list
@@ -218,21 +397,21 @@ async def enroll_course_user(user_id: int = Form(...),course_id: int = Form(...)
             "message": "User enrolled to course failed"
         })
 
-@service.get("/enrollusers_course_by_onlyid")
-def fetch_user_enrollcourse_by_onlyid(id):
+@service.get("/fetch_enrollusers_course")
+def fetch_user_enrollcourse_by_onlycourse_id():
     try:
         # Fetch all enrolled users' data of course here
-        users = fetch_users_course_by_onlyid(id)
+        courses = fetch_users_course_enrolled()
 
         return {
             "status": "success",
-            "data": users
+            "data": courses
         }
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
             "status": "failure",
-            "message": "Failed to fetch enrolled users' data"
+            "message": "Failed to fetch enrolled courses' data"
         }) 
     
 # Unenrolled USER from Course
@@ -303,7 +482,7 @@ def unenroll_user_group(payload: UnenrolledUsers_Group):
 
 # Create enroll_course_group
 # @service.post('/enroll_course_group')
-# async def enroll_course_group(course_id: int = Form(...),group_id: int = Form(...), generate_token: bool = Form(...)):
+# async def enroll_course_group(: int = Form(...),group_id: int = Form(...), generate_token: bool = Form(...)):
 #     try:
 #         return enroll_coursegroup(course_id,generate_token, auth_token="", inputs={
 #                 'course_id': course_id,'group_id': group_id,'cr_grp_allowed': '[]', 'picture': ""})

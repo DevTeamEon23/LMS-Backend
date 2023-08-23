@@ -121,7 +121,19 @@ class LmsHandler:
                 status_code=401, detail="Token Expired or Invalid Token")
         else:
             return data
-        
+
+    def get_user_course_enrollment_by_course_id(course_id):
+        query = """SELECT user_id FROM user_course_enrollment WHERE course_id = %(course_id)s AND course_id IS NOT NULL AND course_id != '';"""
+        resp = execute_query(query=query, params={'course_id': course_id})
+        data = resp.fetchall()
+        if not data:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            # Extract the user IDs from the fetched data
+            user_ids = [row['user_id'] for row in data]
+            return user_ids
+    
 #Add user_course_enrollment
     @classmethod
     def add_user_course_enrollment(cls, params):
@@ -132,10 +144,16 @@ class LmsHandler:
         return execute_query(query, params=params)
 
 #Fetch Enrolled & UnEnrolled Users of courses
+    # @classmethod
+    # def get_all_user_course_enrollment(cls):
+    #     query = """ SELECT u.*,c.* FROM user_course_enrollment e JOIN users u ON e.user_id = u.id JOIN course c ON e.course_id = c.id; """
+    #     return execute_query(query).fetchall()
+
     @classmethod
     def get_all_user_course_enrollment(cls):
-        query = """ SELECT u.*,c.* FROM user_course_enrollment e JOIN users u ON e.user_id = u.id JOIN course c ON e.course_id = c.id; """
+        query = """ SELECT u.id as user_id, u.role, u.full_name, c.coursename FROM user_course_enrollment e JOIN users u ON e.user_id = u.id JOIN course c ON e.course_id = c.id; """
         return execute_query(query).fetchall()
+    
     
 #Delete or Remove Enrolled User from Course
     @classmethod

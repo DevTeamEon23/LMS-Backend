@@ -25,6 +25,8 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 app.mount("/media/", StaticFiles(directory="media/"), name="media")
 app.mount("/course/", StaticFiles(directory="course/"), name="course")
 app.mount("/coursevideo/", StaticFiles(directory="coursevideo/"), name="coursevideo")
+app.mount("/files/", StaticFiles(directory="files/"), name="files")
+app.mount("/exported_files/", StaticFiles(directory="exported_files/"), name="exported_files")
 
 # Modify Default Exception Handler
 @app.exception_handler(RequestValidationError)

@@ -545,31 +545,55 @@ def enroll_course(id= int,generate_tokens: bool = False, auth_token="", inputs={
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course has been enrolled to user successfully'))
 
-#Get Users enrolled course data by id
-def fetch_users_course_by_onlyid(id):
+# #Get Users enrolled course data by id
+# def fetch_users_course_by_onlyid(course_id):
 
+#     try:
+#         # Query user from the database for the specified id
+#         course = LmsHandler.get_user_course_enrollment_by_id(course_id)
+#         # role = LmsHandler.get_user_by_id(id)
+
+#         if not course:
+#             # Handle the case when no user or role is found for the specified id
+#             return None
+
+
+#         # Transform the user object into a dictionary
+#         enrolled_course_data = {
+#             "id": course.id,
+#             "user_id": course.user_id,
+#             "course_id": course.course_id,
+#             # "role": role.role,
+#             "created_at": course.created_at,
+#             "updated_at": course.updated_at,
+#             # Include other course attributes as needed
+#         }
+
+#         return enrolled_course_data
+#     except Exception as exc:
+#         logger = logging.getLogger(__name__)
+#         logger.error(traceback.format_exc())
+#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#             "status": "failure",
+#             "message": "Failed to fetch user enrolled course data"
+#         })
+
+def fetch_users_course_enrolled():
     try:
-        # Query user from the database for the specified id
-        user = LmsHandler.get_user_course_enrollment_by_id(id)
-        # role = LmsHandler.get_user_by_id(id)
+        # Query user IDs from the database for the specified course
+        user_ids = LmsHandler.get_all_user_course_enrollment()
 
-        if not user:
-            # Handle the case when no user or role is found for the specified id
+        if not user_ids:
+            # Handle the case when no user is found for the specified course
             return None
 
+        # Now user_ids is a list of user IDs enrolled in the course
+        # You can return this list or process it further as needed
 
-        # Transform the user object into a dictionary
-        user_data = {
-            "id": user.id,
-            "user_id": user.user_id,
-            "course_id": user.course_id,
-            # "role": role.role,
-            "created_at": user.created_at,
-            "updated_at": user.updated_at,
-            # Include other user attributes as needed
+        return {
+            "user_ids": user_ids,
+            # Include other course attributes as needed
         }
-
-        return user_data
     except Exception as exc:
         logger = logging.getLogger(__name__)
         logger.error(traceback.format_exc())
@@ -577,7 +601,7 @@ def fetch_users_course_by_onlyid(id):
             "status": "failure",
             "message": "Failed to fetch user enrolled course data"
         })
-
+    
 def delete_user_course_by_id(id):
     try:
         # Delete the user by ID
@@ -698,7 +722,7 @@ def check_existing_courseid(id):
 # def enroll_coursegroup(id= int,generate_tokens: bool = False, auth_token="", inputs={},skip_new_crgroupenroll=False):
 #     try:
 
-#         course_id = inputs.get('course_id')
+#          = inputs.get('course_id')
 #         group_id = inputs.get('group_id')
 
 #         # Generate the token here
@@ -2331,4 +2355,84 @@ def delete_calender_by_id(id):
             "status": "failure",
             "message": "Failed to delete Calender data"
         })
+
+################################################## Export data #####################################################
+
+def fetch_users_data_export():
+    try:
+        # Query all users from the database
+        users = LmsHandler.get_all_users()
+
+        # Transform the user objects into a list of dictionaries
+        users_data = []
+        for user in users:
+
+            user_data = {
+                "id": user.id,
+                "eid": user.eid,
+                "sid": user.sid,
+                "full_name": user.full_name,
+                "email": user.email,
+                "dept": user.dept,
+                "adhr": user.adhr,
+                "username": user.username,
+                "bio": user.bio,
+                "role": user.role,
+                "timezone": user.timezone,
+                "langtype": user.langtype,
+                "active": True if user.active == 1 else False,
+                "deactive": True if user.deactive == 1 else False,
+                "exclude_from_email": True if user.exclude_from_email == 1 else False,
+                "created_at": user.created_at,
+                "updated_at": user.updated_at,
+                # Include other user attributes as needed
+            }
+
+            users_data.append(user_data)
+
+        return users_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch users data"
+        })
     
+def fetch_courses_data_export():
+    try:
+        # Query all users from the database
+        courses = LmsHandler.get_all_courses()
+
+        # Transform the user objects into a list of dictionaries
+        courses_data = []
+        for course in courses:
+
+            course_data = {
+                "id": course.id,
+                "coursename": course.coursename,
+                "description": course.description,
+                "coursecode": course.coursecode,
+                "price": course.price ,
+                "courselink": course.courselink,
+                "capacity": course.capacity,
+                "startdate": course.startdate,
+                "enddate": course.enddate,
+                "timelimit": course.timelimit,
+                "certificate": course.certificate,
+                "level": course.level,
+                "category": course.category,
+                "isActive": course.isActive,
+                "isHide": course.isHide,
+                "created_at": course.created_at,
+                "updated_at": course.updated_at,
+                # Include other course attributes as needed
+            }
+            courses_data.append(course_data)
+
+        return courses_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch courses data"
+        })
