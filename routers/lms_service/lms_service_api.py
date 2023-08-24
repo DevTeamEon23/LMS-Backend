@@ -146,7 +146,7 @@ async def create_users_from_excel(file: UploadFile = File(...)):
             "message": message
         })
 
-##################################################################################################################
+####################################    USER COURSE ENROLLMENT     ##################################
 def fetch_users_data():
     try:
         # Fetch all users' data using your existing function
