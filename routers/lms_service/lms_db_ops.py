@@ -143,16 +143,11 @@ class LmsHandler:
                     """
         return execute_query(query, params=params)
 
-#Fetch Enrolled & UnEnrolled Users of courses
-    # @classmethod
-    # def get_all_user_course_enrollment(cls):
-    #     query = """ SELECT u.*,c.* FROM user_course_enrollment e JOIN users u ON e.user_id = u.id JOIN course c ON e.course_id = c.id; """
-    #     return execute_query(query).fetchall()
-
+#
     @classmethod
     def get_all_user_course_enrollment(cls):
-        query = """ SELECT user_id, role, full_name, coursename FROM (
-            SELECT e.user_id as user_id, u.role, u.full_name, c.coursename, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+        query = """ SELECT user_id, role, full_name, coursename, user_course_enrollment_id FROM (
+            SELECT e.user_id as user_id, u.role, u.full_name, c.coursename, e.id as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
             FROM user_course_enrollment e
             JOIN users u ON e.user_id = u.id
             JOIN course c ON e.course_id = c.id
@@ -160,7 +155,7 @@ class LmsHandler:
 
             UNION DISTINCT
 
-            SELECT id as user_id, role, full_name, NULL as coursename, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+            SELECT id as user_id, role, full_name, NULL as coursename, NULL as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
             FROM users
             WHERE role = 'Admin' AND id NOT IN (SELECT user_id FROM user_course_enrollment WHERE user_id IS NOT NULL)
         ) AS combined_data; """
@@ -210,7 +205,19 @@ class LmsHandler:
 #Fetch Enrolled & UnEnrolled Users of groups
     @classmethod
     def get_all_user_group_enrollment(cls):
-        query = """ SELECT u.*,g.* FROM user_group_enrollment e JOIN users u ON e.user_id = u.id JOIN lmsgroup g ON e.group_id = g.id; """
+        query = """ SELECT user_id, role, full_name, groupname, user_group_enrollment_id FROM (
+            SELECT e.user_id as user_id, u.role, u.full_name, lg.groupname, e.id as user_group_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+            FROM user_group_enrollment e
+            JOIN users u ON e.user_id = u.id
+            JOIN lmsgroup lg ON e.group_id = lg.id
+            WHERE u.role = 'Admin'
+
+            UNION DISTINCT
+
+            SELECT id as user_id, role, full_name, NULL as groupname, NULL as user_group_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+            FROM users
+            WHERE role = 'Admin' AND id NOT IN (SELECT user_id FROM user_group_enrollment WHERE user_id IS NOT NULL)
+        ) AS combined_data; """
         return execute_query(query).fetchall()
     
 #Delete or Remove Enrolled User from group
