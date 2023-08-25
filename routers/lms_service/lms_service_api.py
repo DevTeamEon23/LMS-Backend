@@ -8,6 +8,7 @@ import pandas as pd
 import mysql.connector
 import subprocess
 import xlsxwriter
+from pathlib import Path
 from typing import List
 from zipfile import ZipFile
 from PIL import Image
@@ -146,7 +147,7 @@ async def create_users_from_excel(file: UploadFile = File(...)):
             "message": message
         })
 
-####################################    USER COURSE ENROLLMENT     ##################################
+####################################    Export Excel Api     ##################################
 def fetch_users_data():
     try:
         # Fetch all users' data using your existing function
@@ -249,7 +250,28 @@ async def export_data_to_excel():
 
     except HTTPException as e:
         return e
-    
+
+# @service.get("/download-excel")
+# async def download_excel():
+#     # Assuming your Excel file is named "example.xlsx"
+#     file_path = Path("exported_files/exported_data.xlsx")
+
+#     if file_path.exists():
+#         return FileResponse(file_path, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+#     else:
+#         return {"error": "File not found"}
+file_folder = "exported_files"
+
+@service.get("/download/{file_name}")
+async def download_file(file_name: str):
+    # Assuming you have a folder containing files
+    # The requested file should be located in this folder
+    file_path = f"{file_folder}/{file_name}"
+
+    # Use FileResponse to return the file for download
+    return FileResponse(file_path)
+
+
 def export_data_to_excel_and_download():
     try:
         table_data = {
@@ -293,12 +315,11 @@ def export_data_to_excel_and_download():
 
 @service.get("/export_and_download")
 def export_and_download():
-    try:
-        data = export_data_to_excel_and_download()
-        return Response(content=data, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-    except HTTPException as e:
-        raise e
+    data = export_data_to_excel_and_download()
+    if data.exists():
+        return FileResponse(data, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    else:
+        return {"error": "File not found"}
     
     
 # Define an endpoint to download the exported Excel file

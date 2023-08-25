@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from config.db_config import n_table_user
+from config.db_config import n_table_user, users_points
 from ..db_ops import execute_query
 
 
@@ -53,3 +53,6 @@ class UserDBHandler:
             raise HTTPException(status_code=401, detail="User not found")
         else:
             return data
+        
+
+

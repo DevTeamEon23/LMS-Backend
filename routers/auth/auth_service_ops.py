@@ -10,7 +10,7 @@ from passlib.context import CryptContext
 from starlette import status
 from starlette.responses import JSONResponse
 
-from config.db_config import n_table_user
+from config.db_config import n_table_user,users_points
 from config import settings
 from config.logconfig import logger
 from routers.auth.auth_db_ops import UserDBHandler
@@ -231,6 +231,27 @@ def fetch_user_id_from_db(email: str) -> int:
     user_ids = [row['id'] for row in result]
     
     return user_ids[0] if user_ids else None
+
+def get_user_points_by_user_id(user_id):
+    query = f"SELECT points FROM user_points WHERE user_id = %(user_id)s"
+    params = {"user_id": user_id}
+    resp = execute_query(query=query, params=params)
+    data = resp.fetchone()
+    
+    if data is None:
+        raise HTTPException(status_code=404, detail="User points not found")
+    else:
+        return {"points": data['points']}
+
+def update_user_points(user_id, points):
+    # Fetch the user's points record or create one if it doesn't exist
+    query = """
+        INSERT INTO user_points (user_id, points)
+        VALUES (%(user_id)s, %(points)s)
+        ON DUPLICATE KEY UPDATE points = points + %(points)s;
+    """
+    params = {"user_id": user_id, "points": points}
+    return execute_query(query, params=params)
 
 def add_new_user(email: str, generate_tokens: bool = False, auth_token="", inputs={}, password=None, skip_new_user=False):
     message, active, is_mfa_enabled, request_token, token, details = None, False, False, None, None, {}

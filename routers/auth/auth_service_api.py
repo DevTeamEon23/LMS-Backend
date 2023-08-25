@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from starlette.requests import Request
 from routers.auth.auth_db_ops import UserDBHandler
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from .auth_service_ops import verify_token, admin_add_new_user,add_new_user, change_user_password, flush_tokens,fetch_user_id_from_db
+from .auth_service_ops import verify_token, admin_add_new_user,add_new_user, change_user_password, flush_tokens,fetch_user_id_from_db,get_user_points_by_user_id,update_user_points
 from config.logconfig import logger
 from dotenv import load_dotenv
 from schemas.auth_service_schema import (Email, NewUser, User,EmailSchema, UserPassword)
@@ -29,36 +29,14 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-# Original code by Sai
-# def loginResponse(message, active, is_mfa_enabled, request_token, token, details={}):
-#     if token is None and request_token is None:
-#         return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"status": "failure", 'message': message})
-#     if is_mfa_enabled:
-#         return {"status": "success", 'message': message, "is_active": active, "is_mfa_enabled": is_mfa_enabled,
-#                 'request_token': request_token, 'error': None}
-#     else:
-#         if details.keys():
-#             user_detail = {
-#                 "user": {
-#                     "role": details['role'],
-#                     "data": {
-#                         "displayName": details['displayName'],
-#                         "email": details['email'],
-#                         "photoURL": ""  # details['photoURL']
-#                     }},
-#             }
-#         else:
-#             user_detail = {}
-#         return {"status": "success", 'message': message, "is_active": active, "is_mfa_enabled": is_mfa_enabled, "token": token,
-#                 'data': user_detail, 'error': None}
 
-def create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id):
+def create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id, user_points=0):
     if token is None and request_token is None:
         return {"status": "failure", "message": message}
 
     if is_mfa_enabled:
         return {"status": "success", "message": message, "is_active": active, "is_mfa_enabled": is_mfa_enabled,
-                "request_token": request_token}
+                "request_token": request_token, "user_points": user_points}
     else:
         user_detail = {
             "user": {
@@ -78,21 +56,12 @@ def create_login_response(message, active, is_mfa_enabled, request_token, token,
             "is_active": active,
             "is_mfa_enabled": is_mfa_enabled,
             "user_id": user_id,
+            "user_points": user_points,
             "token": token,
             "data": user_detail,
             "error": None
         }
     
-# @auth.post('/login')
-# def login(user: User):
-#     message, active, is_mfa_enabled, request_token, token, details = add_new_user(user.email, password=user.password, auth_token="",
-#                                                                                   inputs={
-#                                                                                       'full_name': user.fullname, 'role': 'user',
-#                                                                                       'users_allowed': '[]', 'active': False,
-#                                                                                       'picture': ""}, skip_new_user=True)
-#     return loginResponse(message, active, is_mfa_enabled, request_token, token, details)
-
-# Login API
 @auth.post('/login')
 def login(user: User):
     email = user.email
@@ -108,10 +77,23 @@ def login(user: User):
     # Fetch the user's ID based on the provided email
     user_id = fetch_user_id_from_db(email)
 
-    # Create a login response including the user ID
-    login_response = create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id)
+    # Award points to the user (e.g., 25 points for each login)
+    if active:
+        points = 25
+        update_user_points(user_id, points)
+
+    # Get the user's current points
+    user_points = get_user_points_by_user_id(user_id)
+
+
+    # Create a login response including the user ID and points
+    login_response = create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id, user_points)
+
+    # # Add user points to the response
+    # login_response["user_points"] = user_points
 
     return JSONResponse(content=login_response)
+
 
 # Token Verification for Other apis
 @auth.get('/verify-token')

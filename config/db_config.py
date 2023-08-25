@@ -403,6 +403,32 @@ cg_table_enrollment = Table(
     Index(f'idx_{table_calender}_token', 'token'),
 )
 
+# Each Login gives 25 Points to users
+users_points = 'user_points'
+table_user_points = Table(
+    users_points, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+
+    # Adding user_id column with foreign key reference
+    Column('user_id', Integer, nullable=False),
+    ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_user_points_user_id'),
+
+    # Points column
+    Column('points', Integer, default=0),
+
+    # Timestamp columns
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+
+    # Unique constraint on user_id
+    UniqueConstraint('user_id', name='uq_user_points_user_id'),
+
+    # Index on points for queries
+    Index('idx_user_points_points', 'points'),
+)
+
+
+
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')
 metadata.create_all(meta_engine, checkfirst=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=meta_engine)
