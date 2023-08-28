@@ -242,7 +242,7 @@ def get_user_points_by_user_id(user_id):
         raise HTTPException(status_code=404, detail="User points not found")
     else:
         return {"points": data['points']}
-
+    
 def get_user_points_by_user():
     try:
         # Query user IDs from the database for the specified course
