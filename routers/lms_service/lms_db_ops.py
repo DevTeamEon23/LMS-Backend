@@ -99,7 +99,7 @@ class LmsHandler:
         query = f""" DELETE FROM users WHERE id = '{id}'; """
         return execute_query(query)
 
-###########################################################################################################################
+######################################## Users to Course & Courses to User #############################################
 
     def get_user_course_enrollment_by_token(token):
         query = f"""SELECT * FROM {course_enrollment} where token=%(token)s and token is not NULL and token != '';"""
@@ -169,7 +169,7 @@ class LmsHandler:
         return execute_query(query)
 
 
-############################################################################################################################
+######################################### Users to Group & Groups to User ##########################################
 
 
     def get_user_group_enrollment_by_token(token):
@@ -226,7 +226,7 @@ class LmsHandler:
         query = f""" DELETE FROM user_group_enrollment WHERE id = '{id}'; """
         return execute_query(query)
     
-############################################################################################################################
+######################################### Courses To Group & Groups To Course #############################################
 
 
     def get_course_group_enrollment_by_token(token):
@@ -259,10 +259,20 @@ class LmsHandler:
                     """
         return execute_query(query, params=params)
 
-#Fetch Enrolled & UnEnrolled Course of groups
+#Fetch Enrolled & UnEnrolled courses of groups
     @classmethod
     def get_all_course_group_enrollment(cls):
-        query = """ SELECT c.*,g.* FROM course_group_enrollment e JOIN course c ON e.user_id = c.id JOIN lmsgroup g ON e.group_id = g.id; """
+        query = """ 
+        SELECT course_id, coursename, category, groupname, course_group_enrollment_id 
+        FROM (SELECT e.course_id as course_id, c.coursename, c.category, lg.groupname, e.id as course_group_enrollment_id, NULL as file, NULL as description, NULL as coursecode, NULL as price, NULL as courselink, NULL as coursevideo, NULL as capacity, NULL as startdate, NULL as enddate, NULL as timelimit, NULL as certificate, NULL as level, NULL as courses_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as isActive, NULL as isHide, NULL as created_at, NULL as updated_at
+          FROM course_group_enrollment e
+          JOIN course c ON e.course_id = c.id
+          JOIN lmsgroup lg ON e.group_id = lg.id
+
+          UNION DISTINCT
+          
+          SELECT id as course_id, coursename, category, NULL as groupname, NULL as course_group_enrollment_id, NULL as file, NULL as description, NULL as coursecode, NULL as price, NULL as courselink, NULL as coursevideo, NULL as capacity, NULL as startdate, NULL as enddate, NULL as timelimit, NULL as certificate, NULL as level, NULL as courses_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as isActive, NULL as isHide, NULL as created_at, NULL as updated_at FROM course WHERE id NOT IN (SELECT course_id FROM course_group_enrollment WHERE course_id IS NOT NULL))
+          AS combined_data; """
         return execute_query(query).fetchall()
     
 #Delete or Remove Enrolled course from group

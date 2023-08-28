@@ -3,7 +3,7 @@ from datetime import datetime
 
 import jwt
 import traceback
-
+import logging
 from dateutil.relativedelta import relativedelta
 from fastapi import Header, HTTPException
 from passlib.context import CryptContext
@@ -243,6 +243,30 @@ def get_user_points_by_user_id(user_id):
     else:
         return {"points": data['points']}
 
+def get_user_points_by_user():
+    try:
+        # Query user IDs from the database for the specified course
+        user_ids = UserDBHandler.get_user_points()
+
+        if not user_ids:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        # Now user_ids is a list of user IDs enrolled in the course
+        # You can return this list or process it further as needed
+
+        return {
+            "user_ids": user_ids,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user enrolled course data"
+        })
+    
 def update_user_points(user_id, points):
     # Fetch the user's points record or create one if it doesn't exist
     query = """

@@ -53,6 +53,8 @@ class UserDBHandler:
             raise HTTPException(status_code=401, detail="User not found")
         else:
             return data
-        
 
-
+    @classmethod    
+    def get_user_points(cls):
+        query = """ SELECT u.full_name, u.role,up.points, u.file FROM users u JOIN user_points up ON u.id = up.user_id; """
+        return execute_query(query).fetchall()

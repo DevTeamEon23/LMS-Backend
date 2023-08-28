@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from starlette.requests import Request
 from routers.auth.auth_db_ops import UserDBHandler
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from .auth_service_ops import verify_token, admin_add_new_user,add_new_user, change_user_password, flush_tokens,fetch_user_id_from_db,get_user_points_by_user_id,update_user_points
+from .auth_service_ops import verify_token, admin_add_new_user,add_new_user, change_user_password, flush_tokens,fetch_user_id_from_db,get_user_points_by_user_id,update_user_points,get_user_points_by_user
 from config.logconfig import logger
 from dotenv import load_dotenv
 from schemas.auth_service_schema import (Email, NewUser, User,EmailSchema, UserPassword)
@@ -251,3 +251,21 @@ async def send_mail(email: EmailSchema):
     print(message)
 
     return JSONResponse(status_code=200, content={"status": "success","message": "Email has been sent","OTP":otp})
+
+
+@auth.get("/fetch_userpoints_by_userid")
+def fetch_userpoints():
+    try:
+        # Fetch all point's data of users here
+        points = get_user_points_by_user()
+
+        return {
+            "status": "success",
+            "data": points
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch points data"
+        }) 

@@ -768,30 +768,22 @@ def enroll_coursegroup(id=int, generate_tokens: bool = False, auth_token="", inp
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='course has been enrolled to groups successfully'))
 
 #Get courses enrolled course data by id
-def fetch_course_group_by_onlyid(id):
-
+def fetch_courses_group_enrolled():
     try:
-        # Query course from the database for the specified id
-        course = LmsHandler.get_course_group_enrollment_by_id(id)
-        # role = LmsHandler.get_course_by_id(id)
+        # Query course IDs from the database for the specified group
+        course_ids = LmsHandler.get_all_course_group_enrollment()
 
-        if not course:
-            # Handle the case when no course or role is found for the specified id
+        if not course_ids:
+            # Handle the case when no course is found for the specified group
             return None
 
+        # Now course_ids is a list of course IDs enrolled in the group
+        # You can return this list or process it further as needed
 
-        # Transform the course object into a dictionary
-        course_data = {
-            "id": course.id,
-            "course_id": course.course_id,
-            "group_id": course.group_id,
-            # "role": role.role,
-            "created_at": course.created_at,
-            "updated_at": course.updated_at,
-            # Include other course attributes as needed
+        return {
+            "course_ids": course_ids,
+            # Include other group attributes as needed
         }
-
-        return course_data
     except Exception as exc:
         logger = logging.getLogger(__name__)
         logger.error(traceback.format_exc())
