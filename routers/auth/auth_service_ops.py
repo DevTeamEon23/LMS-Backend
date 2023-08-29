@@ -242,6 +242,17 @@ def get_user_points_by_user_id(user_id):
         raise HTTPException(status_code=404, detail="User points not found")
     else:
         return {"points": data['points']}
+
+def get_user_level_by_user_id(user_id):
+    query = f"SELECT user_level FROM user_points WHERE user_id = %(user_id)s"
+    params = {"user_id": user_id}
+    resp = execute_query(query=query, params=params)
+    data = resp.fetchone()
+    
+    if data is None:
+        raise HTTPException(status_code=404, detail="User user_level not found")
+    else:
+        return {"user_level": data['user_level']}
     
 def get_user_points_by_user():
     try:
@@ -267,15 +278,31 @@ def get_user_points_by_user():
             "message": "Failed to fetch user enrolled course data"
         })
     
+# def update_user_points(user_id, points):
+#     # Fetch the user's points record or create one if it doesn't exist
+#     query = """
+#         INSERT INTO user_points (user_id, points)
+#         VALUES (%(user_id)s, %(points)s)
+#         ON DUPLICATE KEY UPDATE points = points + %(points)s;
+#     """
+#     params = {"user_id": user_id, "points": points}
+#     return execute_query(query, params=params)
+
 def update_user_points(user_id, points):
     # Fetch the user's points record or create one if it doesn't exist
     query = """
-        INSERT INTO user_points (user_id, points)
-        VALUES (%(user_id)s, %(points)s)
-        ON DUPLICATE KEY UPDATE points = points + %(points)s;
+        INSERT INTO user_points (user_id, points, user_level)
+        VALUES (%(user_id)s, %(points)s, 0)
+        ON DUPLICATE KEY UPDATE points = points + %(points)s,
+                                user_level = CASE
+                                    WHEN points + %(points)s >= 600 THEN 2
+                                    WHEN points + %(points)s >= 300 THEN 1
+                                    ELSE 0
+                                END;
     """
     params = {"user_id": user_id, "points": points}
-    return execute_query(query, params=params)
+    execute_query(query, params=params)
+
 
 def add_new_user(email: str, generate_tokens: bool = False, auth_token="", inputs={}, password=None, skip_new_user=False):
     message, active, is_mfa_enabled, request_token, token, details = None, False, False, None, None, {}
