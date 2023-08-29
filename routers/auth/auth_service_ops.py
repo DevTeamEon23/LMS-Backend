@@ -242,17 +242,6 @@ def get_user_points_by_user_id(user_id):
         raise HTTPException(status_code=404, detail="User points not found")
     else:
         return {"points": data['points']}
-
-def get_user_level_by_user_id(user_id):
-    query = f"SELECT user_level FROM user_points WHERE user_id = %(user_id)s"
-    params = {"user_id": user_id}
-    resp = execute_query(query=query, params=params)
-    data = resp.fetchone()
-    
-    if data is None:
-        raise HTTPException(status_code=404, detail="User user_level not found")
-    else:
-        return {"user_level": data['user_level']}
     
 def get_user_points_by_user():
     try:
