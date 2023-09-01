@@ -23,7 +23,7 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_course,enroll_group,user_exists,enroll_coursegroup,delete_user_course_by_id,delete_user_group_by_id,fetch_courses_group_enrolled,delete_course_group_by_id,fetch_users_data_export,fetch_courses_data_export,fetch_users_course_enrolled,fetch_users_group_enrolled
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_course,enroll_group,user_exists,enroll_coursegroup,delete_user_course_by_id,delete_user_group_by_id,fetch_courses_group_enrolled,delete_course_group_by_id,fetch_users_data_export,fetch_courses_data_export,fetch_users_course_enrolled,fetch_users_group_enrolled,enroll_coursegroup_massaction
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender,UnenrolledUsers_Course,UnenrolledUsers_Group,UnenrolledCourse_Group,UnenrolledUsers_Group)
 from utils import success_response
@@ -403,162 +403,6 @@ def delete_user(payload: DeleteUser):
             "message": "Failed to Delete user data"
         })
 
-###################################################################################################################
-
-# Create enroll_course
-@service.post('/enroll_course')
-async def enroll_course_user(user_id: int = Form(...),course_id: int = Form(...), generate_token: bool = Form(...)):
-    try:
-        return enroll_course(user_id,generate_token, auth_token="", inputs={
-                'user_id': user_id,'course_id': course_id,'enrollment_allowed': '[]', 'picture': ""})
-    except Exception as exc: 
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "User enrolled to course failed"
-        })
-
-@service.get("/fetch_enrollusers_course")
-def fetch_user_enrollcourse_by_onlycourse_id():
-    try:
-        # Fetch all enrolled users' data of course here
-        courses = fetch_users_course_enrolled()
-
-        return {
-            "status": "success",
-            "data": courses
-        }
-    except Exception as exc:
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
-            "status": "failure",
-            "message": "Failed to fetch enrolled courses' data"
-        }) 
-    
-# Unenrolled USER from Course
-@service.delete("/unenroll_user_course")
-def unenroll_user_course(payload: UnenrolledUsers_Course):
-    try:
-        users = delete_user_course_by_id(payload.id)
-        return {
-            "status": "success",
-            "data": users
-        }
-    except Exception as exc:
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
-            "status": "failure",
-            "message": "Failed to Unenrolled user data from course"
-        })
-
-###################################################################################################################
-
-# Create enroll_group
-@service.post('/enroll_group')
-async def enroll_group_user(user_id: int = Form(...),group_id: int = Form(...), generate_token: bool = Form(...)):
-    try:
-        return enroll_group(user_id,generate_token, auth_token="", inputs={
-                'user_id': user_id,'group_id': group_id,'enrollment_allowed': '[]', 'picture': ""})
-    except Exception as exc: 
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "User enrolled to group failed"
-        })
-
-@service.get("/fetch_enrollusers_group")
-def fetch_user_enrollgroup_by_onlygroup_id():
-    try:
-        # Fetch all enrolled users' data of group here
-        groups = fetch_users_group_enrolled()
-
-        return {
-            "status": "success",
-            "data": groups
-        }
-    except Exception as exc:
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
-            "status": "failure",
-            "message": "Failed to fetch enrolled groups' data"
-        }) 
-    
-# Unenrolled USER from Group
-@service.delete("/unenroll_user_group")
-def unenroll_user_group(payload: UnenrolledUsers_Group):
-    try:
-        users = delete_user_group_by_id(payload.id)
-        return {
-            "status": "success",
-            "data": users
-        }
-    except Exception as exc:
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
-            "status": "failure",
-            "message": "Failed to Unenrolled user data from group"
-        })
-
-###################################################################################################################
-
-# Create enroll_course_group
-# @service.post('/enroll_course_group')
-# async def enroll_course_group(: int = Form(...),group_id: int = Form(...), generate_token: bool = Form(...)):
-#     try:
-#         return enroll_coursegroup(course_id,generate_token, auth_token="", inputs={
-#                 'course_id': course_id,'group_id': group_id,'cr_grp_allowed': '[]', 'picture': ""})
-#     except Exception as exc: 
-#         logger.error(traceback.format_exc())
-#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-#             "status": "failure",
-#             "message": "course enrolled to group failed"
-#         })
-    
-# Create enroll_group
-@service.post('/enroll_course_group')
-async def enroll_group_user(course_id: int = Form(...),group_id: int = Form(...), generate_token: bool = Form(...)):
-    try:
-        return enroll_group(course_id,generate_token, auth_token="", inputs={
-                'course_id': course_id,'group_id': group_id,'enrollment_allowed': '[]', 'picture': ""})
-    except Exception as exc: 
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "course enrolled to group failed"
-        })
-
-@service.get("/fetch_enrollcourses_group")
-def fetch_course_enrollgroup_by_onlygroup_id():
-    try:
-        # Fetch all enrolled courses' data of group here
-        groups = fetch_courses_group_enrolled()
-
-        return {
-            "status": "success",
-            "data": groups
-        }
-    except Exception as exc:
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
-            "status": "failure",
-            "message": "Failed to fetch enrolled groups' data"
-        }) 
-    
-# Unenrolled course from Group
-@service.delete("/unenroll_course_group")
-def unenroll_course_group(payload: UnenrolledCourse_Group):
-    try:
-        courses = delete_course_group_by_id(payload.id)
-        return {
-            "status": "success",
-            "data": courses
-        }
-    except Exception as exc:
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
-            "status": "failure",
-            "message": "Failed to Unenrolled course data from group"
-        })
 
 ############################################################################################################################
 
@@ -1436,5 +1280,262 @@ def get_image(filename: str):
         return FileResponse(image_path, media_type="image/jpeg")
     else:
         return {"error": "Image not found"}
+    
+
+# Files
+
+# Define the directory where uploaded files will be stored
+UPLOAD_DIR = "uploads"
+
+# Create the upload directory if it doesn't exist
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Define the allowed file types and their maximum file sizes
+ALLOWED_FILE_TYPES = {
+    'ppt': 100,
+    'pptx': 100,
+    'doc': 100,
+    'docx': 100,
+    'xls': 100,
+    'xlsx': 100,
+    'pdf': 100,
+    'csv': 100,
+    'epub': 100,
+    'gz': 100,
+    'sql': 100,
+    'txt': 2,
+    'vtt': 2,
+    'srt': 2,
+    'gif': 10,
+    'jpg': 10,
+    'jpeg': 10,
+    'png': 10,
+    'heic': 10,
+    'mp4': 100,
+    'webm': 100,
+    # Add more file types as needed
+}
+
+# Upload files and mark them as active
+@service.post("/upload/")
+async def upload_file(file: UploadFile, active: bool):
+    try:
+        # Check if the file type is allowed
+        file_ext = file.filename.split(".")[-1]
+        if file_ext not in ALLOWED_FILE_TYPES:
+            return JSONResponse(status_code=400, content={"status": "failure", "message": "File type not allowed"})
+
+        # Check if the file size is within the allowed limit
+        max_file_size = ALLOWED_FILE_TYPES[file_ext]
+        if file.file_size > max_file_size * 1024 * 1024:  # Convert MB to bytes
+            return JSONResponse(status_code=400, content={"status": "failure", "message": "File size exceeds the allowed limit"})
+
+        # Save the file to the upload directory
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
+        with open(file_path, "wb") as f:
+            f.write(file.file.read())
+
+        # Save file metadata to the database
+        data = {
+            "filename": file.filename,
+            "file_type": file.content_type,
+            "file_size": os.path.getsize(file_path),
+            "active": active,
+        }
+
+        # Use your existing UserDBHandler to save the data to the database
+        resp = LmsHandler.add_user_to_db(data)
+
+        return JSONResponse(content={"status": "success", "message": "File uploaded successfully"})
+
+    except Exception as exc:
+        return JSONResponse(status_code=500, content={"status": "failure", "message": "Failed to upload file"})
+
+# Fetch active files
+@service.get("/files/")
+def fetch_user_enrollcourse_by_onlycourse_id():
+    try:
+        # Fetch all enrolled users' data of course here
+        courses = fetch_users_course_enrolled()
+
+        return {
+            "status": "success",
+            "data": courses
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled courses' data"
+        })
+    
+###################################################################################################################
+
+# Create enroll_course
+@service.post('/enroll_course',tags=["COURSE :  Enroll Users"])
+async def enroll_course_user(user_id: int = Form(...),course_id: int = Form(...), generate_token: bool = Form(...)):
+    try:
+        return enroll_course(user_id,generate_token, auth_token="", inputs={
+                'user_id': user_id,'course_id': course_id,'enrollment_allowed': '[]', 'picture': ""})
+    except Exception as exc: 
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "User enrolled to course failed"
+        })
+
+@service.get("/fetch_enrollusers_course",tags=["COURSE :  Enroll Users"])
+def fetch_user_enrollcourse_by_onlycourse_id():
+    try:
+        # Fetch all enrolled users' data of course here
+        courses = fetch_users_course_enrolled()
+
+        return {
+            "status": "success",
+            "data": courses
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled courses' data"
+        }) 
+    
+# Unenrolled USER from Course
+@service.delete("/unenroll_user_course",tags=["COURSE :  Enroll Users"])
+def unenroll_user_course(payload: UnenrolledUsers_Course):
+    try:
+        users = delete_user_course_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": users
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled user data from course"
+        })
+
+###################################################################################################################
+
+# Create enroll_group
+@service.post('/enroll_group',tags=["GROUP :  Enroll Users"])
+async def enroll_group_user(user_id: int = Form(...),group_id: int = Form(...), generate_token: bool = Form(...)):
+    try:
+        return enroll_group(user_id,generate_token, auth_token="", inputs={
+                'user_id': user_id,'group_id': group_id,'enrollment_allowed': '[]', 'picture': ""})
+    except Exception as exc: 
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "User enrolled to group failed"
+        })
+
+@service.get("/fetch_enrollusers_group",tags=["GROUP :  Enroll Users"])
+def fetch_user_enrollgroup_by_onlygroup_id():
+    try:
+        # Fetch all enrolled users' data of group here
+        groups = fetch_users_group_enrolled()
+
+        return {
+            "status": "success",
+            "data": groups
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled groups' data"
+        }) 
+    
+# Unenrolled USER from Group
+@service.delete("/unenroll_user_group",tags=["GROUP :  Enroll Users"])
+def unenroll_user_group(payload: UnenrolledUsers_Group):
+    try:
+        users = delete_user_group_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": users
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled user data from group"
+        })
+
+###################################################################################################################
+
+# Create enroll_course_group
+# @service.post('/enroll_course_group')
+# async def enroll_course_group(: int = Form(...),group_id: int = Form(...), generate_token: bool = Form(...)):
+#     try:
+#         return enroll_coursegroup(course_id,generate_token, auth_token="", inputs={
+#                 'course_id': course_id,'group_id': group_id,'cr_grp_allowed': '[]', 'picture': ""})
+#     except Exception as exc: 
+#         logger.error(traceback.format_exc())
+#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#             "status": "failure",
+#             "message": "course enrolled to group failed"
+#         })
+    
+@service.post('/enroll_course_group',tags=["COURSE :  Enroll Group"])
+async def enroll_course_group(course_id: int = Form(...),group_id: int = Form(...), generate_token: bool = Form(...)):
+    try:
+        return enroll_coursegroup(course_id,generate_token, auth_token="", inputs={
+                'course_id': course_id,'group_id': group_id,'enrollment_allowed': '[]', 'picture': ""})
+    except Exception as exc: 
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "course enrolled to group failed"
+        })
+    
+# Create enroll_group
+@service.post('/mass_enroll_course_group',tags=["Group :  Mass Enroll Course to Group"])
+async def massaction_groups_enroll(course_id: int = Form(...), generate_token: bool = Form(...)):
+    try:
+        return enroll_coursegroup_massaction(course_id,generate_token, auth_token="", inputs={
+                'course_id': course_id,'enrollment_allowed': '[]', 'picture': ""})
+    except Exception as exc: 
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "course enrolled to group failed"
+        })
+
+@service.get("/fetch_enrollcourses_group",tags=["COURSE :  Enroll Group"])
+def fetch_course_enrollgroup_by_onlygroup_id():
+    try:
+        # Fetch all enrolled courses' data of group here
+        groups = fetch_courses_group_enrolled()
+
+        return {
+            "status": "success",
+            "data": groups
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled groups' data"
+        }) 
+    
+# Unenrolled course from Group
+@service.delete("/unenroll_course_group",tags=["COURSE :  Enroll Group"])
+def unenroll_course_group(payload: UnenrolledCourse_Group):
+    try:
+        courses = delete_course_group_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": courses
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled course data from group"
+        })
 
 

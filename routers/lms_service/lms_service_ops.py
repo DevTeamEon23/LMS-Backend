@@ -14,7 +14,7 @@ from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,course_enrollment,group_enrollment,course_group_enroll
+from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,course_enrollment,group_enrollment,course_group_enroll,n_table_user_files
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import AddUser
@@ -109,6 +109,11 @@ def create_groupenroll_token(user_id):
 def create_course_groupenroll_token(course_id):
     base = random_string(8) + str(course_id) + random_string(8)
     token = MD5(base)
+    return token
+
+def create_files_token(user_id):
+    base = random_string(8) + str(user_id) + random_string(8)
+    token = md5(base)
     return token
 
 def random_password(password_length=12):
@@ -500,309 +505,6 @@ def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, pa
         return True
     else:
         raise ValueError("User does not exists")
-
-################################################# Enroll Course to User  ###################################################
-
-def check_existing_userid(id):
-
-    query = f"""
-    select * from {course_enrollment} where id=%(id)s;
-    """
-    response = execute_query(query, params={'id': id})
-    data = response.fetchone()
-
-    if data is None:
-        return False
-    else:
-        return True
-    
-
-def enroll_course(id= int,generate_tokens: bool = False, auth_token="", inputs={},skip_new_courseenroll=False):
-    try:
-
-        user_id = inputs.get('user_id')
-        course_id = inputs.get('course_id')
-
-        # Generate the token here
-        token = create_courseenroll_token(user_id) 
-
-        request_token = ''
-        
-        # Add New User to the list of users
-        data = {'user_id': user_id, 'course_id': course_id,
-                'enrollment_allowed': inputs.get('enrollment_allowed', ''), 'auth_token': auth_token,
-                'request_token': request_token, 'token': token}
-
-        resp = LmsHandler.add_user_course_enrollment(data)
-        # If token not required,
-        if not generate_tokens and len(auth_token) == 0:
-            token = None
-
-    except ValueError as exc:
-        logger.error(traceback.format_exc())
-        message = exc.args[0]
-        logger.error(message)
-
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course has been enrolled to user successfully'))
-
-# #Get Users enrolled course data by id
-# def fetch_users_course_by_onlyid(course_id):
-
-#     try:
-#         # Query user from the database for the specified id
-#         course = LmsHandler.get_user_course_enrollment_by_id(course_id)
-#         # role = LmsHandler.get_user_by_id(id)
-
-#         if not course:
-#             # Handle the case when no user or role is found for the specified id
-#             return None
-
-
-#         # Transform the user object into a dictionary
-#         enrolled_course_data = {
-#             "id": course.id,
-#             "user_id": course.user_id,
-#             "course_id": course.course_id,
-#             # "role": role.role,
-#             "created_at": course.created_at,
-#             "updated_at": course.updated_at,
-#             # Include other course attributes as needed
-#         }
-
-#         return enrolled_course_data
-#     except Exception as exc:
-#         logger = logging.getLogger(__name__)
-#         logger.error(traceback.format_exc())
-#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-#             "status": "failure",
-#             "message": "Failed to fetch user enrolled course data"
-#         })
-
-def fetch_users_course_enrolled():
-    try:
-        # Query user IDs from the database for the specified course
-        user_ids = LmsHandler.get_all_user_course_enrollment()
-
-        if not user_ids:
-            # Handle the case when no user is found for the specified course
-            return None
-
-        # Now user_ids is a list of user IDs enrolled in the course
-        # You can return this list or process it further as needed
-
-        return {
-            "user_ids": user_ids,
-            # Include other course attributes as needed
-        }
-    except Exception as exc:
-        logger = logging.getLogger(__name__)
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "Failed to fetch user enrolled course data"
-        })
-    
-def delete_user_course_by_id(id):
-    try:
-        # Delete the user by ID
-        users = LmsHandler.delete_user_course_enrollment(id)
-        return users
-    except Exception as exc:
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "Failed to Unenrolled user data from course"
-        })
-
-################################################# Enroll Groups to User  ###################################################
-
-def check_existing_userid(id):
-
-    query = f"""
-    select * from {group_enrollment} where id=%(id)s;
-    """
-    response = execute_query(query, params={'id': id})
-    data = response.fetchone()
-
-    if data is None:
-        return False
-    else:
-        return True
-    
-
-def enroll_group(id= int,generate_tokens: bool = False, auth_token="", inputs={},skip_new_groupenroll=False):
-    try:
-
-        user_id = inputs.get('user_id')
-        group_id = inputs.get('group_id')
-
-        # Generate the token here
-        token = create_groupenroll_token(user_id) 
-
-        request_token = ''
-        
-        # Add New User to the list of users
-        data = {'user_id': user_id, 'group_id': group_id,
-                'enrollment_allowed': inputs.get('enrollment_allowed', ''), 'auth_token': auth_token,
-                'request_token': request_token, 'token': token}
-
-        resp = LmsHandler.add_user_group_enrollment(data)
-        # If token not required,
-        if not generate_tokens and len(auth_token) == 0:
-            token = None
-
-    except ValueError as exc:
-        logger.error(traceback.format_exc())
-        message = exc.args[0]
-        logger.error(message)
-
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='group has been enrolled to user successfully'))
-
-#Get Users enrolled group data by id
-def fetch_users_group_enrolled():
-    try:
-        # Query user IDs from the database for the specified group
-        user_ids = LmsHandler.get_all_user_group_enrollment()
-
-        if not user_ids:
-            # Handle the case when no user is found for the specified group
-            return None
-
-        # Now user_ids is a list of user IDs enrolled in the group
-        # You can return this list or process it further as needed
-
-        return {
-            "user_ids": user_ids,
-            # Include other group attributes as needed
-        }
-    except Exception as exc:
-        logger = logging.getLogger(__name__)
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "Failed to fetch user enrolled group data"
-        })
-
-def delete_user_group_by_id(id):
-    try:
-        # Delete the user by ID
-        users = LmsHandler.delete_user_group_enrollment(id)
-        return users
-    except Exception as exc:
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "Failed to Unenrolled user data from group"
-        })
-
-################################################# Enroll Course to Group  ###################################################
-
-def check_existing_courseid(id):
-
-    query = f"""
-    select * from {course_group_enroll} where id=%(id)s;
-    """
-    response = execute_query(query, params={'id': id})
-    data = response.fetchone()
-
-    if data is None:
-        return False
-    else:
-        return True
-    
-
-# def enroll_coursegroup(id= int,generate_tokens: bool = False, auth_token="", inputs={},skip_new_crgroupenroll=False):
-#     try:
-
-#          = inputs.get('course_id')
-#         group_id = inputs.get('group_id')
-
-#         # Generate the token here
-#         token = create_course_groupenroll_token(course_id) 
-
-#         request_token = ''
-        
-#         # Add New course to the list of group
-#         data = {'course_id': course_id, 'group_id': group_id,
-#                 'cr_grp_allowed': inputs.get('cr_grp_allowed', ''), 'auth_token': auth_token,
-#                 'request_token': request_token, 'token': token}
-
-#         resp = LmsHandler.add_course_group_enrollment(data)
-#         # If token not required,
-#         if not generate_tokens and len(auth_token) == 0:
-#             token = None
-
-#     except ValueError as exc:
-#         logger.error(traceback.format_exc())
-#         message = exc.args[0]
-#         logger.error(message)
-
-#     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='course has been enrolled to group successfully'))
-
-def enroll_coursegroup(id=int, generate_tokens: bool = False, auth_token="", inputs={}, skip_new_crgroupenroll=False):
-    try:
-        course_id = inputs.get('course_id')
-        group_ids = inputs.get('group_id')  # Use () instead of []
-
-        # Generate the token here
-        token = create_course_groupenroll_token(course_id)
-
-        request_token = ''
-
-        for group_id in group_ids:
-            # Add the course to each group
-            data = {'course_id': course_id, 'group_id': group_id,
-                    'cr_grp_allowed': inputs.get('cr_grp_allowed', ''), 'auth_token': auth_token,
-                    'request_token': request_token, 'token': token}
-            resp = LmsHandler.add_course_group_enrollment(data)
-
-        # If token not required,
-        if not generate_tokens and len(auth_token) == 0:
-            token = None
-
-    except ValueError as exc:
-        logger.error(traceback.format_exc())
-        message = exc.args[0]
-        logger.error(message)
-
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='course has been enrolled to groups successfully'))
-
-#Get courses enrolled course data by id
-def fetch_courses_group_enrolled():
-    try:
-        # Query course IDs from the database for the specified group
-        course_ids = LmsHandler.get_all_course_group_enrollment()
-
-        if not course_ids:
-            # Handle the case when no course is found for the specified group
-            return None
-
-        # Now course_ids is a list of course IDs enrolled in the group
-        # You can return this list or process it further as needed
-
-        return {
-            "course_ids": course_ids,
-            # Include other group attributes as needed
-        }
-    except Exception as exc:
-        logger = logging.getLogger(__name__)
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "Failed to fetch course enrolled group data"
-        })
-
-def delete_course_group_by_id(id):
-    try:
-        # Delete the course by ID
-        courses = LmsHandler.delete_course_group_enrollment(id)
-        return courses
-    except Exception as exc:
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "Failed to Unenrolled course data from group"
-        })
         
 ##################################################   COURSES  ###########################################################################
 
@@ -2419,4 +2121,439 @@ def fetch_courses_data_export():
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
             "message": "Failed to fetch courses data"
+        })
+    
+################################################# Enroll Course to User  ###################################################
+
+def check_existing_userid(id):
+
+    query = f"""
+    select * from {course_enrollment} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+
+def enroll_course(id= int,generate_tokens: bool = False, auth_token="", inputs={},skip_new_courseenroll=False):
+    try:
+
+        user_id = inputs.get('user_id')
+        course_id = inputs.get('course_id')
+
+        # Generate the token here
+        token = create_courseenroll_token(user_id) 
+
+        request_token = ''
+        
+        # Add New User to the list of users
+        data = {'user_id': user_id, 'course_id': course_id,
+                'enrollment_allowed': inputs.get('enrollment_allowed', ''), 'auth_token': auth_token,
+                'request_token': request_token, 'token': token}
+
+        resp = LmsHandler.add_user_course_enrollment(data)
+        # If token not required,
+        if not generate_tokens and len(auth_token) == 0:
+            token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course has been enrolled to user successfully'))
+
+# #Get Users enrolled course data by id
+# def fetch_users_course_by_onlyid(course_id):
+
+#     try:
+#         # Query user from the database for the specified id
+#         course = LmsHandler.get_user_course_enrollment_by_id(course_id)
+#         # role = LmsHandler.get_user_by_id(id)
+
+#         if not course:
+#             # Handle the case when no user or role is found for the specified id
+#             return None
+
+
+#         # Transform the user object into a dictionary
+#         enrolled_course_data = {
+#             "id": course.id,
+#             "user_id": course.user_id,
+#             "course_id": course.course_id,
+#             # "role": role.role,
+#             "created_at": course.created_at,
+#             "updated_at": course.updated_at,
+#             # Include other course attributes as needed
+#         }
+
+#         return enrolled_course_data
+#     except Exception as exc:
+#         logger = logging.getLogger(__name__)
+#         logger.error(traceback.format_exc())
+#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#             "status": "failure",
+#             "message": "Failed to fetch user enrolled course data"
+#         })
+
+def fetch_users_course_enrolled():
+    try:
+        # Query user IDs from the database for the specified course
+        user_ids = LmsHandler.get_all_user_course_enrollment()
+
+        if not user_ids:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        # Now user_ids is a list of user IDs enrolled in the course
+        # You can return this list or process it further as needed
+
+        return {
+            "user_ids": user_ids,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user enrolled course data"
+        })
+    
+def delete_user_course_by_id(id):
+    try:
+        # Delete the user by ID
+        users = LmsHandler.delete_user_course_enrollment(id)
+        return users
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled user data from course"
+        })
+
+################################################# Enroll Groups to User  ###################################################
+
+def check_existing_userid(id):
+
+    query = f"""
+    select * from {group_enrollment} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+
+def enroll_group(id= int,generate_tokens: bool = False, auth_token="", inputs={},skip_new_groupenroll=False):
+    try:
+
+        user_id = inputs.get('user_id')
+        group_id = inputs.get('group_id')
+
+        # Generate the token here
+        token = create_groupenroll_token(user_id) 
+
+        request_token = ''
+        
+        # Add New User to the list of users
+        data = {'user_id': user_id, 'group_id': group_id,
+                'enrollment_allowed': inputs.get('enrollment_allowed', ''), 'auth_token': auth_token,
+                'request_token': request_token, 'token': token}
+
+        resp = LmsHandler.add_user_group_enrollment(data)
+        # If token not required,
+        if not generate_tokens and len(auth_token) == 0:
+            token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='group has been enrolled to user successfully'))
+
+#Get Users enrolled group data by id
+def fetch_users_group_enrolled():
+    try:
+        # Query user IDs from the database for the specified group
+        user_ids = LmsHandler.get_all_user_group_enrollment()
+
+        if not user_ids:
+            # Handle the case when no user is found for the specified group
+            return None
+
+        # Now user_ids is a list of user IDs enrolled in the group
+        # You can return this list or process it further as needed
+
+        return {
+            "user_ids": user_ids,
+            # Include other group attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user enrolled group data"
+        })
+
+def delete_user_group_by_id(id):
+    try:
+        # Delete the user by ID
+        users = LmsHandler.delete_user_group_enrollment(id)
+        return users
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled user data from group"
+        })
+
+################################################# Enroll Course to Group  ###################################################
+
+def check_existing_courseid(id):
+
+    query = f"""
+    select * from {course_group_enroll} where id=%(id)s;
+    """
+    response = execute_query(query, params={'id': id})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+
+# def enroll_coursegroup(id= int,generate_tokens: bool = False, auth_token="", inputs={},skip_new_crgroupenroll=False):
+#     try:
+
+#          = inputs.get('course_id')
+#         group_id = inputs.get('group_id')
+
+#         # Generate the token here
+#         token = create_course_groupenroll_token(course_id) 
+
+#         request_token = ''
+        
+#         # Add New course to the list of group
+#         data = {'course_id': course_id, 'group_id': group_id,
+#                 'cr_grp_allowed': inputs.get('cr_grp_allowed', ''), 'auth_token': auth_token,
+#                 'request_token': request_token, 'token': token}
+
+#         resp = LmsHandler.add_course_group_enrollment(data)
+#         # If token not required,
+#         if not generate_tokens and len(auth_token) == 0:
+#             token = None
+
+#     except ValueError as exc:
+#         logger.error(traceback.format_exc())
+#         message = exc.args[0]
+#         logger.error(message)
+
+#     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='course has been enrolled to group successfully'))
+
+def enroll_coursegroup(id=int, generate_tokens: bool = False, auth_token="", inputs={}, skip_new_crgroupenroll=False):
+    try:
+        course_id = inputs.get('course_id')
+        group_id = inputs.get('group_id')  # Use () instead of []
+
+        # Generate the token here
+        token = create_course_groupenroll_token(course_id)
+
+        request_token = ''
+
+        data = {'course_id': course_id, 'group_id': group_id,
+                'cr_grp_allowed': inputs.get('cr_grp_allowed', ''), 'auth_token': auth_token,
+                'request_token': request_token, 'token': token}
+        resp = LmsHandler.add_course_group_enrollment(data)
+
+        # If token not required,
+        if not generate_tokens and len(auth_token) == 0:
+            token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='course has been enrolled to groups successfully'))
+
+def enroll_coursegroup_massaction(id=int, generate_tokens: bool = False, auth_token="", inputs={}, skip_new_crgroupenroll=False):
+    try:
+        course_id = inputs.get('course_id')
+                # Query all group IDs from the lmsgroup table
+        group_ids_query = "SELECT id FROM lmsgroup"
+        group_ids_result = execute_query(group_ids_query)
+        group_ids = [row['id'] for row in group_ids_result]  # Use () instead of []
+
+        # Generate the token here
+        token = create_course_groupenroll_token(course_id)
+
+        request_token = ''
+
+        for group_id in group_ids:
+            # Add the course to each group
+            data = {'course_id': course_id, 'group_id': group_id,
+                    'cr_grp_allowed': inputs.get('cr_grp_allowed', ''), 'auth_token': auth_token,
+                    'request_token': request_token, 'token': token}
+            resp = LmsHandler.add_course_group_enrollment(data)
+
+        # If token not required,
+        if not generate_tokens and len(auth_token) == 0:
+            token = None
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='course has been enrolled to groups successfully'))
+
+#Get courses enrolled course data by id
+def fetch_courses_group_enrolled():
+    try:
+        # Query course IDs from the database for the specified group
+        course_ids = LmsHandler.get_all_course_group_enrollment()
+
+        if not course_ids:
+            # Handle the case when no course is found for the specified group
+            return None
+
+        # Now course_ids is a list of course IDs enrolled in the group
+        # You can return this list or process it further as needed
+
+        return {
+            "course_ids": course_ids,
+            # Include other group attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch course enrolled group data"
+        })
+
+def delete_course_group_by_id(id):
+    try:
+        # Delete the course by ID
+        courses = LmsHandler.delete_course_group_enrollment(id)
+        return courses
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled course data from group"
+        })
+    
+####################################################################################################################
+
+def check_existing_files(user_id):
+
+    query = f"""
+    select * from {n_table_user_files} where user_id=%(user_id)s;
+    """
+    response = execute_query(query, params={'user_id': user_id})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+#Add Files and select active or deactive for user access
+def add_files(user_id: int, files: bytes, files_allowed: bool = False,generate_tokens: bool = False, auth_token="", inputs={},skip_new_files=False):
+    try:
+        # Check if files already exist and if it's allowed
+        is_existing = check_existing_files(user_id)  # Implement this function as needed
+
+        if is_existing:
+            # File already exists
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "message": "Files for this user already exist"
+            })
+
+        elif not is_existing and not skip_new_files:
+            # Extract parameters
+            user_id = inputs.get('user_id')
+            files = inputs.get('files')
+            files_allowed = inputs.get('files_allowed')
+            auth_token = inputs.get('auth_token')
+
+            # Generate tokens if needed
+            token = create_files_token(user_id)
+
+            request_token = ''
+
+            # Add new files to the database
+            data = {
+                'user_id': user_id,
+                'files': files,
+                'files_allowed': files_allowed,
+                'auth_token': auth_token,
+                'request_token': request_token,
+                'token': token
+            }
+
+            # Call the function to add files (replace with your actual function)
+            resp = LmsHandler.add_files(data)
+
+            # If tokens are not required
+            if not generate_tokens and len(auth_token) == 0:
+                token = None
+
+    except ValueError as exc:
+        # Handle exceptions
+        logger.error(traceback.format_exc())
+        message = exc.args[0]
+        logger.error(message)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content={
+        "status": "success",
+        "message": "Files added successfully"
+    })
+
+#Fetch Files
+def fetch_active_files():
+
+    try:
+        # Query Calender from the database for the specified id
+        files = LmsHandler.fetch_active_files()
+
+        if not files:
+            # Handle the case when no Calender is found for the specified id
+            return None
+
+        # Transform the Calender object into a dictionary
+        files_data = {
+                "id": files.id,
+                "user_id": files.user_id,
+                "files": files.files,
+                "files_allowed": files.files_allowed,
+                "auth_token": files.auth_token,
+                "request_token": files.request_token,
+                "token": files.token,
+                "active": files.active,
+                "deactive": files.deactive,
+                "created_at": files.created_at,
+                "updated_at": files.updated_at,
+            # Include other files attributes as needed
+        }
+
+        return files_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch Files List"
         })

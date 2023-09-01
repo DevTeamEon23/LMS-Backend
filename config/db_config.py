@@ -342,12 +342,8 @@ course_enrollment = 'user_course_enrollment'
 s_table_enrollment = Table(
     course_enrollment, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
-
-    # Adding user_id column with foreign key reference
     Column('user_id', Integer, nullable=False),
     ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_user_id'),
-
-    # Adding course_id column with foreign key reference
     Column('course_id', Integer, nullable=False),
     ForeignKeyConstraint(['course_id'], ['course.id'], name='fk_course_id'),
     Column('enrollment_allowed', VARCHAR(150), nullable=False),
@@ -364,12 +360,8 @@ group_enrollment = 'user_group_enrollment'
 g_table_enrollment = Table(
     group_enrollment, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
-
-    # Adding user_id column with foreign key reference
     Column('user_id', Integer, nullable=False),
     ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_user_grp_id'),
-
-    # Adding group_id column with foreign key reference
     Column('group_id', Integer, nullable=False),
     ForeignKeyConstraint(['group_id'], ['lmsgroup.id'], name='fk_group_id'),
     Column('enrollment_allowed', VARCHAR(150), nullable=False),
@@ -386,12 +378,8 @@ course_group_enroll = 'course_group_enrollment'
 cg_table_enrollment = Table(
     course_group_enroll, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
-
-    # Adding course_id column with foreign key reference
     Column('course_id', Integer, nullable=False),
     ForeignKeyConstraint(['course_id'], ['course.id'], name='fk_course_grp_id'),
-
-    # Adding group_id column with foreign key reference
     Column('group_id', Integer, nullable=False),
     ForeignKeyConstraint(['group_id'], ['lmsgroup.id'], name='fk_cr_group_id'),
     Column('cr_grp_allowed', VARCHAR(150), nullable=False),
@@ -408,26 +396,34 @@ users_points = 'user_points'
 table_user_points = Table(
     users_points, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
-
-    # Adding user_id column with foreign key reference
     Column('user_id', Integer, nullable=False),
     ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_user_points_user_id'),
-
-    # Points column
     Column('points', Integer, default=0),
-
-    # Timestamp columns
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-
-    # Unique constraint on user_id
     UniqueConstraint('user_id', name='uq_user_points_user_id'),
-
-    # Index on points for queries
     Index('idx_user_points_points', 'points'),
 )
 
-
+#Documents of users 
+n_table_user_files = 'documents'
+user_files_table = Table(
+    n_table_user_files, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('user_id', Integer, nullable=False),
+    ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_user_files_user_id'),  # Foreign key with a specific name
+    Column('files', LONGBLOB, nullable=False),
+    Column('files_allowed', VARCHAR(150), nullable=False),
+    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+    Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('active', BOOLEAN, default=True, nullable=False),
+    Column('deactive', BOOLEAN, default=False, nullable=True),
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    UniqueConstraint('user_id', name='uq_user_files_user_id'),
+    Index(f'idx_{n_table_user_files}_token', 'token'),
+)
 
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')
 metadata.create_all(meta_engine, checkfirst=True)
