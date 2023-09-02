@@ -337,16 +337,16 @@ s_table_calender = Table(
     Index(f'idx_{table_calender}_token', 'token'),
 )
 
-# Users Course Enrollment table
-course_enrollment = 'user_course_enrollment'
-s_table_enrollment = Table(
-    course_enrollment, metadata,
+# Enroll Users to Course & Enroll Courses to User (user_course_enrollment)table
+users_courses_enrollment = 'user_course_enrollment'
+u_c_table_enrollment = Table(
+    users_courses_enrollment, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('user_id', Integer, nullable=False),
     ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_user_id'),
     Column('course_id', Integer, nullable=False),
     ForeignKeyConstraint(['course_id'], ['course.id'], name='fk_course_id'),
-    Column('enrollment_allowed', VARCHAR(150), nullable=False),
+    Column('u_c_enrollment_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
     Column('request_token', VARCHAR(2500), nullable=False),
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
@@ -355,16 +355,16 @@ s_table_enrollment = Table(
     Index(f'idx_{table_calender}_token', 'token'),
 )
 
-# Users Group Enrollment table
-group_enrollment = 'user_group_enrollment'
-g_table_enrollment = Table(
-    group_enrollment, metadata,
+#  Enroll Users to Group & Enroll Groups to User (user_group_enrollment)table
+users_groups_enrollment = 'user_group_enrollment'
+u_g_table_enrollment = Table(
+    users_groups_enrollment, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('user_id', Integer, nullable=False),
     ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_user_grp_id'),
     Column('group_id', Integer, nullable=False),
     ForeignKeyConstraint(['group_id'], ['lmsgroup.id'], name='fk_group_id'),
-    Column('enrollment_allowed', VARCHAR(150), nullable=False),
+    Column('u_g_enrollment_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
     Column('request_token', VARCHAR(2500), nullable=False),
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
@@ -373,16 +373,16 @@ g_table_enrollment = Table(
     Index(f'idx_{table_calender}_token', 'token'),
 )
 
-# Course Group Enrollment table
-course_group_enroll = 'course_group_enrollment'
+# Enroll Courses to Group & Enroll Groups to Courses (course_group_enrollment)table
+courses_groups_enrollment = 'course_group_enrollment'
 cg_table_enrollment = Table(
-    course_group_enroll, metadata,
+    courses_groups_enrollment, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('course_id', Integer, nullable=False),
     ForeignKeyConstraint(['course_id'], ['course.id'], name='fk_course_grp_id'),
     Column('group_id', Integer, nullable=False),
     ForeignKeyConstraint(['group_id'], ['lmsgroup.id'], name='fk_cr_group_id'),
-    Column('cr_grp_allowed', VARCHAR(150), nullable=False),
+    Column('c_g_enrollment_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
     Column('request_token', VARCHAR(2500), nullable=False),
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints

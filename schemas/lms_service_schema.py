@@ -146,12 +146,12 @@ class DeleteCalender(BaseModel):
 class UnenrolledUsers_Course(BaseModel):
     id: int
 
-##################################### Unenroll Users from course #############################################
+##################################### Unenroll Users from group #############################################
 
 class UnenrolledUsers_Group(BaseModel):
     id: int
 
-##################################### Unenroll Users from course #############################################
+##################################### Unenroll course from group #############################################
 
 class UnenrolledCourse_Group(BaseModel):
     id: int

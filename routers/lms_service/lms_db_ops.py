@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,course_enrollment,group_enrollment,course_group_enroll,n_table_user_files
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -854,53 +854,18 @@ class LmsHandler:
         query = f""" DELETE FROM calender WHERE id = '{id}'; """
         return execute_query(query)    
 
-######################################## Course Page USERS ENROLL #############################################
+######################################## Users TAB Courses Page #################################################
 
-    def get_user_course_enrollment_by_token(token):
-        query = f"""SELECT * FROM {course_enrollment} where token=%(token)s and token is not NULL and token != '';"""
-        resp = execute_query(query=query, params={'token': token})
-        data = resp.fetchone()
-        if data is None:
-            raise HTTPException(
-                status_code=401, detail="Token Expired or Invalid Token")
-        else:
-            return data
-
-#Get user_course_enrollment data by id for update fields Mapping
-    def get_user_course_enrollment_by_id(id):
-        query = f"""SELECT * FROM user_course_enrollment WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
-        resp = execute_query(query=query, params={'id': id})
-        data = resp.fetchone()
-        if data is None:
-            raise HTTPException(
-                status_code=401, detail="Token Expired or Invalid Token")
-        else:
-            return data
-
-    def get_user_course_enrollment_by_course_id(course_id):
-        query = """SELECT user_id FROM user_course_enrollment WHERE course_id = %(course_id)s AND course_id IS NOT NULL AND course_id != '';"""
-        resp = execute_query(query=query, params={'course_id': course_id})
-        data = resp.fetchall()
-        if not data:
-            raise HTTPException(
-                status_code=401, detail="Token Expired or Invalid Token")
-        else:
-            # Extract the user IDs from the fetched data
-            user_ids = [row['user_id'] for row in data]
-            return user_ids
-    
-#Add user_course_enrollment
     @classmethod
-    def add_user_course_enrollment(cls, params):
-        query = f"""   INSERT into {course_enrollment}(user_id, course_id, enrollment_allowed, auth_token, request_token, token) VALUES 
-                        (%(user_id)s, %(course_id)s, %(enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+    def enroll_courses_user_enrollment(cls, params):
+        query = f"""   INSERT into {users_courses_enrollment}(user_id, course_id, u_c_enrollment_allowed, auth_token, request_token, token) VALUES 
+                        (%(user_id)s, %(course_id)s, %(u_c_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
                         ; 
                     """
         return execute_query(query, params=params)
 
-#
     @classmethod
-    def get_all_user_course_enrollment(cls):
+    def get_allcourses_of_user(cls):
         query = """ SELECT user_id, role, full_name, coursename, user_course_enrollment_id FROM (
             SELECT e.user_id as user_id, u.role, u.full_name, c.coursename, e.id as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
             FROM user_course_enrollment e
@@ -919,47 +884,23 @@ class LmsHandler:
     
 #Delete or Remove Enrolled User from Course
     @classmethod
-    def delete_user_course_enrollment(cls, id):
+    def unenroll_courses_from_user(cls, id):
         query = f""" DELETE FROM user_course_enrollment WHERE id = '{id}'; """
         return execute_query(query)
 
+######################################## Users TAB Group Page #################################################
 
-######################################### Group Page USER ENROLL ##########################################
-
-
-    def get_user_group_enrollment_by_token(token):
-        query = f"""SELECT * FROM {group_enrollment} where token=%(token)s and token is not NULL and token != '';"""
-        resp = execute_query(query=query, params={'token': token})
-        data = resp.fetchone()
-        if data is None:
-            raise HTTPException(
-                status_code=401, detail="Token Expired or Invalid Token")
-        else:
-            return data
-
-#Get user_group_enrollment data by id for update fields Mapping
-    def get_user_group_enrollment_by_id(id):
-        query = f"""SELECT * FROM user_group_enrollment WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
-        resp = execute_query(query=query, params={'id': id})
-        data = resp.fetchone()
-        if data is None:
-            raise HTTPException(
-                status_code=401, detail="Token Expired or Invalid Token")
-        else:
-            return data
-        
-#Add user_group_enrollment
     @classmethod
-    def add_user_group_enrollment(cls, params):
-        query = f"""   INSERT into {group_enrollment}(user_id, group_id, enrollment_allowed, auth_token, request_token, token) VALUES 
-                        (%(user_id)s, %(group_id)s, %(enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+    def enroll_groups_to_user(cls, params):
+        query = f"""   INSERT into {users_groups_enrollment}(user_id, group_id, u_g_enrollment_allowed, auth_token, request_token, token) VALUES 
+                        (%(user_id)s, %(group_id)s, %(u_g_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
                         ; 
                     """
         return execute_query(query, params=params)
 
-#Fetch Enrolled & UnEnrolled Users of groups
+#
     @classmethod
-    def get_all_user_group_enrollment(cls):
+    def get_allgroups_of_user(cls):
         query = """ SELECT user_id, role, full_name, groupname, user_group_enrollment_id FROM (
             SELECT e.user_id as user_id, u.role, u.full_name, lg.groupname, e.id as user_group_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
             FROM user_group_enrollment e
@@ -975,50 +916,132 @@ class LmsHandler:
         ) AS combined_data; """
         return execute_query(query).fetchall()
     
-#Delete or Remove Enrolled User from group
+    
+#Delete or Remove Enrolled User from Course
     @classmethod
-    def delete_user_group_enrollment(cls, id):
+    def remove_groups_from_user(cls, id):
         query = f""" DELETE FROM user_group_enrollment WHERE id = '{id}'; """
         return execute_query(query)
     
-######################################### Courses To Group & Groups To Course #############################################
 
+######################################## Course TAB User Page #################################################
 
-    def get_course_group_enrollment_by_token(token):
-        query = f"""SELECT * FROM {course_group_enroll} where token=%(token)s and token is not NULL and token != '';"""
-        resp = execute_query(query=query, params={'token': token})
-        data = resp.fetchone()
-        if data is None:
-            raise HTTPException(
-                status_code=401, detail="Token Expired or Invalid Token")
-        else:
-            return data
-
-#Get course_group_enrollment data by id for update fields Mapping
-    def get_course_group_enrollment_by_id(id):
-        query = f"""SELECT * FROM course_group_enrollment WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
-        resp = execute_query(query=query, params={'id': id})
-        data = resp.fetchone()
-        if data is None:
-            raise HTTPException(
-                status_code=401, detail="Token Expired or Invalid Token")
-        else:
-            return data
-        
-#Add course_group_enrollment
     @classmethod
-    def add_course_group_enrollment(cls, params):
-        query = f"""   INSERT into {course_group_enroll}(course_id, group_id, cr_grp_allowed, auth_token, request_token, token) VALUES 
-                        (%(course_id)s, %(group_id)s, %(cr_grp_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+    def enroll_users_to_course(cls, params):
+        query = f"""   INSERT into {users_courses_enrollment}(user_id, course_id, u_c_enrollment_allowed, auth_token, request_token, token) VALUES 
+                        (%(user_id)s, %(course_id)s, %(u_c_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
                         ; 
                     """
         return execute_query(query, params=params)
 
-#Fetch Enrolled & UnEnrolled courses of groups
+#
     @classmethod
-    def get_all_course_group_enrollment(cls):
-        query = """ 
-            SELECT group_id, groupname, coursename, course_group_enrollment_id
+    def get_allusers_of_course(cls):
+        query = """ SELECT user_id, role, full_name, coursename, user_course_enrollment_id FROM (
+            SELECT e.user_id as user_id, u.role, u.full_name, c.coursename, e.id as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+            FROM user_course_enrollment e
+            JOIN users u ON e.user_id = u.id
+            JOIN course c ON e.course_id = c.id
+            WHERE u.role = 'Admin'
+
+            UNION DISTINCT
+
+            SELECT id as user_id, role, full_name, NULL as coursename, NULL as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+            FROM users
+            WHERE role = 'Admin' AND id NOT IN (SELECT user_id FROM user_course_enrollment WHERE user_id IS NOT NULL)
+        ) AS combined_data; """
+        return execute_query(query).fetchall()
+    
+    
+#Delete or Remove Enrolled Course from User
+    @classmethod
+    def unenroll_users_from_course(cls, id):
+        query = f""" DELETE FROM user_course_enrollment WHERE id = '{id}'; """
+        return execute_query(query)
+    
+######################################## Course TAB Group Page #################################################
+
+    @classmethod
+    def add_groups_to_course(cls, params):
+        query = f"""   INSERT into {courses_groups_enrollment}(course_id, group_id, c_g_enrollment_allowed, auth_token, request_token, token) VALUES 
+                        (%(course_id)s, %(group_id)s, %(c_g_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+
+    @classmethod
+    def get_allgroups_of_course(cls):
+        query = """
+        SELECT group_id, groupname, coursename, course_group_enrollment_id
+            FROM (
+                SELECT e.group_id as group_id, lg.groupname, c.coursename, e.id as course_group_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+                FROM course_group_enrollment e
+                JOIN lmsgroup lg ON e.group_id = lg.id
+                JOIN course c ON e.course_id = c.id
+
+                UNION DISTINCT
+
+                SELECT id as group_id, groupname, NULL as coursename, NULL as course_group_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+                FROM lmsgroup
+                WHERE id NOT IN (SELECT group_id FROM course_group_enrollment WHERE group_id IS NOT NULL)
+            ) AS combined_data
+            ORDER BY group_id ASC; """
+        return execute_query(query).fetchall()
+        
+#Delete or Remove Enrolled Course from Groups
+    @classmethod
+    def remove_groups_from_course(cls, id):
+        query = f""" DELETE FROM course_group_enrollment WHERE id = '{id}'; """
+        return execute_query(query)
+    
+######################################## Group TAB User Page #################################################
+
+    @classmethod
+    def add_users_to_group(cls, params):
+        query = f"""   INSERT into {users_groups_enrollment}(user_id, group_id, u_g_enrollment_allowed, auth_token, request_token, token) VALUES 
+                        (%(user_id)s, %(group_id)s, %(u_g_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+
+#
+    @classmethod
+    def get_allusers_of_group(cls):
+        query = """ SELECT user_id, role, full_name, groupname, user_group_enrollment_id FROM (
+            SELECT e.user_id as user_id, u.role, u.full_name, lg.groupname, e.id as user_group_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+            FROM user_group_enrollment e
+            JOIN users u ON e.user_id = u.id
+            JOIN lmsgroup lg ON e.group_id = lg.id
+            WHERE u.role = 'Admin'
+
+            UNION DISTINCT
+
+            SELECT id as user_id, role, full_name, NULL as groupname, NULL as user_group_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+            FROM users
+            WHERE role = 'Admin' AND id NOT IN (SELECT user_id FROM user_group_enrollment WHERE user_id IS NOT NULL)
+        ) AS combined_data; """
+        return execute_query(query).fetchall()
+    
+    
+#Delete or Remove added group from Users
+    @classmethod
+    def remove_users_from_group(cls, id):
+        query = f""" DELETE FROM user_group_enrollment WHERE id = '{id}'; """
+        return execute_query(query)
+    
+######################################## Group TAB Course Page #################################################
+
+    @classmethod
+    def enroll_courses_to_group(cls, params):
+        query = f"""   INSERT into {courses_groups_enrollment}(course_id, group_id, c_g_enrollment_allowed, auth_token, request_token, token) VALUES 
+                        (%(course_id)s, %(group_id)s, %(c_g_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+
+    @classmethod
+    def get_allcourses_of_group(cls):
+        query = """ SELECT group_id, groupname, coursename, course_group_enrollment_id
             FROM (
                 SELECT e.group_id as group_id, lg.groupname, c.coursename, e.id as course_group_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
                 FROM course_group_enrollment e
@@ -1034,13 +1057,60 @@ class LmsHandler:
             ORDER BY group_id ASC; """
         return execute_query(query).fetchall()
     
-#Delete or Remove Enrolled course from group
+    
+#Delete or Remove Enrolled Courses from Group
     @classmethod
-    def delete_course_group_enrollment(cls, id):
+    def remove_courses_from_group(cls, id):
         query = f""" DELETE FROM course_group_enrollment WHERE id = '{id}'; """
         return execute_query(query)
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ##################################################################################################################
+
+    @classmethod
+    def add_course_group_enrollment(cls, params):
+        query = f"""   INSERT into {courses_groups_enrollment}(course_id, group_id, cr_grp_allowed, auth_token, request_token, token) VALUES 
+                        (%(course_id)s, %(group_id)s, %(cr_grp_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+    
+    @classmethod
+    def get_all_user_course_enrollment(cls):
+        query = """ SELECT user_id, role, full_name, coursename, user_course_enrollment_id FROM (
+            SELECT e.user_id as user_id, u.role, u.full_name, c.coursename, e.id as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+            FROM user_course_enrollment e
+            JOIN users u ON e.user_id = u.id
+            JOIN course c ON e.course_id = c.id
+            WHERE u.role = 'Admin'
+
+            UNION DISTINCT
+
+            SELECT id as user_id, role, full_name, NULL as coursename, NULL as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+            FROM users
+            WHERE role = 'Admin' AND id NOT IN (SELECT user_id FROM user_course_enrollment WHERE user_id IS NOT NULL)
+        ) AS combined_data; """
+        return execute_query(query).fetchall()
+    
 
 #Files / Documents
     @classmethod
