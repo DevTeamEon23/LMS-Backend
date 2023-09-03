@@ -37,6 +37,14 @@ def get_database_session():
         db.close()
 
 service = APIRouter(tags=["Service :  Service Name"], dependencies=[Depends(verify_user)])
+user_tab1 = APIRouter(tags=["User Tab1 : Course Page"])
+user_tab2 = APIRouter(tags=["User Tab2 : Group Page"])
+
+course_tab1 = APIRouter(tags=["COURSE Tab1: User Page"])
+course_tab2 = APIRouter(tags=["COURSE Tab2: Group Page"])
+
+group_tab1 = APIRouter(tags=["GROUP Tab1: User Page"])
+group_tab2 = APIRouter(tags=["GROUP Tab2: Course Page"])
 
 # Variable to store the path of the latest extracted folder
 latest_extracted_folder = None
@@ -1368,11 +1376,14 @@ def fetch_user_enrollcourse_by_onlycourse_id():
             "status": "failure",
             "message": "Failed to fetch enrolled courses' data"
         })
+    
 
+    
+    
 ###################################### Enroll Courses to USER (USERS -> Course Page) ###########################################
 
 # Create enroll_course
-@service.post('/enroll_courses_to_user',tags=["USER Tab : Course Page"])
+@user_tab1.post('/enroll_courses_to_user',tags=["User Tab1 : Course Page"])
 async def enroll_course_to_user(user_id: int = Form(...),course_id: int = Form(...), generate_token: bool = Form(...)):
     try:
         return enroll_courses_touser(user_id,generate_token, auth_token="", inputs={
@@ -1384,7 +1395,7 @@ async def enroll_course_to_user(user_id: int = Form(...),course_id: int = Form(.
             "message": "Course enrolled to user failed"
         })
 
-@service.get("/fetch_enroll_courses_of_user",tags=["USER Tab : Course Page"])
+@user_tab1.get("/fetch_enroll_courses_of_user",tags=["User Tab1 : Course Page"])
 def fetch_course_enrollusers_by_onlyuser_id():
     try:
         # Fetch all enrolled users' data of course here
@@ -1402,7 +1413,7 @@ def fetch_course_enrollusers_by_onlyuser_id():
         }) 
     
 # Unenrolled USER from Course
-@service.delete("/unenroll_courses_from_user",tags=["USER Tab : Course Page"])
+@user_tab1.delete("/unenroll_courses_from_user",tags=["User Tab1 : Course Page"])
 def unenroll_course_user(payload: UnenrolledUsers_Course):
     try:
         users = unenroll_courses_from_userby_id(payload.id)
@@ -1420,7 +1431,7 @@ def unenroll_course_user(payload: UnenrolledUsers_Course):
 ###################################### Enroll Group to USER (USERS -> Group Page) ###########################################
 
 # Create enroll_course
-@service.post('/enroll_groups_to_user',tags=["USER Tab: Group Page"])
+@user_tab2.post('/enroll_groups_to_user',tags=["User Tab2 : Group Page"])
 async def enroll_group_to_user(user_id: int = Form(...),group_id: int = Form(...), generate_token: bool = Form(...)):
     try:
         return enroll_groups_touser(user_id,generate_token, auth_token="", inputs={
@@ -1432,7 +1443,7 @@ async def enroll_group_to_user(user_id: int = Form(...),group_id: int = Form(...
             "message": "Group enrolled to user failed"
         })
 
-@service.get("/fetch_groups_of_user",tags=["USER Tab: Group Page"])
+@user_tab2.get("/fetch_groups_of_user",tags=["User Tab2 : Group Page"])
 def fetch_added_groups_touser_by_onlyuser_id():
     try:
         # Fetch all enrolled users' data of course here
@@ -1450,7 +1461,7 @@ def fetch_added_groups_touser_by_onlyuser_id():
         }) 
     
 # Unenrolled USER from Course
-@service.delete("/remove_groups_from_user",tags=["USER Tab: Group Page"])
+@user_tab2.delete("/remove_groups_from_user",tags=["User Tab2 : Group Page"])
 def unenroll_group_user(payload: UnenrolledUsers_Group):
     try:
         groups = remove_group_from_userby_id(payload.id)
@@ -1470,7 +1481,7 @@ def unenroll_group_user(payload: UnenrolledUsers_Group):
 ###################################### Enroll Users to COURSE (COURSE -> User Page) ###########################################
 
 # Create enroll_course
-@service.post('/enroll_users_to_course',tags=["COURSE Tab: User Page"])
+@course_tab1.post('/enroll_users_to_course',tags=["COURSE Tab1: User Page"])
 async def enroll_user_to_course(user_id: int = Form(...),course_id: int = Form(...), generate_token: bool = Form(...)):
     try:
         return enroll_users_tocourse(user_id,generate_token, auth_token="", inputs={
@@ -1482,7 +1493,7 @@ async def enroll_user_to_course(user_id: int = Form(...),course_id: int = Form(.
             "message": "User enrolled to Course failed"
         })
 
-@service.get("/fetch_enroll_users_of_course",tags=["COURSE Tab: User Page"])
+@course_tab1.get("/fetch_enroll_users_of_course",tags=["COURSE Tab1: User Page"])
 def fetch_added_users_tocourse_by_onlyuser_id():
     try:
         # Fetch all enrolled users' data of course here
@@ -1500,7 +1511,7 @@ def fetch_added_users_tocourse_by_onlyuser_id():
         }) 
     
 # Unenrolled USER from Course
-@service.delete("/remove_users_from_course",tags=["COURSE Tab: User Page"])
+@course_tab1.delete("/remove_users_from_course",tags=["COURSE Tab1: User Page"])
 def unenroll_user_course(payload: UnenrolledUsers_Course):
     try:
         users = unenrolled_users_from_courseby_id(payload.id)
@@ -1518,7 +1529,7 @@ def unenroll_user_course(payload: UnenrolledUsers_Course):
 ###################################### Enroll Group to COURSE (COURSE -> Group Page) ###########################################
 
 # Create 
-@service.post('/enroll_group_to_course',tags=["COURSE Tab: Group Page"])
+@course_tab2.post('/enroll_group_to_course',tags=["COURSE Tab2: Group Page"])
 async def enroll_group_to_course(group_id: int = Form(...),course_id: int = Form(...), generate_token: bool = Form(...)):
     try:
         return enroll_groups_tocourse(group_id,generate_token, auth_token="", inputs={
@@ -1530,7 +1541,7 @@ async def enroll_group_to_course(group_id: int = Form(...),course_id: int = Form
             "message": "Group enrolled to Course failed"
         })
 
-@service.get("/fetch_groups_of_course",tags=["COURSE Tab: Group Page"])
+@course_tab2.get("/fetch_groups_of_course",tags=["COURSE Tab2: Group Page"])
 def fetch_added_groups_tocourse_by_onlygroup_id():
     try:
         # Fetch all enrolled users' data of course here
@@ -1548,7 +1559,7 @@ def fetch_added_groups_tocourse_by_onlygroup_id():
         }) 
     
 # Unenrolled USER from Course
-@service.delete("/remove_groups_from_course",tags=["COURSE Tab: Group Page"])
+@course_tab2.delete("/remove_groups_from_course",tags=["COURSE Tab2: Group Page"])
 def unenroll_group_course(payload: UnenrolledCourse_Group):
     try:
         groups = unenrolled_groups_from_courseby_id(payload.id)
@@ -1567,7 +1578,7 @@ def unenroll_group_course(payload: UnenrolledCourse_Group):
 ###################################### Enroll User to GROUP (GROUP -> User Page) ###########################################
 
 # Create 
-@service.post('/add_users_to_group',tags=["GROUP Tab: User Page"])
+@group_tab1.post('/add_users_to_group',tags=["GROUP Tab1: User Page"])
 async def enroll_users_to_group(group_id: int = Form(...),user_id: int = Form(...), generate_token: bool = Form(...)):
     try:
         return enroll_users_togroup(group_id,generate_token, auth_token="", inputs={
@@ -1579,7 +1590,7 @@ async def enroll_users_to_group(group_id: int = Form(...),user_id: int = Form(..
             "message": "Group enrolled to Course failed"
         })
 
-@service.get("/fetch_users_of_group",tags=["GROUP Tab: User Page"])
+@group_tab1.get("/fetch_users_of_group",tags=["GROUP Tab1: User Page"])
 def fetch_added_users_togroup_by_onlygroup_id():
     try:
         # Fetch all enrolled users' data of course here
@@ -1597,7 +1608,7 @@ def fetch_added_users_togroup_by_onlygroup_id():
         }) 
     
 # Unenrolled USER from Course
-@service.delete("/remove_users_from_group",tags=["GROUP Tab: User Page"])
+@group_tab1.delete("/remove_users_from_group",tags=["GROUP Tab1: User Page"])
 def unenroll_user_group(payload: UnenrolledUsers_Group):
     try:
         users = remove_user_from_groupby_id(payload.id)
@@ -1616,7 +1627,7 @@ def unenroll_user_group(payload: UnenrolledUsers_Group):
 ###################################### Enroll Course to GROUP (GROUP -> Course Page) ###########################################
 
 # Create 
-@service.post('/add_courses_to_group',tags=["GROUP Tab: Course Page"])
+@group_tab2.post('/add_courses_to_group',tags=["GROUP Tab2: Course Page"])
 async def enroll_course_to_group(group_id: int = Form(...),course_id: int = Form(...), generate_token: bool = Form(...)):
     try:
         return enroll_courses_togroup(group_id,generate_token, auth_token="", inputs={
@@ -1628,7 +1639,7 @@ async def enroll_course_to_group(group_id: int = Form(...),course_id: int = Form
             "message": "Course enrolled to Group failed"
         })
 
-@service.get("/fetch_courses_of_group",tags=["GROUP Tab: Course Page"])
+@group_tab2.get("/fetch_courses_of_group",tags=["GROUP Tab2: Course Page"])
 def fetch_added_courses_togroup_by_onlygroup_id():
     try:
         # Fetch all enrolled users' data of course here
@@ -1646,7 +1657,7 @@ def fetch_added_courses_togroup_by_onlygroup_id():
         }) 
     
 # Unenrolled USER from Course
-@service.delete("/remove_courses_from_group",tags=["GROUP Tab: Course Page"])
+@group_tab2.delete("/remove_courses_from_group",tags=["GROUP Tab2: Course Page"])
 def unenroll_course_group(payload: UnenrolledCourse_Group):
     try:
         courses = remove_course_from_groupby_id(payload.id)
