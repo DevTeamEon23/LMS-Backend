@@ -37,14 +37,14 @@ def get_database_session():
         db.close()
 
 service = APIRouter(tags=["Service :  Service Name"], dependencies=[Depends(verify_user)])
-user_tab1 = APIRouter(tags=["User Tab1 : Course Page"])
-user_tab2 = APIRouter(tags=["User Tab2 : Group Page"])
+user_tab1 = APIRouter(tags=["User Tab1 : Course Page"], dependencies=[Depends(verify_user)])
+user_tab2 = APIRouter(tags=["User Tab2 : Group Page"], dependencies=[Depends(verify_user)])
 
-course_tab1 = APIRouter(tags=["COURSE Tab1: User Page"])
-course_tab2 = APIRouter(tags=["COURSE Tab2: Group Page"])
+course_tab1 = APIRouter(tags=["COURSE Tab1: User Page"], dependencies=[Depends(verify_user)])
+course_tab2 = APIRouter(tags=["COURSE Tab2: Group Page"], dependencies=[Depends(verify_user)])
 
-group_tab1 = APIRouter(tags=["GROUP Tab1: User Page"])
-group_tab2 = APIRouter(tags=["GROUP Tab2: Course Page"])
+group_tab1 = APIRouter(tags=["GROUP Tab1: User Page"], dependencies=[Depends(verify_user)])
+group_tab2 = APIRouter(tags=["GROUP Tab2: Course Page"], dependencies=[Depends(verify_user)])
 
 # Variable to store the path of the latest extracted folder
 latest_extracted_folder = None
@@ -1493,11 +1493,28 @@ async def enroll_user_to_course(user_id: int = Form(...),course_id: int = Form(.
             "message": "User enrolled to Course failed"
         })
 
-@course_tab1.get("/fetch_enroll_users_of_course",tags=["COURSE Tab1: User Page"])
-def fetch_added_users_tocourse_by_onlyuser_id():
+# @course_tab1.get("/fetch_enroll_users_of_course",tags=["COURSE Tab1: User Page"])
+# def fetch_added_users_tocourse_by_onlyuser_id():
+#     try:
+#         # Fetch all enrolled users' data of course here
+#         users = fetch_enrolled_unenroll_users_of_course()
+
+#         return {
+#             "status": "success",
+#             "data": users
+#         }
+#     except Exception as exc:
+#         logger.error(traceback.format_exc())
+#         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+#             "status": "failure",
+#             "message": "Failed to fetch enrolled users' data"
+#         }) 
+
+@course_tab1.get("/fetch_enroll_users_of_course", tags=["COURSE Tab1: User Page"])
+def fetch_added_users_tocourse_by_onlyuser_id(course_id: int):
     try:
-        # Fetch all enrolled users' data of course here
-        users = fetch_enrolled_unenroll_users_of_course()
+        # Fetch all enrolled users' data of the specified course
+        users = fetch_enrolled_unenroll_users_of_course(course_id)
 
         return {
             "status": "success",
@@ -1542,10 +1559,10 @@ async def enroll_group_to_course(group_id: int = Form(...),course_id: int = Form
         })
 
 @course_tab2.get("/fetch_groups_of_course",tags=["COURSE Tab2: Group Page"])
-def fetch_added_groups_tocourse_by_onlygroup_id():
+def fetch_added_groups_tocourse_by_onlygroup_id(course_id: int):
     try:
         # Fetch all enrolled users' data of course here
-        groups = fetch_enrolled_unenroll_groups_of_course()
+        groups = fetch_enrolled_unenroll_groups_of_course(course_id)
 
         return {
             "status": "success",

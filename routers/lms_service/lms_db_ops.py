@@ -866,19 +866,21 @@ class LmsHandler:
 
     @classmethod
     def get_allcourses_of_user(cls):
-        query = """ SELECT user_id, role, full_name, coursename, user_course_enrollment_id FROM (
-            SELECT e.user_id as user_id, u.role, u.full_name, c.coursename, e.id as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
-            FROM user_course_enrollment e
-            JOIN users u ON e.user_id = u.id
-            JOIN course c ON e.course_id = c.id
-            WHERE u.role = 'Admin'
+        query = """ 
+        SELECT c.id as course_id, c.coursename, NULL as user_id,
+            u.role, u.full_name, uce.id as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token,
+            NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, uce.created_at as created_at, NULL as updated_at
+        FROM course c
+        LEFT JOIN user_course_enrollment uce ON c.id = uce.course_id
+        LEFT JOIN users u ON uce.user_id = u.id
 
-            UNION DISTINCT
+        UNION DISTINCT
 
-            SELECT id as user_id, role, full_name, NULL as coursename, NULL as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
-            FROM users
-            WHERE role = 'Admin' AND id NOT IN (SELECT user_id FROM user_course_enrollment WHERE user_id IS NOT NULL)
-        ) AS combined_data; """
+        SELECT c.id as course_id, c.coursename, NULL as user_id, NULL as role, NULL as full_name, NULL as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token,
+            NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+        FROM course c
+        WHERE c.id NOT IN (SELECT course_id FROM user_course_enrollment WHERE course_id IS NOT NULL);
+        """
         return execute_query(query).fetchall()
     
     
@@ -901,7 +903,8 @@ class LmsHandler:
 #
     @classmethod
     def get_allgroups_of_user(cls):
-        query = """ SELECT user_id, role, full_name, groupname, user_group_enrollment_id FROM (
+        query = """ 
+        SELECT user_id, role, full_name, groupname, user_group_enrollment_id FROM (
             SELECT e.user_id as user_id, u.role, u.full_name, lg.groupname, e.id as user_group_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
             FROM user_group_enrollment e
             JOIN users u ON e.user_id = u.id
@@ -936,21 +939,37 @@ class LmsHandler:
 
 #
     @classmethod
-    def get_allusers_of_course(cls):
-        query = """ SELECT user_id, role, full_name, coursename, user_course_enrollment_id FROM (
-            SELECT e.user_id as user_id, u.role, u.full_name, c.coursename, e.id as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
-            FROM user_course_enrollment e
-            JOIN users u ON e.user_id = u.id
-            JOIN course c ON e.course_id = c.id
+    def get_allusers_of_course(cls, course_id):
+        query = """
+        WITH AdminUsers AS (
+            SELECT
+                u.id AS user_id,
+                u.role,
+                u.full_name
+            FROM users u
             WHERE u.role = 'Admin'
-
-            UNION DISTINCT
-
-            SELECT id as user_id, role, full_name, NULL as coursename, NULL as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
-            FROM users
-            WHERE role = 'Admin' AND id NOT IN (SELECT user_id FROM user_course_enrollment WHERE user_id IS NOT NULL)
-        ) AS combined_data; """
-        return execute_query(query).fetchall()
+        ),
+        CourseEnrollments AS (
+            SELECT
+                u.id AS user_id,
+                c.coursename AS enrolled_coursename,
+                e.id AS user_course_enrollment_id
+            FROM users u
+            LEFT JOIN user_course_enrollment e ON u.id = e.user_id
+            LEFT JOIN course c ON e.course_id = c.id
+            WHERE e.course_id = %(course_id)s
+        )
+        SELECT
+            au.user_id,
+            au.role,
+            au.full_name,
+            ce.enrolled_coursename,
+            ce.user_course_enrollment_id
+        FROM AdminUsers au
+        LEFT JOIN CourseEnrollments ce ON au.user_id = ce.user_id;
+        """
+        params = {"course_id": course_id}
+        return execute_query(query, params).fetchall()
     
     
 #Delete or Remove Enrolled Course from User
@@ -970,23 +989,19 @@ class LmsHandler:
         return execute_query(query, params=params)
 
     @classmethod
-    def get_allgroups_of_course(cls):
+    def get_allgroups_of_course(cls, course_id):
         query = """
-        SELECT group_id, groupname, coursename, course_group_enrollment_id
-            FROM (
-                SELECT e.group_id as group_id, lg.groupname, c.coursename, e.id as course_group_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
-                FROM course_group_enrollment e
-                JOIN lmsgroup lg ON e.group_id = lg.id
-                JOIN course c ON e.course_id = c.id
-
-                UNION DISTINCT
-
-                SELECT id as group_id, groupname, NULL as coursename, NULL as course_group_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
-                FROM lmsgroup
-                WHERE id NOT IN (SELECT group_id FROM course_group_enrollment WHERE group_id IS NOT NULL)
-            ) AS combined_data
-            ORDER BY group_id ASC; """
-        return execute_query(query).fetchall()
+            SELECT
+                g.id AS group_id,
+                g.groupname,
+                c.coursename AS enrolled_coursename,
+                cge.id AS course_group_enrollment_id
+            FROM lmsgroup g
+            LEFT JOIN course_group_enrollment cge ON g.id = cge.group_id AND cge.course_id = %(course_id)s
+            LEFT JOIN course c ON cge.course_id = c.id;
+            """
+        params = {"course_id": course_id}
+        return execute_query(query, params).fetchall()
         
 #Delete or Remove Enrolled Course from Groups
     @classmethod
@@ -1007,7 +1022,8 @@ class LmsHandler:
 #
     @classmethod
     def get_allusers_of_group(cls):
-        query = """ SELECT user_id, role, full_name, groupname, user_group_enrollment_id FROM (
+        query = """ 
+        SELECT user_id, role, full_name, groupname, user_group_enrollment_id FROM (
             SELECT e.user_id as user_id, u.role, u.full_name, lg.groupname, e.id as user_group_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
             FROM user_group_enrollment e
             JOIN users u ON e.user_id = u.id
@@ -1090,7 +1106,7 @@ class LmsHandler:
     def add_course_group_enrollment(cls, params):
         query = f"""   INSERT into {courses_groups_enrollment}(course_id, group_id, cr_grp_allowed, auth_token, request_token, token) VALUES 
                         (%(course_id)s, %(group_id)s, %(cr_grp_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
-                        ; 
+                        ;
                     """
         return execute_query(query, params=params)
     

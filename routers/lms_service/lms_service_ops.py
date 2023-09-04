@@ -594,7 +594,7 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
             coursename = coursename.split('@')[0] if coursename is None or coursename == '' else coursename
             file = inputs.get('file')
             description = inputs.get('description')
-            coursecode = md5(coursename)
+            coursecode = inputs.get('coursecode')
             price = inputs.get('price')
             courselink = inputs.get('courselink')
             coursevideo = inputs.get('coursevideo')
@@ -2364,10 +2364,10 @@ def enroll_users_tocourse(id= int,generate_tokens: bool = False, auth_token="", 
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='User has been Enrolled to Course successfully'))
 
-def fetch_enrolled_unenroll_users_of_course():
+def fetch_enrolled_unenroll_users_of_course(course_id):
     try:
         # Query user IDs from the database for the specified course
-        user_ids = LmsHandler.get_allusers_of_course()
+        user_ids = LmsHandler.get_allusers_of_course(course_id)
 
         if not user_ids:
             # Handle the case when no user is found for the specified course
@@ -2444,10 +2444,10 @@ def enroll_groups_tocourse(id= int,generate_tokens: bool = False, auth_token="",
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Group has been Enrolled to Course successfully'))
 
-def fetch_enrolled_unenroll_groups_of_course():
+def fetch_enrolled_unenroll_groups_of_course(course_id):
     try:
         # Query user IDs from the database for the specified course
-        groups_ids = LmsHandler.get_allgroups_of_course()
+        groups_ids = LmsHandler.get_allgroups_of_course(course_id)
 
         if not groups_ids:
             # Handle the case when no groups is found for the specified course
