@@ -1701,7 +1701,7 @@ def unenroll_course_group(payload: UnenrolledCourse_Group):
 async def massaction_groups_enroll(course_id: int = Form(...), generate_token: bool = Form(...)):
     try:
         return enroll_coursegroup_massaction(course_id,generate_token, auth_token="", inputs={
-                'course_id': course_id,'enrollment_allowed': '[]', 'picture': ""})
+                'course_id': course_id,'c_g_enrollment_allowed': '[]', 'picture': ""})
     except Exception as exc: 
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={

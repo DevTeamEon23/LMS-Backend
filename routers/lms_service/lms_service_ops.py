@@ -2658,7 +2658,7 @@ def enroll_coursegroup_massaction(id=int, generate_tokens: bool = False, auth_to
         for group_id in group_ids:
             # Add the course to each group
             data = {'course_id': course_id, 'group_id': group_id,
-                    'cr_grp_allowed': inputs.get('cr_grp_allowed', ''), 'auth_token': auth_token,
+                    'c_g_enrollment_allowed': inputs.get('c_g_enrollment_allowed', ''), 'auth_token': auth_token,
                     'request_token': request_token, 'token': token}
             resp = LmsHandler.add_course_group_enrollment(data)
 
