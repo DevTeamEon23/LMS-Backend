@@ -1396,10 +1396,10 @@ async def enroll_course_to_user(user_id: int = Form(...),course_id: int = Form(.
         })
 
 @user_tab1.get("/fetch_enroll_courses_of_user",tags=["User Tab1 : Course Page"])
-def fetch_course_enrollusers_by_onlyuser_id():
+def fetch_course_enrollusers_by_onlyuser_id(user_id: int):
     try:
         # Fetch all enrolled users' data of course here
-        courses = fetch_enrolled_unenroll_courses_of_user()
+        courses = fetch_enrolled_unenroll_courses_of_user(user_id)
 
         return {
             "status": "success",
@@ -1444,10 +1444,10 @@ async def enroll_group_to_user(user_id: int = Form(...),group_id: int = Form(...
         })
 
 @user_tab2.get("/fetch_groups_of_user",tags=["User Tab2 : Group Page"])
-def fetch_added_groups_touser_by_onlyuser_id():
+def fetch_added_groups_touser_by_onlyuser_id(user_id: int):
     try:
         # Fetch all enrolled users' data of course here
-        groups = fetch_added_unadded_groups_of_user()
+        groups = fetch_added_unadded_groups_of_user(user_id)
 
         return {
             "status": "success",

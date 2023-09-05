@@ -913,7 +913,7 @@ class LmsHandler:
     def get_allgroups_of_user(cls, user_id):
         query = """ 
         SELECT
-            e.user_id AS user_id,
+            e.group_id AS group_id,
             lg.groupname,
             e.id AS user_group_enrollment_id
         FROM user_group_enrollment e
@@ -923,7 +923,7 @@ class LmsHandler:
         UNION DISTINCT
 
         SELECT
-            %(user_id)s AS user_id,
+            lg.id AS group_id,
             lg.groupname,
             NULL AS user_group_enrollment_id
         FROM lmsgroup lg

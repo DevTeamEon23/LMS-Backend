@@ -2204,10 +2204,10 @@ def enroll_courses_touser(id= int,generate_tokens: bool = False, auth_token="", 
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course has been enrolled to user successfully'))
 
-def fetch_enrolled_unenroll_courses_of_user():
+def fetch_enrolled_unenroll_courses_of_user(user_id):
     try:
         # Query user IDs from the database for the specified course
-        course_ids = LmsHandler.get_allcourses_of_user()
+        course_ids = LmsHandler.get_allcourses_of_user(user_id)
 
         if not course_ids:
             # Handle the case when no user is found for the specified course
@@ -2284,10 +2284,10 @@ def enroll_groups_touser(id= int,generate_tokens: bool = False, auth_token="", i
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Group has been Added to user successfully'))
 
-def fetch_added_unadded_groups_of_user():
+def fetch_added_unadded_groups_of_user(user_id):
     try:
         # Query user IDs from the database for the specified course
-        user_ids = LmsHandler.get_allgroups_of_user()
+        user_ids = LmsHandler.get_allgroups_of_user(user_id)
 
         if not user_ids:
             # Handle the case when no user is found for the specified course
