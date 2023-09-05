@@ -1112,7 +1112,38 @@ class LmsHandler:
 
 
 ##################################################################################################################
+    @classmethod
+    def add_course_group_enrollment(cls, params):
+        query = f"""  INSERT INTO {courses_groups_enrollment} (course_id, group_id, c_g_enrollment_allowed, auth_token, request_token, token)
+                    VALUES (%(course_id)s, %(group_id)s, %(c_g_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+                    ON DUPLICATE KEY UPDATE
+                    course_id = VALUES(course_id),
+                    group_id = VALUES(group_id),
+                    c_g_enrollment_allowed = VALUES(c_g_enrollment_allowed),
+                    auth_token = VALUES(auth_token),
+                    request_token = VALUES(request_token),
+                    token = VALUES(token);
+                    """
+        return execute_query(query, params=params)
     
+    @classmethod
+    def get_all_user_course_enrollment(cls):
+        query = """ SELECT user_id, role, full_name, coursename, user_course_enrollment_id FROM (
+            SELECT e.user_id as user_id, u.role, u.full_name, c.coursename, e.id as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+            FROM user_course_enrollment e
+            JOIN users u ON e.user_id = u.id
+            JOIN course c ON e.course_id = c.id
+            WHERE u.role = 'Admin'
+
+            UNION DISTINCT
+
+            SELECT id as user_id, role, full_name, NULL as coursename, NULL as user_course_enrollment_id, NULL as email, NULL as dept, NULL as adhr, NULL as username, NULL as password, NULL as bio, NULL as file, NULL as timezone, NULL as langtype, NULL as users_allowed, NULL as auth_token, NULL as request_token, NULL as token, NULL as active, NULL as deactive, NULL as exclude_from_email, NULL as created_at, NULL as updated_at
+            FROM users
+            WHERE role = 'Admin' AND id NOT IN (SELECT user_id FROM user_course_enrollment WHERE user_id IS NOT NULL)
+        ) AS combined_data; """
+        return execute_query(query).fetchall()
+
+####################################################################################################################
 
 #Files / Documents
     @classmethod

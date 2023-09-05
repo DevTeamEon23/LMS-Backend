@@ -106,27 +106,28 @@ def verify_access_token(request: Request):
             details['user_id'] = data['id']
             details['displayName'] = data['full_name']
             details['email'] = data['email']
-            # details['photoURL'] = "assets/images/avatars/brian-hughes.jpg"
-            details['photoURL'] = ""
+            details['photoURL'] = ""  # You can set the photoURL here or modify as needed
             user['role'] = data['role']
 
             user['user'] = {}
             user['user']['role'] = data['role']
             user['user']['data'] = details
 
-            return {"status": "success", 'message': "", 'user_id': user['id'] ,'token': request.headers['auth-token'], 'data': user}
-
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "Invalid Token"
-        })
+            # Return a success response with user data and token
+            return JSONResponse(status_code=status.HTTP_200_OK, content={
+                "status": "success",
+                "message": "Authorized user successfully",
+                "user_id": user['user']['data']['user_id'],
+                "token": request.headers['auth-token'],
+                "data": user
+            })
 
     except Exception as exc:
         logger.error(exc.args[0])
         logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+        return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={
             "status": "failure",
-            "message": ""
+            "message": "Authentication failed"
         })
 
 
