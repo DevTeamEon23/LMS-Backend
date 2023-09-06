@@ -20,6 +20,7 @@ from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import AddUser
 from starlette.responses import JSONResponse
 from starlette import status
+from datetime import datetime
 from sqlalchemy.schema import Column
 from sqlalchemy import String, Integer, Text, Enum, Boolean
 from sqlalchemy_utils import EmailType, URLType
@@ -2740,8 +2741,27 @@ def check_existing_files(user_id):
         return False
     else:
         return True
-    
-#Add Files and select active or deactive for user access
+
+def upload_file_to_db(user_id, file_data, files_allowed, auth_token, request_token, token, active, deactive):
+    query = """
+        INSERT INTO documents (user_id, files, files_allowed, auth_token, request_token, token, active, deactive, created_at, updated_at)
+        VALUES (%(user_id)s, %(files)s, %(files_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s, %(created_at)s, %(updated_at)s);
+    """
+    params = {
+        "user_id": user_id,
+        "files": file_data,  # Binary file data
+        "files_allowed": files_allowed,
+        "auth_token": auth_token,
+        "request_token": request_token,
+        "token": token,
+        "active": active,
+        "deactive": deactive,
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+    }
+    return execute_query(query, params=params)
+
+# Add Files and select active or deactive for user access
 def add_files(user_id: int, files: bytes, files_allowed: bool = False,generate_tokens: bool = False, auth_token="", inputs={},skip_new_files=False):
     try:
         # Check if files already exist and if it's allowed

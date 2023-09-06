@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import List
 from zipfile import ZipFile
 from PIL import Image
+from datetime import datetime
 from io import BytesIO
 import routers.lms_service.lms_service_ops as model
 from fastapi.responses import JSONResponse,HTMLResponse,FileResponse
@@ -28,6 +29,8 @@ from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender,UnenrolledUsers_Course,UnenrolledUsers_Group,UnenrolledCourse_Group,UnenrolledUsers_Group)
 from utils import success_response
 from config.logconfig import logger
+
+from ..db_ops import execute_query
 
 def get_database_session():
     try:
@@ -1278,10 +1281,7 @@ def get_image(filename: str):
     else:
         return {"error": "Image not found"}
     
-
-# Files
-
-# Define the directory where uploaded files will be stored
+# Upload files and mark them as active
 UPLOAD_DIR = "uploads"
 
 # Create the upload directory if it doesn't exist
@@ -1312,41 +1312,74 @@ ALLOWED_FILE_TYPES = {
     'webm': 100,
     # Add more file types as needed
 }
+# Maximum allowed file size in bytes (10 MB)
+MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
-# Upload files and mark them as active
-@service.post("/upload/")
-async def upload_file(file: UploadFile, active: bool):
+# List of allowed file extensions
+ALLOWED_EXTENSIONS = {'pdf', 'jpg', 'jpeg', 'png', 'docx' }
+
+def upload_file_to_db(user_id, file_data, files_allowed, auth_token, request_token, token, active, deactive):
+    query = """
+        INSERT INTO documents (user_id, files, files_allowed, auth_token, request_token, token, active, deactive, created_at, updated_at)
+        VALUES (%(user_id)s, %(files)s, %(files_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s, %(created_at)s, %(updated_at)s);
+    """
+    params = {
+        "user_id": user_id,
+        "files": file_data,  # Binary file data
+        "files_allowed": files_allowed,
+        "auth_token": auth_token,
+        "request_token": request_token,
+        "token": token,
+        "active": active,
+        "deactive": deactive,
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+    }
+    return execute_query(query, params=params)
+
+@service.post("/upload_file/")
+async def upload_file_api(user_id: int, file: UploadFile, active: bool, deactive: bool):
     try:
-        # Check if the file type is allowed
-        file_ext = file.filename.split(".")[-1]
+        # Check if the file extension is allowed
+        file_ext = file.filename.split(".")[-1].lower()
         if file_ext not in ALLOWED_FILE_TYPES:
-            return JSONResponse(status_code=400, content={"status": "failure", "message": "File type not allowed"})
+            raise HTTPException(status_code=400, detail="File type not allowed")
 
-        # Check if the file size is within the allowed limit
-        max_file_size = ALLOWED_FILE_TYPES[file_ext]
-        if file.file_size > max_file_size * 1024 * 1024:  # Convert MB to bytes
-            return JSONResponse(status_code=400, content={"status": "failure", "message": "File size exceeds the allowed limit"})
+        # Calculate the file size
+        file_size_bytes = len(file.file.read())
+        file.file.seek(0)
+
+        # Check if the file size exceeds the allowed limit
+        if file_size_bytes > MAX_FILE_SIZE_BYTES:
+            raise HTTPException(status_code=400, detail="File size exceeds the allowed limit")
 
         # Save the file to the upload directory
         file_path = os.path.join(UPLOAD_DIR, file.filename)
-        with open(file_path, "wb") as f:
-            f.write(file.file.read())
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
 
-        # Save file metadata to the database
-        data = {
-            "filename": file.filename,
-            "file_type": file.content_type,
-            "file_size": os.path.getsize(file_path),
+        # Save file information to the database using execute_query
+        query = """
+            INSERT INTO documents
+            (user_id, files, files_allowed, auth_token, request_token, token, active, deactive, created_at, updated_at, filename)
+            VALUES
+            (%(user_id)s, %(files)s, 'some_value', 'some_value', 'some_value', 'some_value', %(active)s, %(deactive)s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, %(filename)s)
+        """
+        params = {
+            "user_id": user_id,
+            "files": file_path,
             "active": active,
+            "deactive": deactive,
+            "filename": file.filename,
         }
 
-        # Use your existing UserDBHandler to save the data to the database
-        resp = LmsHandler.add_user_to_db(data)
+        execute_query(query, params=params)
 
-        return JSONResponse(content={"status": "success", "message": "File uploaded successfully"})
-
+        return JSONResponse(status_code=200, content={"message": "File uploaded successfully"})
     except Exception as exc:
-        return JSONResponse(status_code=500, content={"status": "failure", "message": "Failed to upload file"})
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Failed to upload file")
+
 
 # Fetch active files
 @service.get("/files/")
@@ -1366,7 +1399,44 @@ def fetch_user_enrollcourse_by_onlycourse_id():
             "message": "Failed to fetch enrolled courses' data"
         })
     
+@service.get("/fetch_files")
+def fetch_files_api():
+    try:
+        # Modify the query to select filename, file type, active status, and calculate size in MB
+        query = """
+            SELECT
+                filename,
+                SUBSTRING_INDEX(filename, '.', -1) as file_type,
+                files,
+                LENGTH(files) as file_size,
+                active
+            FROM documents
+            WHERE active = 1;
+        """
 
+        # Execute the query and get the result
+        files_metadata = execute_query(query)
+
+        # Process the result and return it
+        result = []
+        for row in files_metadata:
+            result.append({
+                "filename": row["filename"],
+                "file_type": row["file_type"],
+                "file_size_mb": round(row["file_size"] / (1024 * 1024), 2),
+                "active": row["active"]
+            })
+
+        return {
+            "status": "success",
+            "data": result
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=500, content={
+            "status": "failure",
+            "message": "Failed to fetch files"
+        })
 ###################################### Enroll Courses to USER (USERS -> Course Page) ###########################################
 
 # Create enroll_course

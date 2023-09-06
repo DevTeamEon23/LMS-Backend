@@ -8,6 +8,7 @@ media/
 course/
 coursevideo/
 files/
+uploads/
 .env
 .env*
 *.pdf

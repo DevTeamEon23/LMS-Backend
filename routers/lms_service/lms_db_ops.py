@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 
+from datetime import datetime
 from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files
 from ..db_ops import execute_query
 
@@ -871,9 +872,11 @@ class LmsHandler:
                 uce.course_id AS course_id,
                 c.coursename,
                 uce.id AS user_course_enrollment_id,
-                uce.created_at AS enrolled_on
+                uce.created_at AS enrolled_on,
+                u.role AS user_role
             FROM user_course_enrollment uce
             LEFT JOIN course c ON uce.course_id = c.id
+            LEFT JOIN users u ON uce.user_id = u.id
             WHERE uce.user_id = %(user_id)s
 
             UNION
@@ -882,11 +885,13 @@ class LmsHandler:
                 c.id AS course_id,
                 c.coursename,
                 NULL AS user_course_enrollment_id,
-                NULL AS enrolled_on
+                NULL AS enrolled_on,
+                u.role AS user_role
             FROM course c
+            CROSS JOIN users u
             WHERE c.id NOT IN (
                 SELECT course_id FROM user_course_enrollment WHERE user_id = %(user_id)s
-            );
+            ) AND u.id = %(user_id)s;
         """
         params = {"user_id": user_id}
         return execute_query(query, params).fetchall()
@@ -1177,7 +1182,7 @@ class LmsHandler:
                         ;
                     """
         return execute_query(query, params=params)
-    
+
     @classmethod
     def fetch_active_files(cls):
         query = """ SELECT * FROM documents WHERE active = ; """
