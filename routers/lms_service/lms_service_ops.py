@@ -2641,26 +2641,67 @@ def remove_course_from_groupby_id(id):
         })
 
 
-####################################################################################################################
-def enroll_coursegroup_massaction(id=int, generate_tokens: bool = False, auth_token="", inputs={}, skip_new_crgroupenroll=False):
+######################################## Mass Action to enroll course_id to all groups ##################################################
+# def enroll_coursegroup_massaction(id=int, generate_tokens: bool = False, auth_token="", inputs={}, skip_new_crgroupenroll=False):
+#     try:
+#         course_id = inputs.get('course_id')
+#                 # Query all group IDs from the lmsgroup table
+#         group_ids_query = "SELECT id FROM lmsgroup"
+#         group_ids_result = execute_query(group_ids_query)
+#         group_ids = [row['id'] for row in group_ids_result]  # Use () instead of []
+
+#         # Generate the token here
+#         token = create_groups_tocourseenroll_token(course_id)
+
+#         request_token = ''
+
+#         for group_id in group_ids:
+#             # Add the course to each group
+#             data = {'course_id': course_id, 'group_id': group_id,
+#                     'c_g_enrollment_allowed': inputs.get('c_g_enrollment_allowed', ''), 'auth_token': auth_token,
+#                     'request_token': request_token, 'token': token}
+#             resp = LmsHandler.add_course_group_enrollment(data)
+
+#         # If token not required,
+#         if not generate_tokens and len(auth_token) == 0:
+#             token = None
+
+#     except ValueError as exc:
+#         logger.error(traceback.format_exc())
+#         message = exc.args[0]
+#         logger.error(message)
+
+#     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='course has been enrolled to groups successfully'))
+
+# Operation code for enrolling course_id to groups
+def enroll_coursegroup_massaction(course_id: int, generate_tokens: bool = False, auth_token="", inputs={}, skip_new_crgroupenroll=False):
     try:
-        course_id = inputs.get('course_id')
-                # Query all group IDs from the lmsgroup table
+        # Query group IDs that are already enrolled for the given course
+        enrolled_group_query = "SELECT group_id FROM course_group_enrollment WHERE course_id = %(course_id)s"
+        enrolled_group_params = {'course_id': course_id}
+        enrolled_group_result = execute_query(enrolled_group_query, params=enrolled_group_params)
+        enrolled_groups = [row['group_id'] for row in enrolled_group_result]
+
+        # Query all group IDs from the lmsgroup table
         group_ids_query = "SELECT id FROM lmsgroup"
         group_ids_result = execute_query(group_ids_query)
-        group_ids = [row['id'] for row in group_ids_result]  # Use () instead of []
+        group_ids = [row['id'] for row in group_ids_result]
 
-        # Generate the token here
-        token = create_groups_tocourseenroll_token(course_id)
+        if generate_tokens:
+            # Generate the token here
+            token = create_groups_tocourseenroll_token(course_id)
+        else:
+            token = None
 
         request_token = ''
 
         for group_id in group_ids:
-            # Add the course to each group
-            data = {'course_id': course_id, 'group_id': group_id,
-                    'c_g_enrollment_allowed': inputs.get('c_g_enrollment_allowed', ''), 'auth_token': auth_token,
-                    'request_token': request_token, 'token': token}
-            resp = LmsHandler.add_course_group_enrollment(data)
+            if group_id not in enrolled_groups:
+
+                data = {'course_id': course_id, 'group_id': group_id,
+                            'c_g_enrollment_allowed': inputs.get('c_g_enrollment_allowed', ''), 'auth_token': auth_token,
+                            'request_token': request_token, 'token': token}
+                resp = LmsHandler.add_course_group_enrollment(data)
 
         # If token not required,
         if not generate_tokens and len(auth_token) == 0:
@@ -2671,8 +2712,20 @@ def enroll_coursegroup_massaction(id=int, generate_tokens: bool = False, auth_to
         message = exc.args[0]
         logger.error(message)
 
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='course has been enrolled to groups successfully'))
-
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='Course has been enrolled to groups successfully'))
+    
+def remove_course_from_all_groups_by_course_id(course_id):
+    try:
+        # Delete the course from all groups by course_id
+        result = LmsHandler.remove_course_from_all_groups(course_id)
+        return result
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to unenroll course from all groups"
+        })
+    
 ################################################################################################
 
 def check_existing_files(user_id):

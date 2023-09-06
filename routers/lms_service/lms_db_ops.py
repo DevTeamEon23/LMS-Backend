@@ -1112,18 +1112,42 @@ class LmsHandler:
 
 
 ##################################################################################################################
+    # @classmethod
+    # def add_course_group_enrollment(cls, params):
+    #     query = f"""  INSERT INTO {courses_groups_enrollment} (course_id, group_id, c_g_enrollment_allowed, auth_token, request_token, token)
+    #                 VALUES (%(course_id)s, %(group_id)s, %(c_g_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+    #                 ON DUPLICATE KEY UPDATE
+    #                 course_id = VALUES(course_id),
+    #                 group_id = VALUES(group_id),
+    #                 c_g_enrollment_allowed = VALUES(c_g_enrollment_allowed),
+    #                 auth_token = VALUES(auth_token),
+    #                 request_token = VALUES(request_token),
+    #                 token = VALUES(token);
+    #                 """
+    #     return execute_query(query, params=params)
+
     @classmethod
     def add_course_group_enrollment(cls, params):
-        query = f"""  INSERT INTO {courses_groups_enrollment} (course_id, group_id, c_g_enrollment_allowed, auth_token, request_token, token)
-                    VALUES (%(course_id)s, %(group_id)s, %(c_g_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
-                    ON DUPLICATE KEY UPDATE
-                    course_id = VALUES(course_id),
-                    group_id = VALUES(group_id),
-                    c_g_enrollment_allowed = VALUES(c_g_enrollment_allowed),
-                    auth_token = VALUES(auth_token),
-                    request_token = VALUES(request_token),
-                    token = VALUES(token);
-                    """
+        query = f"""  
+            INSERT INTO {courses_groups_enrollment} 
+            (course_id, group_id, c_g_enrollment_allowed, auth_token, request_token, token)
+            VALUES 
+            (%(course_id)s, %(group_id)s, %(c_g_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+            ON DUPLICATE KEY UPDATE
+            course_id = VALUES(course_id),
+            group_id = VALUES(group_id),
+            c_g_enrollment_allowed = VALUES(c_g_enrollment_allowed),
+            auth_token = VALUES(auth_token),
+            request_token = VALUES(request_token),
+            token = VALUES(token);
+        """
+        return execute_query(query, params=params)
+
+    #Delete or Remove Enrolled Courses from Group
+    @classmethod
+    def remove_course_from_all_groups(cls, course_id):
+        query = f"""DELETE FROM {courses_groups_enrollment} WHERE course_id = %(course_id)s;"""
+        params = {'course_id': course_id}
         return execute_query(query, params=params)
     
     @classmethod
