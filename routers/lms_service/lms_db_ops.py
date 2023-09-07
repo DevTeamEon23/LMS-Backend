@@ -859,9 +859,21 @@ class LmsHandler:
 
     @classmethod
     def enroll_courses_user_enrollment(cls, params):
-        query = f"""   INSERT into {users_courses_enrollment}(user_id, course_id, u_c_enrollment_allowed, auth_token, request_token, token) VALUES 
-                        (%(user_id)s, %(course_id)s, %(u_c_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
-                        ; 
+        query = f"""   INSERT INTO {users_courses_enrollment}
+                    (user_id, course_id, u_c_enrollment_allowed, auth_token, request_token, token)
+                    SELECT
+                        %(user_id)s,
+                        %(course_id)s,
+                        %(u_c_enrollment_allowed)s,
+                        %(auth_token)s,
+                        %(request_token)s,
+                        %(token)s
+                    FROM DUAL
+                    WHERE NOT EXISTS (
+                        SELECT 1
+                        FROM {users_courses_enrollment}
+                        WHERE user_id = %(user_id)s AND course_id = %(course_id)s
+                    ); 
                     """
         return execute_query(query, params=params)
 
@@ -907,16 +919,28 @@ class LmsHandler:
 
     @classmethod
     def enroll_groups_to_user(cls, params):
-        query = f"""   INSERT into {users_groups_enrollment}(user_id, group_id, u_g_enrollment_allowed, auth_token, request_token, token) VALUES 
-                        (%(user_id)s, %(group_id)s, %(u_g_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
-                        ; 
+        query = f"""   INSERT INTO {users_groups_enrollment}
+                    (user_id, group_id, u_g_enrollment_allowed, auth_token, request_token, token)
+                    SELECT
+                        %(user_id)s,
+                        %(group_id)s,
+                        %(u_g_enrollment_allowed)s,
+                        %(auth_token)s,
+                        %(request_token)s,
+                        %(token)s
+                    FROM DUAL
+                    WHERE NOT EXISTS (
+                        SELECT 1
+                        FROM {users_groups_enrollment}
+                        WHERE user_id = %(user_id)s AND group_id = %(group_id)s
+                    ); 
                     """
         return execute_query(query, params=params)
 
 #
     @classmethod
     def get_allgroups_of_user(cls, user_id):
-        query = """ 
+        query = """
         SELECT
             e.group_id AS group_id,
             lg.groupname,
@@ -932,7 +956,8 @@ class LmsHandler:
             lg.groupname,
             NULL AS user_group_enrollment_id
         FROM lmsgroup lg
-        WHERE lg.id NOT IN (SELECT group_id FROM user_group_enrollment WHERE user_id = %(user_id)s); """
+        WHERE lg.id NOT IN (SELECT group_id FROM user_group_enrollment WHERE user_id = %(user_id)s)
+        ORDER BY group_id ASC; """
         params = {"user_id": user_id}
         return execute_query(query, params).fetchall()
     
@@ -948,9 +973,21 @@ class LmsHandler:
 
     @classmethod
     def enroll_users_to_course(cls, params):
-        query = f"""   INSERT into {users_courses_enrollment}(user_id, course_id, u_c_enrollment_allowed, auth_token, request_token, token) VALUES 
-                        (%(user_id)s, %(course_id)s, %(u_c_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
-                        ; 
+        query = f"""   INSERT INTO {users_courses_enrollment}
+                    (user_id, course_id, u_c_enrollment_allowed, auth_token, request_token, token)
+                    SELECT
+                        %(user_id)s,
+                        %(course_id)s,
+                        %(u_c_enrollment_allowed)s,
+                        %(auth_token)s,
+                        %(request_token)s,
+                        %(token)s
+                    FROM DUAL
+                    WHERE NOT EXISTS (
+                        SELECT 1
+                        FROM {users_courses_enrollment}
+                        WHERE user_id = %(user_id)s AND course_id = %(course_id)s
+                    ); 
                     """
         return execute_query(query, params=params)
 
@@ -999,9 +1036,21 @@ class LmsHandler:
 
     @classmethod
     def add_groups_to_course(cls, params):
-        query = f"""   INSERT into {courses_groups_enrollment}(course_id, group_id, c_g_enrollment_allowed, auth_token, request_token, token) VALUES 
-                        (%(course_id)s, %(group_id)s, %(c_g_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
-                        ; 
+        query = f"""   INSERT INTO {courses_groups_enrollment}
+                    (course_id, group_id, c_g_enrollment_allowed, auth_token, request_token, token)
+                    SELECT
+                        %(course_id)s,
+                        %(group_id)s,
+                        %(c_g_enrollment_allowed)s,
+                        %(auth_token)s,
+                        %(request_token)s,
+                        %(token)s
+                    FROM DUAL
+                    WHERE NOT EXISTS (
+                        SELECT 1
+                        FROM {courses_groups_enrollment}
+                        WHERE course_id = %(course_id)s AND group_id = %(group_id)s
+                    ); 
                     """
         return execute_query(query, params=params)
 
@@ -1030,9 +1079,21 @@ class LmsHandler:
 
     @classmethod
     def add_users_to_group(cls, params):
-        query = f"""   INSERT into {users_groups_enrollment}(user_id, group_id, u_g_enrollment_allowed, auth_token, request_token, token) VALUES 
-                        (%(user_id)s, %(group_id)s, %(u_g_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
-                        ; 
+        query = f"""   INSERT INTO {users_groups_enrollment}
+                    (user_id, group_id, u_g_enrollment_allowed, auth_token, request_token, token)
+                    SELECT
+                        %(user_id)s,
+                        %(group_id)s,
+                        %(u_g_enrollment_allowed)s,
+                        %(auth_token)s,
+                        %(request_token)s,
+                        %(token)s
+                    FROM DUAL
+                    WHERE NOT EXISTS (
+                        SELECT 1
+                        FROM {users_groups_enrollment}
+                        WHERE user_id = %(user_id)s AND group_id = %(group_id)s
+                    ); 
                     """
         return execute_query(query, params=params)
 
@@ -1074,9 +1135,21 @@ class LmsHandler:
 
     @classmethod
     def enroll_courses_to_group(cls, params):
-        query = f"""   INSERT into {courses_groups_enrollment}(course_id, group_id, c_g_enrollment_allowed, auth_token, request_token, token) VALUES 
-                        (%(course_id)s, %(group_id)s, %(c_g_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
-                        ; 
+        query = f"""   INSERT INTO {courses_groups_enrollment}
+                    (course_id, group_id, c_g_enrollment_allowed, auth_token, request_token, token)
+                    SELECT
+                        %(course_id)s,
+                        %(group_id)s,
+                        %(c_g_enrollment_allowed)s,
+                        %(auth_token)s,
+                        %(request_token)s,
+                        %(token)s
+                    FROM DUAL
+                    WHERE NOT EXISTS (
+                        SELECT 1
+                        FROM {courses_groups_enrollment}
+                        WHERE course_id = %(course_id)s AND group_id = %(group_id)s
+                    );
                     """
         return execute_query(query, params=params)
 

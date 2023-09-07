@@ -208,18 +208,6 @@ s_table_lmsevent = Table(
     Index(f'idx_{table_lmsevent}_token', 'token'),
 )
 
-# parentcategory table
-table_parentcategory = 'parentcategory'
-s_table_parentcategory = Table(
-    table_parentcategory, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('name', VARCHAR(45)),
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{table_parentcategory}_token', 'token'),
-)
-
 # virtualtraining table
 table_virtualtraining = 'virtualtraining'
 s_table_virtualtraining = Table(
@@ -424,6 +412,26 @@ user_files_table = Table(
     UniqueConstraint('user_id', name='uq_user_files_user_id'),
     Index(f'idx_{n_table_user_files}_token', 'token'),
 )
+
+# n_table_course_content = 'course_video'
+# course_content_table = Table(
+#     n_table_course_content, metadata,
+#     Column('id', Integer, primary_key=True, autoincrement=True),
+#     Column('course_id', Integer, nullable=False),
+#     ForeignKeyConstraint(['course_id'], ['course.id'], name='fk_course_grp_id'),  # Foreign key with a specific name
+#     Column('unit_name', VARCHAR(150), nullable=False),
+#     Column('video', LONGBLOB, nullable=False),
+#     Column('video_allowed', VARCHAR(150), nullable=False),
+#     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+#     Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA
+#     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+#     Column('active', BOOLEAN, default=True, nullable=False),
+#     Column('deactive', BOOLEAN, default=False, nullable=True),
+#     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+#     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+#     UniqueConstraint('user_id', name='uq_user_files_user_id'),
+#     Index(f'idx_{n_table_user_files}_token', 'token'),
+# )
 
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')
 metadata.create_all(meta_engine, checkfirst=True)
