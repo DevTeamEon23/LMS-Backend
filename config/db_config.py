@@ -1,6 +1,6 @@
 import sqlalchemy as sql
 from sqlalchemy import MetaData, Table, Column, String, Integer, DECIMAL, VARCHAR, Index, UniqueConstraint,ForeignKeyConstraint, \
-    func, BOOLEAN, create_engine, Date, BigInteger, event, DDL, Float, ForeignKey,Enum
+    func, BOOLEAN, create_engine, Date, BigInteger, event, DDL, Float, ForeignKey,Enum,CheckConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID, TIMESTAMP,BYTEA
 from sqlalchemy.dialects.mysql import LONGBLOB
 from sqlalchemy.orm import sessionmaker
@@ -413,25 +413,68 @@ user_files_table = Table(
     Index(f'idx_{n_table_user_files}_token', 'token'),
 )
 
-# n_table_course_content = 'course_video'
-# course_content_table = Table(
-#     n_table_course_content, metadata,
-#     Column('id', Integer, primary_key=True, autoincrement=True),
-#     Column('course_id', Integer, nullable=False),
-#     ForeignKeyConstraint(['course_id'], ['course.id'], name='fk_course_grp_id'),  # Foreign key with a specific name
-#     Column('video_unitname', VARCHAR(150), nullable=False),
-#     Column('video', LONGBLOB, nullable=False),
-#     Column('course_content_allowed', VARCHAR(150), nullable=False),
-#     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-#     Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA
-#     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-#     Column('active', BOOLEAN, default=True, nullable=False),
-#     Column('deactive', BOOLEAN, default=False, nullable=True),
-#     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-#     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-#     UniqueConstraint('user_id', name='uq_user_files_user_id'),
-#     Index(f'idx_{n_table_user_files}_token', 'token'),
-# )
+n_table_course_content = 'course_content'
+course_content_table = Table(
+    n_table_course_content, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('course_id', Integer, nullable=False),
+    ForeignKeyConstraint(['course_id'], ['course.id'], name='fk_course_content_id'),
+    Column('content_type', String(50), nullable=False),  # Type of content: 'video', 'ppt', 'scorm', 'assignment', 'instructor-led'
+    
+    # Common fields for scorm content types
+    Column('unit_name', String(150), nullable=True),
+    Column('file_url', String(500), nullable=True),
+    
+    # Additional fields based on content type
+    Column('video_unitname', String(150), nullable=True),
+    Column('video_file', LONGBLOB, nullable=False),
+    #PPT/Documents
+    Column('ppt_unitname', String(150), nullable=True),
+    Column('ppt_file', LONGBLOB, nullable=False),
+    #Scorm File
+    Column('scorm_unitname', String(150), nullable=True),
+    Column('scorm_file', LONGBLOB, nullable=False),
+    #Assignment 
+    Column('assignment_name', String(150), nullable=True),
+    Column('assignment_file', LONGBLOB, nullable=False),
+    Column('topic', String(600), nullable=True),
+    Column('instructor_led_name', String(150), nullable=True),
+    
+    # Submission related fields (for assignments)
+    Column('submission_status', String(20), nullable=True),  # 'Pass', 'Not Passed', 'Pending'
+    Column('grade', Integer, nullable=True),  # 1-100
+    Column('comments', String(600), nullable=True),
+    
+    Column('course_content', VARCHAR(150), nullable=False),
+    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+    Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('active', BOOLEAN, default=True, nullable=False),
+    Column('deactive', BOOLEAN, default=False, nullable=True),
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+)
+
+n_table_combined = 'combined'
+combined_table = Table(
+    n_table_combined, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('course_id', Integer, nullable=False),
+    ForeignKeyConstraint(['course_id'], ['course.id'], name='fk_course_combined_id'),
+    Column('question_text', VARCHAR(1000), nullable=True),
+    Column('option_a', VARCHAR(1000), nullable=True),
+    Column('option_b', VARCHAR(1000), nullable=True),
+    Column('option_c', VARCHAR(1000), nullable=True),
+    Column('option_d', VARCHAR(1000), nullable=True),
+    Column('correct_option', String(1), nullable=True),
+    Column('marks', Integer, nullable=True),
+    Column('test_name', VARCHAR(100), nullable=True),
+    Column('active', BOOLEAN, default=True, nullable=False),
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    CheckConstraint('correct_option IN (\'A\', \'B\', \'C\', \'D\')', name='ck_correct_option')
+)
+
 
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')
 metadata.create_all(meta_engine, checkfirst=True)

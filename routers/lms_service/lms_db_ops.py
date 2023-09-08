@@ -222,6 +222,42 @@ class LmsHandler:
         query = f""" DELETE FROM course WHERE id = '{id}'; """
         return execute_query(query)
     
+###############################################################################################################
+
+
+    @classmethod
+    def insert_course_content(
+            course_id, content_type, unit_name, file_url, video_unitname, ppt_unitname, 
+            scorm_unitname, assignment_name, topic, instructor_led_name, submission_status, 
+            grade, comments):
+        query = """
+            INSERT INTO course_content (
+                course_id, content_type, unit_name, file_url, video_unitname, ppt_unitname, 
+                scorm_unitname, assignment_name, topic, instructor_led_name, submission_status, 
+                grade, comments
+            )
+            VALUES (
+                :course_id, :content_type, :unit_name, :file_url, :video_unitname, :ppt_unitname, 
+                :scorm_unitname, :assignment_name, :topic, :instructor_led_name, :submission_status, 
+                :grade, :comments
+            );
+        """
+        params = {
+            'course_id': course_id,
+            'content_type': content_type,
+            'unit_name': unit_name,
+            'file_url': file_url,
+            'video_unitname': video_unitname,
+            'ppt_unitname': ppt_unitname,
+            'scorm_unitname': scorm_unitname,
+            'assignment_name': assignment_name,
+            'topic': topic,
+            'instructor_led_name': instructor_led_name,
+            'submission_status': submission_status,
+            'grade': grade,
+            'comments': comments
+        }
+        return execute_query(query, params=params)
 
 ########################################################################################
 

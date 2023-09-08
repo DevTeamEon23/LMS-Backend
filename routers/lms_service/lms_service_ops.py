@@ -781,16 +781,19 @@ def fetch_course_by_onlyid(id):
             # Handle the case when no category is found for the specified id
             return None
 
+        full_image_url = backendBaseUrl + '/' + course.file.decode('utf-8').replace('b', '').replace("'", '')
+        full_video_url = backendBaseUrl + '/' + course.coursevideo.decode('utf-8').replace('b', '').replace("'", '')
+
         # Transform the category object into a dictionary
         course_data = {
                 "id": course.id,
                 "coursename": course.coursename,
-                "file": course.file,
+                "file": full_image_url,
                 "description": course.description,
                 "coursecode": course.coursecode,
                 "price": course.price ,
                 "courselink": course.courselink,
-                "coursevideo": course.coursevideo,
+                "coursevideo": full_video_url,
                 "capacity": course.capacity,
                 "startdate": course.startdate,
                 "enddate": course.enddate,
