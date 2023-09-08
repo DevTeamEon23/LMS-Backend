@@ -38,6 +38,8 @@ course_file_path = "C:/Users/Admin/Desktop/TEST_projects/All_FastAPI_Projects/fa
 
 coursevideo_file_path = "C:/Users/Admin/Desktop/TEST_projects/All_FastAPI_Projects/fastapi/coursevideo/${item.file}"
 
+backendBaseUrl = "https://v1.eonlearning.tech"
+
 def sample_data(payload):
     logger.info(payload)
     return {
@@ -207,8 +209,8 @@ def get_image(file: str):
         return {"error": "Image not found"}
     
 #Get User data by id for update fields Mapping
-def fetch_users_by_onlyid(id):
 
+def fetch_users_by_onlyid(id):
     try:
         # Query user from the database for the specified id
         user = LmsHandler.get_user_by_id(id)
@@ -216,6 +218,9 @@ def fetch_users_by_onlyid(id):
         if not user:
             # Handle the case when no user is found for the specified id
             return None
+
+        # file_url = user.file.lstrip("b'").rstrip("'")
+        full_image_url = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
 
         # Transform the user object into a dictionary
         user_data = {
@@ -228,7 +233,7 @@ def fetch_users_by_onlyid(id):
             "adhr": user.adhr,
             "username": user.username,
             "bio": user.bio,
-            "file": user.file,
+            "file": full_image_url,
             "role": user.role,
             "timezone": user.timezone,
             "langtype": user.langtype,

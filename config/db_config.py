@@ -419,9 +419,9 @@ user_files_table = Table(
 #     Column('id', Integer, primary_key=True, autoincrement=True),
 #     Column('course_id', Integer, nullable=False),
 #     ForeignKeyConstraint(['course_id'], ['course.id'], name='fk_course_grp_id'),  # Foreign key with a specific name
-#     Column('unit_name', VARCHAR(150), nullable=False),
+#     Column('video_unitname', VARCHAR(150), nullable=False),
 #     Column('video', LONGBLOB, nullable=False),
-#     Column('video_allowed', VARCHAR(150), nullable=False),
+#     Column('course_content_allowed', VARCHAR(150), nullable=False),
 #     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
 #     Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA
 #     Column('token', VARCHAR(100), nullable=False),  # For data endpoints

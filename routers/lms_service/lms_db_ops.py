@@ -1260,6 +1260,11 @@ class LmsHandler:
     def fetch_active_files(cls):
         query = """ SELECT * FROM documents WHERE active = ; """
         return execute_query(query).fetchall()
+
+
+####################################################################################################################
+
+
     
 
 
