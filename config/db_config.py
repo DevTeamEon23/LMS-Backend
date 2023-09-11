@@ -444,8 +444,8 @@ course_content_table = Table(
     Column('submission_status', String(20), nullable=True),  # 'Pass', 'Not Passed', 'Pending'
     Column('grade', Integer, nullable=True),  # 1-100
     Column('comments', String(600), nullable=True),
-    
-    Column('course_content', VARCHAR(150), nullable=False),
+
+    Column('course_content_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
     Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints

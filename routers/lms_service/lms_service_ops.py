@@ -2397,6 +2397,55 @@ def fetch_enrolled_unenroll_users_of_course(course_id):
             "message": "Failed to fetch enrolled & unenrolled courses data of user"
         })
     
+def fetch_enrolled_unenroll_instructors_of_course(course_id):
+    try:
+        # Query user IDs from the database for the specified course
+        user_ids = LmsHandler.get_allinst_of_course(course_id)
+
+        if not user_ids:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        # Now user_ids is a list of user IDs enrolled in the course
+        # You can return this list or process it further as needed
+
+        return {
+            "user_ids": user_ids,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled & unenrolled courses data of Instructor"
+        })
+
+def fetch_enrolled_unenroll_learners_of_course(course_id):
+    try:
+        # Query user IDs from the database for the specified course
+        user_ids = LmsHandler.get_alllearner_of_course(course_id)
+
+        if not user_ids:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        # Now user_ids is a list of user IDs enrolled in the course
+        # You can return this list or process it further as needed
+
+        return {
+            "user_ids": user_ids,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled & unenrolled courses data of Learner"
+        })
+    
+
 def unenrolled_users_from_courseby_id(id):
     try:
         # Delete the user by ID

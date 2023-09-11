@@ -226,37 +226,17 @@ class LmsHandler:
 
 
     @classmethod
-    def insert_course_content(
-            course_id, content_type, unit_name, file_url, video_unitname, ppt_unitname, 
-            scorm_unitname, assignment_name, topic, instructor_led_name, submission_status, 
-            grade, comments):
+    def insert_course_content(cls, params):
         query = """
-            INSERT INTO course_content (
-                course_id, content_type, unit_name, file_url, video_unitname, ppt_unitname, 
-                scorm_unitname, assignment_name, topic, instructor_led_name, submission_status, 
-                grade, comments
+            INSERT INTO {n_table_course_content} (
+                course_id, content_type, unit_name, file_url, video_unitname, video_file, ppt_unitname, ppt_file,
+                scorm_unitname, scorm_file, assignment_name, assignment_file, topic, instructor_led_name, submission_status, 
+                grade, comments, course_content_allowed, auth_token, request_token, token, active, deactive
             )
-            VALUES (
-                :course_id, :content_type, :unit_name, :file_url, :video_unitname, :ppt_unitname, 
-                :scorm_unitname, :assignment_name, :topic, :instructor_led_name, :submission_status, 
-                :grade, :comments
-            );
+            VALUES (%(course_id)s, %(content_type)s, %(unit_name)s, %(file_url)s, %(video_unitname)s, 
+            %(video_file)s, %(ppt_unitname)s,%(ppt_file)s, %(scorm_unitname)s, %(scorm_file)s, %(assignment_name)s, 
+            %(assignment_file)s, %(topic)s, %(instructor_led_name)s, %(submission_status)s, %(grade)s, %(comments)s, %(course_content)s, %(auth_token)s, %(request_token)s, %(token)s, %(isActive)s, %(isHide)s);
         """
-        params = {
-            'course_id': course_id,
-            'content_type': content_type,
-            'unit_name': unit_name,
-            'file_url': file_url,
-            'video_unitname': video_unitname,
-            'ppt_unitname': ppt_unitname,
-            'scorm_unitname': scorm_unitname,
-            'assignment_name': assignment_name,
-            'topic': topic,
-            'instructor_led_name': instructor_led_name,
-            'submission_status': submission_status,
-            'grade': grade,
-            'comments': comments
-        }
         return execute_query(query, params=params)
 
 ########################################################################################
@@ -1061,6 +1041,71 @@ class LmsHandler:
         params = {"course_id": course_id}
         return execute_query(query, params).fetchall()
     
+    @classmethod
+    def get_allinst_of_course(cls, course_id):
+        query = """
+        WITH InstructorUsers AS (
+            SELECT
+                u.id AS user_id,
+                u.role,
+                u.full_name
+            FROM users u
+            WHERE u.role = 'Instructor'
+        ),
+        CourseEnrollments AS (
+            SELECT
+                u.id AS user_id,
+                c.coursename AS enrolled_coursename,
+                e.id AS user_course_enrollment_id
+            FROM users u
+            LEFT JOIN user_course_enrollment e ON u.id = e.user_id
+            LEFT JOIN course c ON e.course_id = c.id
+            WHERE e.course_id = %(course_id)s
+        )
+        SELECT
+            iu.user_id,
+            iu.role,
+            iu.full_name,
+            ce.enrolled_coursename,
+            ce.user_course_enrollment_id
+        FROM InstructorUsers iu
+        LEFT JOIN CourseEnrollments ce ON iu.user_id = ce.user_id;
+        """
+        params = {"course_id": course_id}
+        return execute_query(query, params).fetchall()
+    
+    @classmethod
+    def get_alllearner_of_course(cls, course_id):
+        query = """
+        WITH LearnerUsers AS (
+            SELECT
+                u.id AS user_id,
+                u.role,
+                u.full_name
+            FROM users u
+            WHERE u.role = 'Learner'
+        ),
+        CourseEnrollments AS (
+            SELECT
+                u.id AS user_id,
+                c.coursename AS enrolled_coursename,
+                e.id AS user_course_enrollment_id
+            FROM users u
+            LEFT JOIN user_course_enrollment e ON u.id = e.user_id
+            LEFT JOIN course c ON e.course_id = c.id
+            WHERE e.course_id = %(course_id)s
+        )
+        SELECT
+            lu.user_id,
+            lu.role,
+            lu.full_name,
+            ce.enrolled_coursename,
+            ce.user_course_enrollment_id
+        FROM LearnerUsers lu
+        LEFT JOIN CourseEnrollments ce ON lu.user_id = ce.user_id;
+        """
+        params = {"course_id": course_id}
+        return execute_query(query, params).fetchall()
     
 #Delete or Remove Enrolled Course from User
     @classmethod
