@@ -2606,6 +2606,55 @@ def fetch_added_unadded_users_of_group(group_id):
             "message": "Failed to fetch enrolled & unenrolled users data of group"
         })
     
+def fetch_added_unadded_instructors_of_group(group_id):
+    try:
+        # Query user IDs from the database for the specified course
+        instructors_ids = LmsHandler.get_allinst_of_group(group_id)
+
+        if not instructors_ids:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        # Now user_ids is a list of user IDs enrolled in the course
+        # You can return this list or process it further as needed
+
+        return {
+            "instructors_ids": instructors_ids,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled & unenrolled instructor data of group"
+        })
+    
+def fetch_added_unadded_learners_of_group(group_id):
+    try:
+        # Query user IDs from the database for the specified course
+        learners_ids = LmsHandler.get_alllearner_of_group(group_id)
+
+        if not learners_ids:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        # Now learners_ids is a list of user IDs enrolled in the course
+        # You can return this list or process it further as needed
+
+        return {
+            "learners_ids": learners_ids,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled & unenrolled learners data of group"
+        })
+    
+
 def remove_user_from_groupby_id(id):
     try:
         # Delete the user by ID

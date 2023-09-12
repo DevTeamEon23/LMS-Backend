@@ -99,7 +99,7 @@ class LmsHandler:
     def delete_users(cls, id):
         query = f""" DELETE FROM users WHERE id = '{id}'; """
         return execute_query(query)
-
+    
 ############################################################################################################################
 
 # Courses CRUD
@@ -1205,7 +1205,58 @@ class LmsHandler:
         params = {"group_id": group_id}
         return execute_query(query, params).fetchall()
     
+    @classmethod
+    def get_allinst_of_group(cls, group_id):
+        query = """ 
+            SELECT
+                e.user_id AS user_id,
+                u.role,
+                u.full_name,
+                e.id AS user_group_enrollment_id
+            FROM user_group_enrollment e
+            JOIN users u ON e.user_id = u.id
+            WHERE e.group_id = %(group_id)s
+
+            UNION DISTINCT
+
+            SELECT
+                u.id AS user_id,
+                'Instructor' AS role, -- Assuming role should be 'Instructor'
+                u.full_name,
+                NULL AS user_group_enrollment_id
+            FROM users u
+            WHERE u.role = 'Instructor'
+                AND u.id NOT IN (SELECT user_id FROM user_group_enrollment WHERE group_id = %(group_id)s)
+                ORDER BY user_id ASC; """
+        params = {"group_id": group_id}
+        return execute_query(query, params).fetchall()
     
+    @classmethod
+    def get_alllearner_of_group(cls, group_id):
+        query = """ 
+            SELECT
+                e.user_id AS user_id,
+                u.role,
+                u.full_name,
+                e.id AS user_group_enrollment_id
+            FROM user_group_enrollment e
+            JOIN users u ON e.user_id = u.id
+            WHERE e.group_id = %(group_id)s
+
+            UNION DISTINCT
+
+            SELECT
+                u.id AS user_id,
+                'Learner' AS role, -- Assuming role should be 'Learner'
+                u.full_name,
+                NULL AS user_group_enrollment_id
+            FROM users u
+            WHERE u.role = 'Learner'
+                AND u.id NOT IN (SELECT user_id FROM user_group_enrollment WHERE group_id = %(group_id)s)
+                ORDER BY user_id ASC; """
+        params = {"group_id": group_id}
+        return execute_query(query, params).fetchall()
+        
 #Delete or Remove added group from Users
     @classmethod
     def remove_users_from_group(cls, id):
