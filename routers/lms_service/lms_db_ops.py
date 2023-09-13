@@ -93,6 +93,11 @@ class LmsHandler:
     def get_all_users(cls):
         query = """ SELECT * FROM users; """
         return execute_query(query).fetchall()
+
+    @classmethod
+    def get_all_inst_learner(cls):
+        query = """ SELECT * FROM users WHERE role IN ('Instructor', 'Learner'); """
+        return execute_query(query).fetchall()
     
 #Delete Users
     @classmethod

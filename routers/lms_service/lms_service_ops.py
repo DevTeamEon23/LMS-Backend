@@ -200,6 +200,49 @@ def fetch_all_users_data():
             "message": "Failed to fetch users data"
         })
 
+# Fetch Instructor & Learners only for Instructor USERS LIST"
+def fetch_all_inst_learn_data():
+    try:
+        # Query all users from the database
+        users = LmsHandler.get_all_inst_learner()
+
+        # Transform the user objects into a list of dictionaries
+        users_data = []
+        for user in users:
+
+            user_data = {
+                "id": user.id,
+                "eid": user.eid,
+                "sid": user.sid,
+                "full_name": user.full_name,
+                "email": user.email,
+                "dept": user.dept,
+                "adhr": user.adhr,
+                "username": user.username,
+                "bio": user.bio,
+                "file": user.file,
+                "role": user.role,
+                "timezone": user.timezone,
+                "langtype": user.langtype,
+                "active": True if user.active == 1 else False,
+                "deactive": True if user.deactive == 1 else False,
+                "exclude_from_email": True if user.exclude_from_email == 1 else False,
+                "created_at": user.created_at,
+                "updated_at": user.updated_at,
+                # Include other user attributes as needed
+            }
+
+            users_data.append(user_data)
+
+        return users_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch Instructor & Learners data"
+        })
+    
+
 def get_image(file: str):
     imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
     image_path = os.path.join(imgpath, file)
