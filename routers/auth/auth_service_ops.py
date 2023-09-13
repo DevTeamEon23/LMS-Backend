@@ -242,6 +242,17 @@ def get_user_points_by_user_id(user_id):
         raise HTTPException(status_code=404, detail="User points not found")
     else:
         return {"points": data['points']}
+
+def get_dept_by_users_id(id):
+    query = f"SELECT dept FROM users WHERE id = %(id)s"
+    params = {"id": id}
+    resp = execute_query(query=query, params=params)
+    data = resp.fetchone()
+    
+    if data is None:
+        raise HTTPException(status_code=404, detail="department not found")
+    else:
+        return {"dept": data['dept']}
     
 def get_user_points_by_user():
     try:

@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from starlette.requests import Request
 from routers.auth.auth_db_ops import UserDBHandler
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from .auth_service_ops import verify_token, admin_add_new_user,add_new_user, change_user_password, flush_tokens,fetch_user_id_from_db,get_user_points_by_user_id,update_user_points,get_user_points_by_user
+from .auth_service_ops import verify_token, admin_add_new_user,add_new_user, change_user_password, flush_tokens,fetch_user_id_from_db,get_user_points_by_user_id,update_user_points,get_user_points_by_user,get_dept_by_users_id
 from config.logconfig import logger
 from dotenv import load_dotenv
 from schemas.auth_service_schema import (Email, NewUser, User,EmailSchema, UserPassword)
@@ -30,17 +30,18 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id, user_points=0):
+def create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id, user_dept, user_points=0):
     if token is None and request_token is None:
         return {"status": "failure", "message": message}
 
     if is_mfa_enabled:
         return {"status": "success", "message": message, "is_active": active, "is_mfa_enabled": is_mfa_enabled,
-                "request_token": request_token, "user_points": user_points}
+                "request_token": request_token, "user_dept": user_dept, "user_points": user_points}
     else:
         user_detail = {
             "user": {
                 "role": details.get('role', ''),
+                "dept": details.get('dept', user_dept), 
                 "data": {
                     "displayName": details.get('displayName', ''),
                     "id": details.get('id', ''),
@@ -56,6 +57,7 @@ def create_login_response(message, active, is_mfa_enabled, request_token, token,
             "is_active": active,
             "is_mfa_enabled": is_mfa_enabled,
             "user_id": user_id,
+            "user_dept": user_dept,
             "user_points": user_points,
             "token": token,
             "data": user_detail,
@@ -70,13 +72,16 @@ def login(user: User):
     # Verify the email and password
     message, active, is_mfa_enabled, request_token, token, details = add_new_user(email, password=password, auth_token="",
                                                                                   inputs={
-                                                                                      'full_name': user.fullname, 'role': 'user',
+                                                                                      'full_name': user.fullname, 'role': 'user', 'dept': 'user',
                                                                                       'users_allowed': '[]', 'active': False,
                                                                                       'picture': ""}, skip_new_user=True)
     
     # Fetch the user's ID based on the provided email
     user_id = fetch_user_id_from_db(email)
-
+    
+    id = fetch_user_id_from_db(email)
+    user_dept = get_dept_by_users_id(id)
+    
     # Award points to the user (e.g., 25 points for each login)
     if active:
         points = 25
@@ -87,7 +92,7 @@ def login(user: User):
 
 
     # Create a login response including the user ID and points
-    login_response = create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id, user_points)
+    login_response = create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id, user_dept, user_points)
 
     # # Add user points to the response
     # login_response["user_points"] = user_points
