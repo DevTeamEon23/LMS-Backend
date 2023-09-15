@@ -1387,8 +1387,8 @@ class LmsHandler:
 #Files / Documents
     @classmethod
     def add_files(cls, params):
-        query = f"""   INSERT into {n_table_user_files} (user_id, files, files_allowed, auth_token, request_token, token, active, deactive, created_at, updated_at) VALUES 
-                        (%(user_id)s, %(files)s, %(files_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s, %(created_at)s, %(updated_at)s)
+        query = f"""   INSERT into {n_table_user_files} (user_id, files, files_allowed, auth_token, request_token, token, active, created_at, updated_at) VALUES 
+                        (%(user_id)s, %(files)s, %(files_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(created_at)s, %(updated_at)s)
                         ;
                     """
         return execute_query(query, params=params)
@@ -1397,7 +1397,12 @@ class LmsHandler:
     def fetch_active_files(cls):
         query = """ SELECT * FROM documents WHERE active = ; """
         return execute_query(query).fetchall()
+    
 
+    @classmethod
+    def remove_files(cls, id):
+        query = f""" DELETE FROM documents WHERE id = '{id}'; """
+        return execute_query(query)
 
 ####################################################################################################################
 

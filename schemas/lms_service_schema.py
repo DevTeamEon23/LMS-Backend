@@ -155,3 +155,9 @@ class UnenrolledUsers_Group(BaseModel):
 
 class UnenrolledCourse_Group(BaseModel):
     id: int
+
+##################################### Remove file by id #############################################
+
+class Remove_file(BaseModel):
+    id: int
+

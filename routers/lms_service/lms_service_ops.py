@@ -5,7 +5,10 @@ import random
 import uuid
 import hashlib
 import base64
+import openpyxl
 import json
+import pandas as pd
+import requests
 import logging
 from enum import Enum
 from typing import List
@@ -263,7 +266,9 @@ def fetch_users_by_onlyid(id):
             return None
 
         # file_url = user.file.lstrip("b'").rstrip("'")
-        full_image_url = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
+        # # full_image_url = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
+        # full_image_url = backendBaseUrl + '/cdn/' + str(user.id) + '.jpg'
+        # cdn_link = upload_blob_to_cdn(user.file, full_image_url)
 
         # Transform the user object into a dictionary
         user_data = {
@@ -276,7 +281,7 @@ def fetch_users_by_onlyid(id):
             "adhr": user.adhr,
             "username": user.username,
             "bio": user.bio,
-            "file": full_image_url,
+            "file": user.file,
             "role": user.role,
             "timezone": user.timezone,
             "langtype": user.langtype,
@@ -294,6 +299,23 @@ def fetch_users_by_onlyid(id):
             "message": "Failed to fetch user data"
         })
 
+def upload_blob_to_cdn(blob_data, cdn_url):
+    try:
+        # Create a PUT request to upload the blob_data to the CDN URL
+        response = requests.put(cdn_url, data=blob_data)
+
+        # Check the HTTP response status code
+        if response.status_code == 200:
+            # Successful upload, return the CDN URL
+            return cdn_url
+        else:
+            logger.error(f"CDN upload failed with status code: {response.status_code}")
+            return None
+
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return None
+    
 def delete_user_by_id(id):
     try:
         # Delete the user by ID
@@ -516,6 +538,66 @@ def user_exists(email):
         return False  # Return False if no rows were found or an error occurred
 
 # for excel import 
+# def add_new_excel(email: str, generate_tokens: bool = False, auth_token="", inputs={}, password=None, skip_new_user=False):
+#     try:
+#         # Check Email Address
+#         v_email = user_exists(email)
+
+#         # If user Already Exists
+#         if v_email:
+#             # Check password
+#             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#                 "message": "User Already Exists"
+#             })
+
+#         eid = inputs.get('eid')
+#         sid = md5(email)
+#         full_name = inputs.get('full_name', None)
+#         full_name = v_email.split('@')[0] if full_name is None or full_name == '' else full_name
+#         email = inputs.get('username')
+#         dept = inputs.get('email')
+#         adhr = inputs.get('dept')
+#         username = inputs.get('adhr')
+#         bio = inputs.get('bio')
+#         role = inputs.get('role')
+#         timezone = inputs.get('timezone')
+#         langtype = inputs.get('langtype')
+#         active = inputs.get('active')
+#         deactive = inputs.get('deactive')
+#         exclude_from_email = inputs.get('exclude_from_email')
+        
+#         # Password for manual signing
+#         if password is None:
+#             password = random_password()
+#         if password is None:
+#             hash_password = ""
+#         else:
+#             hash_password = get_password_hash(password)
+
+#         # Token Generation
+#         token = create_token(email)
+
+#         request_token = ''
+        
+#         # Add New User to the list of users
+#         data = {'eid': eid, 'sid': sid, 'full_name': full_name, 'email': email, 'dept': dept, 'adhr': adhr,
+#                 'username': username, 'password': hash_password, 'bio': bio, 'role': role, 'timezone': timezone,
+#                 'langtype': langtype, "active": active, "deactive": deactive, "exclude_from_email": exclude_from_email,
+#                 'users_allowed': inputs.get('users_allowed', ''), 'auth_token': auth_token,
+#                 'request_token': request_token, 'token': token}
+
+#         resp = LmsHandler.add_users_excel(data)
+#         # If token not required,
+#         if not generate_tokens and len(auth_token) == 0:
+#             token = None
+
+#     except ValueError as exc:
+#         logger.error(traceback.format_exc())
+#         message = exc.args[0]
+#         logger.error(message)
+
+#     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='User added successfully'))
+
 def add_new_excel(email: str, generate_tokens: bool = False, auth_token="", inputs={}, password=None, skip_new_user=False):
     try:
         # Check Email Address
@@ -523,7 +605,6 @@ def add_new_excel(email: str, generate_tokens: bool = False, auth_token="", inpu
 
         # If user Already Exists
         if v_email:
-            # Check password
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
                 "message": "User Already Exists"
             })
@@ -543,7 +624,7 @@ def add_new_excel(email: str, generate_tokens: bool = False, auth_token="", inpu
         active = inputs.get('active')
         deactive = inputs.get('deactive')
         exclude_from_email = inputs.get('exclude_from_email')
-        
+
         # Password for manual signing
         if password is None:
             password = random_password()
@@ -556,28 +637,67 @@ def add_new_excel(email: str, generate_tokens: bool = False, auth_token="", inpu
         token = create_token(email)
 
         request_token = ''
-        
-        # Add New User to the list of users
-        data = {'eid': eid, 'sid': sid, 'full_name': full_name, 'email': email, 'dept': dept, 'adhr': adhr,
-                'username': username, 'password': hash_password, 'bio': bio, 'role': role, 'timezone': timezone,
-                'langtype': langtype, "active": active, "deactive": deactive, "exclude_from_email": exclude_from_email,
-                'users_allowed': inputs.get('users_allowed', ''), 'auth_token': auth_token,
-                'request_token': request_token, 'token': token}
 
-        resp = LmsHandler.add_users_excel(data)
-        # If token not required,
-        if not generate_tokens and len(auth_token) == 0:
-            token = None
+        # Load Excel file using openpyxl
+        wb = openpyxl.load_workbook("users.xlsx")  # Replace with your file path
+        sheet = wb.active
 
-    except ValueError as exc:
+        for row in sheet.iter_rows(min_row=2, values_only=True):  # Assuming header row is present
+            row_email, row_role = row[3], row[10]  # Assuming email is in column 4 and role in column 11
+
+            # Check if the role is not "Superadmin," "Instructor," or "Learner"
+            if row_role not in ["Superadmin", "Instructor", "Learner"]:
+                data = {
+                    'eid': eid,
+                    'sid': sid,
+                    'full_name': full_name,
+                    'email': row_email,
+                    'dept': dept,
+                    'adhr': adhr,
+                    'username': username,
+                    'password': hash_password,
+                    'bio': bio,
+                    'role': row_role,
+                    'timezone': timezone,
+                    'langtype': langtype,
+                    'active': active,
+                    'deactive': deactive,
+                    'exclude_from_email': exclude_from_email,
+                    'users_allowed': inputs.get('users_allowed', ''),
+                    'auth_token': auth_token,
+                    'request_token': request_token,
+                    'token': token
+                }
+
+                resp = LmsHandler.add_users_excel(data)
+
+    except Exception as exc:
         logger.error(traceback.format_exc())
-        message = exc.args[0]
-        logger.error(message)
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "User registration failed"
+        })
 
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='User added successfully'))
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='Users added successfully'))
 
-def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, active, deactive, exclude_from_email):
-    is_existing, _ = check_existing_user(email)
+# def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, active, deactive, exclude_from_email):
+#     is_existing, _ = check_existing_user(email)
+#     if is_existing:
+#         # Update user password
+#         if password is None:
+#             password = random_password()
+#         password_hash = get_password_hash(password)
+
+#         sid = md5(email)
+         
+#         LmsHandler.update_user_to_db(id, eid, sid, full_name, dept, adhr, username,email, password_hash, bio, file, role, timezone, langtype, active, deactive, exclude_from_email)
+#         #     AWSClient.send_signup(email, password, subject='Password Change')
+#         return True
+#     else:
+#         raise ValueError("User does not exists")
+
+def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, file_cdn_url, role, timezone, langtype, active, deactive, exclude_from_email):
+    is_existing, existing_user = check_existing_user(email)
     if is_existing:
         # Update user password
         if password is None:
@@ -585,13 +705,16 @@ def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, pa
         password_hash = get_password_hash(password)
 
         sid = md5(email)
-         
-        LmsHandler.update_user_to_db(id, eid, sid, full_name, dept, adhr, username,email, password_hash, bio, file, role, timezone, langtype, active, deactive, exclude_from_email)
-        #     AWSClient.send_signup(email, password, subject='Password Change')
+
+        # Update the CDN URL for the user's image
+        existing_user.file_cdn_url = file_cdn_url
+
+        LmsHandler.update_user_to_db(id, eid, sid, full_name, dept, adhr, username, email, password_hash, bio, file_cdn_url, role, timezone, langtype, active, deactive, exclude_from_email)
+        # AWSClient.send_signup(email, password, subject='Password Change')
         return True
     else:
-        raise ValueError("User does not exists")
-        
+        raise ValueError("User does not exist")
+         
 ##################################################   COURSES  ###########################################################################
 
 #Function for Add Course to stop the Course name unique voilation
@@ -2911,57 +3034,57 @@ def upload_file_to_db(user_id, file_data, files_allowed, auth_token, request_tok
     return execute_query(query, params=params)
 
 # Add Files and select active or deactive for user access
-def add_files(user_id: int, files: bytes, files_allowed: bool = False,generate_tokens: bool = False, auth_token="", inputs={},skip_new_files=False):
-    try:
-        # Check if files already exist and if it's allowed
-        is_existing = check_existing_files(user_id)  # Implement this function as needed
+# def add_files(user_id: int, files: bytes, files_allowed: bool = False,generate_tokens: bool = False, auth_token="", inputs={},skip_new_files=False):
+#     try:
+#         # Check if files already exist and if it's allowed
+#         is_existing = check_existing_files(user_id)  # Implement this function as needed
 
-        if is_existing:
-            # File already exists
-            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-                "message": "Files for this user already exist"
-            })
+#         if is_existing:
+#             # File already exists
+#             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#                 "message": "Files for this user already exist"
+#             })
 
-        elif not is_existing and not skip_new_files:
-            # Extract parameters
-            user_id = inputs.get('user_id')
-            files = inputs.get('files')
-            files_allowed = inputs.get('files_allowed')
-            auth_token = inputs.get('auth_token')
+#         elif not is_existing and not skip_new_files:
+#             # Extract parameters
+#             user_id = inputs.get('user_id')
+#             files = inputs.get('files')
+#             files_allowed = inputs.get('files_allowed')
+#             auth_token = inputs.get('auth_token')
 
-            # Generate tokens if needed
-            token = create_files_token(user_id)
+#             # Generate tokens if needed
+#             token = create_files_token(user_id)
 
-            request_token = ''
+#             request_token = ''
 
-            # Add new files to the database
-            data = {
-                'user_id': user_id,
-                'files': files,
-                'files_allowed': files_allowed,
-                'auth_token': auth_token,
-                'request_token': request_token,
-                'token': token
-            }
+#             # Add new files to the database
+#             data = {
+#                 'user_id': user_id,
+#                 'files': files,
+#                 'files_allowed': files_allowed,
+#                 'auth_token': auth_token,
+#                 'request_token': request_token,
+#                 'token': token
+#             }
 
-            # Call the function to add files (replace with your actual function)
-            resp = LmsHandler.add_files(data)
+#             # Call the function to add files (replace with your actual function)
+#             resp = LmsHandler.add_files(data)
 
-            # If tokens are not required
-            if not generate_tokens and len(auth_token) == 0:
-                token = None
+#             # If tokens are not required
+#             if not generate_tokens and len(auth_token) == 0:
+#                 token = None
 
-    except ValueError as exc:
-        # Handle exceptions
-        logger.error(traceback.format_exc())
-        message = exc.args[0]
-        logger.error(message)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
+#     except ValueError as exc:
+#         # Handle exceptions
+#         logger.error(traceback.format_exc())
+#         message = exc.args[0]
+#         logger.error(message)
+#         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
 
-    return JSONResponse(status_code=status.HTTP_200_OK, content={
-        "status": "success",
-        "message": "Files added successfully"
-    })
+#     return JSONResponse(status_code=status.HTTP_200_OK, content={
+#         "status": "success",
+#         "message": "Files added successfully"
+#     })
 
 #Fetch Files
 def fetch_active_files():
@@ -3020,4 +3143,16 @@ def fetch_users_course_enrolled():
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
             "message": "Failed to fetch user enrolled course data"
+        })
+    
+def remove_file_by_id(id):
+    try:
+        # Delete the user by ID
+        courses = LmsHandler.remove_files(id)
+        return courses
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to delete file"
         })

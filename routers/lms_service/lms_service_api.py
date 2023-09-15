@@ -24,9 +24,9 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_all_inst_learn_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_courses_touser,user_exists,fetch_users_data_export,fetch_courses_data_export,fetch_users_course_enrolled,enroll_coursegroup_massaction,fetch_enrolled_unenroll_courses_of_user,unenroll_courses_from_userby_id,enroll_groups_touser,fetch_added_unadded_groups_of_user,remove_group_from_userby_id,enroll_users_tocourse,fetch_enrolled_unenroll_users_of_course,unenrolled_users_from_courseby_id,enroll_groups_tocourse,fetch_enrolled_unenroll_groups_of_course,unenrolled_groups_from_courseby_id,enroll_users_togroup,fetch_added_unadded_users_of_group,remove_user_from_groupby_id,enroll_courses_togroup,fetch_added_unadded_courses_of_group,remove_course_from_groupby_id,remove_course_from_all_groups_by_course_id,fetch_enrolled_unenroll_instructors_of_course,fetch_enrolled_unenroll_learners_of_course,fetch_added_unadded_instructors_of_group,fetch_added_unadded_learners_of_group
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_all_inst_learn_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_courses_touser,user_exists,fetch_users_data_export,fetch_courses_data_export,fetch_users_course_enrolled,enroll_coursegroup_massaction,fetch_enrolled_unenroll_courses_of_user,unenroll_courses_from_userby_id,enroll_groups_touser,fetch_added_unadded_groups_of_user,remove_group_from_userby_id,enroll_users_tocourse,fetch_enrolled_unenroll_users_of_course,unenrolled_users_from_courseby_id,enroll_groups_tocourse,fetch_enrolled_unenroll_groups_of_course,unenrolled_groups_from_courseby_id,enroll_users_togroup,fetch_added_unadded_users_of_group,remove_user_from_groupby_id,enroll_courses_togroup,fetch_added_unadded_courses_of_group,remove_course_from_groupby_id,remove_course_from_all_groups_by_course_id,fetch_enrolled_unenroll_instructors_of_course,fetch_enrolled_unenroll_learners_of_course,fetch_added_unadded_instructors_of_group,fetch_added_unadded_learners_of_group,remove_file_by_id
 from routers.lms_service.lms_db_ops import LmsHandler
-from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender,UnenrolledUsers_Course,UnenrolledUsers_Group,UnenrolledCourse_Group,UnenrolledUsers_Group)
+from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender,UnenrolledUsers_Course,UnenrolledUsers_Group,UnenrolledCourse_Group,UnenrolledUsers_Group,Remove_file)
 from utils import success_response
 from config.logconfig import logger
 
@@ -1343,15 +1343,15 @@ ALLOWED_FILE_TYPES = {
     # Add more file types as needed
 }
 # Maximum allowed file size in bytes (10 MB)
-MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
+MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024
 
 # List of allowed file extensions
 ALLOWED_EXTENSIONS = {'pdf', 'jpg', 'jpeg', 'png', 'docx' }
 
-def upload_file_to_db(user_id, file_data, files_allowed, auth_token, request_token, token, active, deactive):
+def upload_file_to_db(user_id, file_data, files_allowed, auth_token, request_token, token, active):
     query = """
-        INSERT INTO documents (user_id, files, files_allowed, auth_token, request_token, token, active, deactive, created_at, updated_at)
-        VALUES (%(user_id)s, %(files)s, %(files_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s, %(created_at)s, %(updated_at)s);
+        INSERT INTO documents (user_id, files, files_allowed, auth_token, request_token, token, active, created_at, updated_at)
+        VALUES (%(user_id)s, %(files)s, %(files_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(created_at)s, %(updated_at)s);
     """
     params = {
         "user_id": user_id,
@@ -1361,14 +1361,13 @@ def upload_file_to_db(user_id, file_data, files_allowed, auth_token, request_tok
         "request_token": request_token,
         "token": token,
         "active": active,
-        "deactive": deactive,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
     }
     return execute_query(query, params=params)
 
 @service.post("/upload_file/")
-async def upload_file_api(user_id: int, file: UploadFile, active: bool, deactive: bool):
+async def upload_file_api(user_id: int, file: UploadFile, active: bool):
     try:
         # Check if the file extension is allowed
         file_ext = file.filename.split(".")[-1].lower()
@@ -1391,15 +1390,14 @@ async def upload_file_api(user_id: int, file: UploadFile, active: bool, deactive
         # Save file information to the database using execute_query
         query = """
             INSERT INTO documents
-            (user_id, files, files_allowed, auth_token, request_token, token, active, deactive, created_at, updated_at, filename)
+            (user_id, files, files_allowed, auth_token, request_token, token, active, created_at, updated_at, filename)
             VALUES
-            (%(user_id)s, %(files)s, 'some_value', 'some_value', 'some_value', 'some_value', %(active)s, %(deactive)s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, %(filename)s)
+            (%(user_id)s, %(files)s, 'some_value', 'some_value', 'some_value', 'some_value', %(active)s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, %(filename)s)
         """
         params = {
             "user_id": user_id,
             "files": file_path,
             "active": active,
-            "deactive": deactive,
             "filename": file.filename,
         }
 
@@ -1432,29 +1430,75 @@ def fetch_user_enrollcourse_by_onlycourse_id():
 @service.get("/fetch_files")
 def fetch_files_api():
     try:
-        # Modify the query to select filename, file type, active status, and calculate size in MB
+        # Modify the query to select filename, file type, active status, and format the file size
         query = """
             SELECT
+                id,
+                user_id,
                 filename,
                 SUBSTRING_INDEX(filename, '.', -1) as file_type,
                 files,
-                LENGTH(files) as file_size,
-                active
+                CONCAT(
+                    CASE
+                        WHEN LENGTH(files) >= 1024*1024*1024 THEN ROUND(LENGTH(files) / (1024*1024*1024), 2)
+                        WHEN LENGTH(files) >= 1024*1024 THEN ROUND(LENGTH(files) / (1024*1024), 2)
+                        WHEN LENGTH(files) >= 1024 THEN ROUND(LENGTH(files) / 1024, 2)
+                        ELSE LENGTH(files)
+                    END,
+                    CASE
+                        WHEN LENGTH(files) >= 1024*1024*1024 THEN ' GB'
+                        WHEN LENGTH(files) >= 1024*1024 THEN ' MB'
+                        WHEN LENGTH(files) >= 1024 THEN ' KB'
+                        ELSE 'bytes'
+                    END
+                ) AS file_size_formatted,
+                active,
+                created_at
             FROM documents
-            WHERE active = 1;
+            WHERE active = 1
+
+            UNION ALL
+
+            SELECT
+                id,
+                user_id,
+                filename,
+                SUBSTRING_INDEX(filename, '.', -1) as file_type,
+                files,
+                CONCAT(
+                    CASE
+                        WHEN LENGTH(files) >= 1024*1024*1024 THEN ROUND(LENGTH(files) / (1024*1024*1024), 2)
+                        WHEN LENGTH(files) >= 1024*1024 THEN ROUND(LENGTH(files) / (1024*1024), 2)
+                        WHEN LENGTH(files) >= 1024 THEN ROUND(LENGTH(files) / 1024, 2)
+                        ELSE LENGTH(files)
+                    END,
+                    CASE
+                        WHEN LENGTH(files) >= 1024*1024*1024 THEN ' GB'
+                        WHEN LENGTH(files) >= 1024*1024 THEN ' MB'
+                        WHEN LENGTH(files) >= 1024 THEN ' KB'
+                        ELSE 'bytes'
+                    END
+                ) AS file_size_formatted,
+                active,
+                created_at
+            FROM documents
+            WHERE active = 0;
         """
 
-        # Execute the query and get the result
+        # Execute the query and get the result (replace with your actual database query function)
         files_metadata = execute_query(query)
 
         # Process the result and return it
         result = []
         for row in files_metadata:
             result.append({
+                "id": row["id"],
+                "user_id": row["user_id"],
                 "filename": row["filename"],
                 "file_type": row["file_type"],
-                "file_size_mb": round(row["file_size"] / (1024 * 1024), 2),
-                "active": row["active"]
+                "file_size_formatted": row["file_size_formatted"],
+                "active": row["active"],
+                "created_at": row["created_at"]
             })
 
         return {
@@ -1462,11 +1506,27 @@ def fetch_files_api():
             "data": result
         }
     except Exception as exc:
-        logger.error(traceback.format_exc())
+        traceback.print_exc()
         return JSONResponse(status_code=500, content={
             "status": "failure",
             "message": "Failed to fetch files"
         })
+
+@service.delete("/remove_file_byid")
+def delete_file(payload: Remove_file):
+    try:
+        file = remove_file_by_id(payload.id)
+        return {
+            "status": "success",
+            "data": file
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to delete file"
+        })
+    
 ###################################### Enroll Courses to USER (USERS -> Course Page) ###########################################
 
 # Create enroll_course
@@ -1829,8 +1889,21 @@ def unenroll_course_group(payload: UnenrolledCourse_Group):
             "message": "Failed to Unenrolled courses data from group"
         })
 
+# Define a folder to store exported files
+UPLOAD_DIR = "uploads"
+
+# Create the upload directory if it doesn't exist
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
+@service.get("/download/{filename}")
+async def download_files(filename: str):
+    # Ensure the requested file exists in the export folder
+    file_path = os.path.join(UPLOAD_DIR, filename)
+    if os.path.exists(file_path):
+        return FileResponse(file_path, filename=filename)
+    else:
+        return {"error": "File not found"}
 
 
 
