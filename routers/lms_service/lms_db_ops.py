@@ -46,7 +46,7 @@ class LmsHandler:
     
 #Update Users
     @classmethod
-    def update_user_to_db(cls,id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, active, deactive, exclude_from_email):
+    def update_user_to_db(cls,id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, cdn_file_link, role, timezone, langtype, active, deactive, exclude_from_email):
         query = f"""   
         UPDATE users SET
             eid = %(eid)s,
@@ -59,6 +59,7 @@ class LmsHandler:
             password = %(password)s,
             bio = %(bio)s,
             file = %(file)s,
+            cdn_file_link = %(cdn_file_link)s,
             role = %(role)s,
             timezone = %(timezone)s,
             langtype = %(langtype)s,
@@ -79,6 +80,7 @@ class LmsHandler:
         "password": password,
         "bio": bio,
         "file": file,
+        "cdn_file_link": cdn_file_link,
         "role": role,
         "timezone": timezone,
         "langtype": langtype,

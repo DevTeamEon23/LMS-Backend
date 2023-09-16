@@ -302,47 +302,6 @@ async def download_file(file_name: str):
     else:
         return {"error": "File not found"}
     
-# def export_data_to_excel_and_download():
-#     try:
-#         table_data = {
-#             "users": fetch_users_data(),
-#             "course": fetch_courses_data(),
-#             "lmsgroup": fetch_groups_data()
-#         }
-
-#         # Specify the pre-defined file name
-#         file_name = "exported_data.xlsx"
-
-#         # Create the file path
-#         file_path = os.path.join(EXPORT_FOLDER, file_name)
-
-#         # Create an XlsxWriter workbook and add sheets
-#         workbook = xlsxwriter.Workbook(file_path)
-
-#         for table, data in table_data.items():
-#             worksheet = workbook.add_worksheet(table)
-
-#             # Write the data to the sheet
-#             for row_num, row_data in enumerate(data.values):
-#                 for col_num, cell_value in enumerate(row_data):
-#                     worksheet.write(row_num, col_num, cell_value)
-
-#         # Close the workbook
-#         workbook.close()
-
-#         # Read the file and return it for download
-#         with open(file_path, "rb") as file:
-#             data = file.read()
-
-#         # Delete the file after reading
-#         os.remove(file_path)
-
-#         return data
-
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Failed to export and download data: {e}")
-    
-
 
 # Read Users list
 @service.get("/users")
@@ -400,12 +359,12 @@ def fetch_user_by_onlyid(id):
     
 # Update users
 @service.post("/update_users")
-def update_users(id: int = Form(...),eid: str = Form(...),sid: str = Form(...), full_name: str = Form(...), email: str = Form(...),dept: str = Form(...), adhr: str = Form(...), username: str = Form(...), password: str = Form(...),bio: str = Form(...), role: str = Form(...), timezone: str = Form(...), langtype: str = Form(...), active: bool = Form(...), deactive: bool = Form(...), exclude_from_email: bool = Form(...),file: UploadFile = File(...)):
+def update_users(id: int = Form(...),eid: str = Form(...),sid: str = Form(...), full_name: str = Form(...), email: str = Form(...),dept: str = Form(...), adhr: str = Form(...), username: str = Form(...), password: str = Form(...),bio: str = Form(...),cdn_file_link: str = Form(...), role: str = Form(...), timezone: str = Form(...), langtype: str = Form(...), active: bool = Form(...), deactive: bool = Form(...), exclude_from_email: bool = Form(...),file: UploadFile = File(...)):
     with open("media/"+file.filename, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     file = str("media/"+file.filename)
     try:
-        if change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, active, deactive, exclude_from_email):
+        if change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, cdn_file_link, file, role, timezone, langtype, active, deactive, exclude_from_email):
             return JSONResponse(status_code=status.HTTP_200_OK, content={
                 "status": "success",
                 "message": "Updated User successfully"

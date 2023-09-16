@@ -266,7 +266,7 @@ def fetch_users_by_onlyid(id):
             return None
 
         # file_url = user.file.lstrip("b'").rstrip("'")
-        # # full_image_url = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
+        cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
         # full_image_url = backendBaseUrl + '/cdn/' + str(user.id) + '.jpg'
         # cdn_link = upload_blob_to_cdn(user.file, full_image_url)
 
@@ -282,6 +282,7 @@ def fetch_users_by_onlyid(id):
             "username": user.username,
             "bio": user.bio,
             "file": user.file,
+            "cdn_file_link": cdn_file_link,
             "role": user.role,
             "timezone": user.timezone,
             "langtype": user.langtype,
@@ -696,7 +697,7 @@ def add_new_excel(email: str, generate_tokens: bool = False, auth_token="", inpu
 #     else:
 #         raise ValueError("User does not exists")
 
-def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, file_cdn_url, role, timezone, langtype, active, deactive, exclude_from_email):
+def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, cdn_file_link, role, timezone, langtype, active, deactive, exclude_from_email):
     is_existing, existing_user = check_existing_user(email)
     if is_existing:
         # Update user password
@@ -707,9 +708,9 @@ def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, pa
         sid = md5(email)
 
         # Update the CDN URL for the user's image
-        existing_user.file_cdn_url = file_cdn_url
+        existing_user.cdn_file_link = cdn_file_link
 
-        LmsHandler.update_user_to_db(id, eid, sid, full_name, dept, adhr, username, email, password_hash, bio, file_cdn_url, role, timezone, langtype, active, deactive, exclude_from_email)
+        LmsHandler.update_user_to_db(id, eid, sid, full_name, dept, adhr, username, email, password_hash, bio, cdn_file_link, role, timezone, langtype, active, deactive, exclude_from_email)
         # AWSClient.send_signup(email, password, subject='Password Change')
         return True
     else:
