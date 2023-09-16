@@ -1895,13 +1895,12 @@ UPLOAD_DIR = "uploads"
 # Create the upload directory if it doesn't exist
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-
-@service.get("/download/{filename}")
-async def download_files(filename: str):
+@service.get("/file_download/{files_name}")
+async def download_files(files_name: str):
     # Ensure the requested file exists in the export folder
-    file_path = os.path.join(UPLOAD_DIR, filename)
+    file_path = os.path.join(UPLOAD_DIR, files_name)
     if os.path.exists(file_path):
-        return FileResponse(file_path, filename=filename)
+        return FileResponse(file_path, filename=files_name)
     else:
         return {"error": "File not found"}
 
