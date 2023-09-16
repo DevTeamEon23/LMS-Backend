@@ -26,7 +26,7 @@ class LmsHandler:
                 status_code=401, detail="Token Expired or Invalid Token")
         else:
             return data
-        
+
 #Add Users
     @classmethod
     def add_users(cls, params):
