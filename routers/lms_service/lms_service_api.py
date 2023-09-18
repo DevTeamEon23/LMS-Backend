@@ -359,12 +359,19 @@ def fetch_user_by_onlyid(id):
     
 # Update users
 @service.post("/update_users")
-def update_users(id: int = Form(...),eid: str = Form(...),sid: str = Form(...), full_name: str = Form(...), email: str = Form(...),dept: str = Form(...), adhr: str = Form(...), username: str = Form(...), password: str = Form(...),bio: str = Form(...),cdn_file_link: str = Form(...), role: str = Form(...), timezone: str = Form(...), langtype: str = Form(...), active: bool = Form(...), deactive: bool = Form(...), exclude_from_email: bool = Form(...),file: UploadFile = File(...)):
-    with open("media/"+file.filename, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    file = str("media/"+file.filename)
+def update_users(id: int = Form(...),eid: str = Form(...),sid: str = Form(...), full_name: str = Form(...), email: str = Form(...),dept: str = Form(...), adhr: str = Form(...), username: str = Form(...), password: str = Form(...),bio: str = Form(...), role: str = Form(...), timezone: str = Form(...), langtype: str = Form(...), active: bool = Form(...), deactive: bool = Form(...), exclude_from_email: bool = Form(...),file: UploadFile = File(None)):
+    # with open("media/"+file.filename, "wb") as buffer:
+    #     shutil.copyfileobj(file.file, buffer)
+    # file = str("media/"+file.filename)
+    
+    file_path = None
+
+    if file is not None:
+        with open("media/" + file.filename, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        file_path = "media/" + file.filename
     try:
-        if change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, cdn_file_link, file, role, timezone, langtype, active, deactive, exclude_from_email):
+        if change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, file_path, role, timezone, langtype, active, deactive, exclude_from_email):
             return JSONResponse(status_code=status.HTTP_200_OK, content={
                 "status": "success",
                 "message": "Updated User successfully"

@@ -254,65 +254,6 @@ def get_image(file: str):
     else:
         return {"error": "Image not found"}
     
-def fetch_users_by_onlyid(id):
-    try:
-        # Query user from the database for the specified id
-        user = LmsHandler.get_user_by_id(id)
-
-        if not user:
-            # Handle the case when no user is found for the specified id
-            return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
-                "status": "failure",
-                "message": "User not found"
-            })
-
-        # Assuming user.file contains the binary image data as a blob
-        image_blob = user.file  # Replace with your actual blob data
-        cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
-        
-        if image_blob:
-            # Encode the image blob as a base64 string
-            image_base64 = base64.b64encode(image_blob).decode('utf-8')
-
-            # Prepare the user data JSON
-            user_data = {
-                "id": user.id,
-                "eid": user.eid,
-                "sid": user.sid,
-                "full_name": user.full_name,
-                "email": user.email,
-                "dept": user.dept,
-                "adhr": user.adhr,
-                "username": user.username,
-                "bio": user.bio,
-                "file": image_base64,  # Include the base64-encoded image here
-                "cdn_file_link": cdn_file_link,
-                "role": user.role,
-                "timezone": user.timezone,
-                "langtype": user.langtype,
-                "active": True if user.active == 1 else False,
-                "deactive": True if user.deactive == 1 else False,
-                "exclude_from_email": True if user.exclude_from_email == 1 else False,
-                # Include other user attributes as needed
-            }
-
-            return JSONResponse(status_code=status.HTTP_200_OK, content={
-                "status": "success",
-                "data": user_data
-            })
-
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
-            "status": "failure",
-            "message": "Image not found"
-        })
-
-    except Exception as exc:
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "Failed to fetch user data"
-        })
-    
 # def fetch_users_by_onlyid(id):
 #     try:
 #         # Query user from the database for the specified id
@@ -320,15 +261,21 @@ def fetch_users_by_onlyid(id):
 
 #         if not user:
 #             # Handle the case when no user is found for the specified id
-#             return None
+#             return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
+#                 "status": "failure",
+#                 "message": "User not found"
+#             })
 
-#         # file_url = user.file.lstrip("b'").rstrip("'")
+#         # Assuming user.file contains the binary image data as a blob
+#         # image_blob = user.file  # Replace with your actual blob data
 #         cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
-#         # full_image_url = backendBaseUrl + '/cdn/' + str(user.id) + '.jpg'
-#         # cdn_link = upload_blob_to_cdn(user.file, full_image_url)
+        
+#         # if image_blob:
+#         #     # Encode the image blob as a base64 string
+#         #     image_base64 = base64.b64encode(image_blob).decode('utf-8')
 
-#         # Transform the user object into a dictionary
-#         user_data = {
+#             # Prepare the user data JSON
+#         if user_data = {
 #             "id": user.id,
 #             "eid": user.eid,
 #             "sid": user.sid,
@@ -338,7 +285,7 @@ def fetch_users_by_onlyid(id):
 #             "adhr": user.adhr,
 #             "username": user.username,
 #             "bio": user.bio,
-#             "file": user.file,
+#             "file": user.file,  # Include the base64-encoded image here
 #             "cdn_file_link": cdn_file_link,
 #             "role": user.role,
 #             "timezone": user.timezone,
@@ -356,6 +303,50 @@ def fetch_users_by_onlyid(id):
 #             "status": "failure",
 #             "message": "Failed to fetch user data"
 #         })
+    
+def fetch_users_by_onlyid(id):
+    try:
+        # Query user from the database for the specified id
+        user = LmsHandler.get_user_by_id(id)
+
+        if not user:
+            # Handle the case when no user is found for the specified id
+            return None
+
+        # file_url = user.file.lstrip("b'").rstrip("'")
+        cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
+        # full_image_url = backendBaseUrl + '/cdn/' + str(user.id) + '.jpg'
+        # cdn_link = upload_blob_to_cdn(user.file, full_image_url)
+
+        # Transform the user object into a dictionary
+        user_data = {
+            "id": user.id,
+            "eid": user.eid,
+            "sid": user.sid,
+            "full_name": user.full_name,
+            "email": user.email,
+            "dept": user.dept,
+            "adhr": user.adhr,
+            "username": user.username,
+            "bio": user.bio,
+            "file": user.file,
+            "cdn_file_link": cdn_file_link,
+            "role": user.role,
+            "timezone": user.timezone,
+            "langtype": user.langtype,
+            "active": True if user.active == 1 else False,
+            "deactive": True if user.deactive == 1 else False,
+            "exclude_from_email": True if user.exclude_from_email == 1 else False,
+            # Include other user attributes as needed
+        }
+
+        return user_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user data"
+        })
 
 def upload_blob_to_cdn(blob_data, cdn_url):
     try:
@@ -738,24 +729,8 @@ def add_new_excel(email: str, generate_tokens: bool = False, auth_token="", inpu
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='Users added successfully'))
 
-# def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, active, deactive, exclude_from_email):
-#     is_existing, _ = check_existing_user(email)
-#     if is_existing:
-#         # Update user password
-#         if password is None:
-#             password = random_password()
-#         password_hash = get_password_hash(password)
-
-#         sid = md5(email)
-         
-#         LmsHandler.update_user_to_db(id, eid, sid, full_name, dept, adhr, username,email, password_hash, bio, file, role, timezone, langtype, active, deactive, exclude_from_email)
-#         #     AWSClient.send_signup(email, password, subject='Password Change')
-#         return True
-#     else:
-#         raise ValueError("User does not exists")
-
-def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, cdn_file_link, role, timezone, langtype, active, deactive, exclude_from_email):
-    is_existing, existing_user = check_existing_user(email)
+def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, active, deactive, exclude_from_email):
+    is_existing, _ = check_existing_user(email)
     if is_existing:
         # Update user password
         if password is None:
@@ -763,15 +738,31 @@ def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, pa
         password_hash = get_password_hash(password)
 
         sid = md5(email)
-
-        # Update the CDN URL for the user's image
-        existing_user.cdn_file_link = cdn_file_link
-
-        LmsHandler.update_user_to_db(id, eid, sid, full_name, dept, adhr, username, email, password_hash, bio, cdn_file_link, role, timezone, langtype, active, deactive, exclude_from_email)
-        # AWSClient.send_signup(email, password, subject='Password Change')
+         
+        LmsHandler.update_user_to_db(id, eid, sid, full_name, dept, adhr, username,email, password_hash, bio, file, role, timezone, langtype, active, deactive, exclude_from_email)
+        #     AWSClient.send_signup(email, password, subject='Password Change')
         return True
     else:
-        raise ValueError("User does not exist")
+        raise ValueError("User does not exists")
+
+# def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, cdn_file_link, role, timezone, langtype, active, deactive, exclude_from_email):
+#     is_existing, existing_user = check_existing_user(email)
+#     if is_existing:
+#         # Update user password
+#         if password is None:
+#             password = random_password()
+#         password_hash = get_password_hash(password)
+
+#         sid = md5(email)
+
+#         # Update the CDN URL for the user's image
+#         existing_user.cdn_file_link = cdn_file_link
+
+#         LmsHandler.update_user_to_db(id, eid, sid, full_name, dept, adhr, username, email, password_hash, bio, cdn_file_link, role, timezone, langtype, active, deactive, exclude_from_email)
+#         # AWSClient.send_signup(email, password, subject='Password Change')
+#         return True
+#     else:
+#         raise ValueError("User does not exist")
          
 ##################################################   COURSES  ###########################################################################
 
