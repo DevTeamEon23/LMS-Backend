@@ -2488,6 +2488,30 @@ def fetch_enrolled_courses_of_user(user_id):
             "message": "Failed to fetch enrolled courses data of user"
         })
     
+def fetch_added_groups_of_user(user_id):
+    try:
+        # Query user IDs from the database for the specified group
+        group_ids = LmsHandler.fetch_enrolled_group_details(user_id)
+
+        if not group_ids:
+            # Handle the case when no user is found for the specified group
+            return None
+
+        # Now user_ids is a list of user IDs enrolled in the group
+        # You can return this list or process it further as needed
+
+        return {
+            "group_ids": group_ids,
+            # Include other group attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled groups data of user"
+        })
+    
 ###################################### Enroll Groups to USER (USERS -> Group Page) ######################################################
 
 def check_existing_userid(id):
