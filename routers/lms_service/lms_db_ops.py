@@ -936,6 +936,23 @@ class LmsHandler:
         query = f""" DELETE FROM user_course_enrollment WHERE id = '{id}'; """
         return execute_query(query)
 
+    @classmethod
+    def fetch_enrolled_course_details(cls, user_id):
+        query = """
+            SELECT
+                uce.course_id AS course_id,
+                c.*,
+                uce.id AS user_course_enrollment_id,
+                uce.created_at AS enrolled_on,
+                u.role AS user_role
+            FROM user_course_enrollment uce
+            LEFT JOIN course c ON uce.course_id = c.id
+            LEFT JOIN users u ON uce.user_id = u.id
+            WHERE uce.user_id = %(user_id)s;
+            """
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
+
 ######################################## Users TAB Group Page #################################################
 
     @classmethod
