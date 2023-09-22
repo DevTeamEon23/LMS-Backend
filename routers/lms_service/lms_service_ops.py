@@ -745,6 +745,63 @@ def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, pa
     else:
         raise ValueError("User does not exists")
 
+def update_user(id, update_data):
+    # Get the user's current data from the database
+    user_data = LmsHandler.get_user_by_id(id)
+
+    if not user_data:
+        raise ValueError("User not found")
+
+    # Extract the fields to update from the incoming update_data
+    update_params = {}
+
+    # Example: Update the 'full_name' field if provided in update_data
+    if 'eid' in update_data:
+        update_params['eid'] = update_data['eid']
+    if 'sid' in update_data:
+        update_params['sid'] = update_data['sid']
+    if 'full_name' in update_data:
+        update_params['full_name'] = update_data['full_name']
+    if 'email' in update_data:
+        update_params['email'] = update_data['email']
+    if 'dept' in update_data:
+        update_params['dept'] = update_data['dept']
+    if 'adhr' in update_data:
+        update_params['adhr'] = update_data['adhr']
+    if 'username' in update_data:
+        update_params['username'] = update_data['username']
+    if 'bio' in update_data:
+        update_params['bio'] = update_data['bio']
+    if 'role' in update_data:
+        update_params['role'] = update_data['role']
+    if 'timezone' in update_data:
+        update_params['timezone'] = update_data['timezone']
+    if 'langtype' in update_data:
+        update_params['langtype'] = update_data['langtype']
+    if 'active' in update_data:
+        update_params['active'] = update_data['active']
+    if 'deactive' in update_data:
+        update_params['deactive'] = update_data['deactive']
+    if 'exclude_from_email' in update_data:
+        update_params['exclude_from_email'] = update_data['exclude_from_email']
+    # Check if 'file' is in update_data
+    if 'file' in update_data:
+        file = update_data['file']
+        
+        # Save the new file to the server
+        if file:
+            with open(f"media/{file.filename}", "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+
+            # Update the 'file' field in the update_params dictionary
+            update_params['file'] = f"media/{file.filename}"
+    # Continue this pattern for other fields you want to update
+
+    # Call the method to update user fields
+    LmsHandler.update_user_fields(id, update_params)
+
+    return "User fields updated successfully"
+
 # def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, cdn_file_link, role, timezone, langtype, active, deactive, exclude_from_email):
 #     is_existing, existing_user = check_existing_user(email)
 #     if is_existing:

@@ -44,6 +44,25 @@ class LmsHandler:
                     """
         return execute_query(query, params=params)
     
+    @classmethod
+    def update_user_fields(cls, id, update_params):
+        # Check if there are any fields to update
+        if not update_params:
+            raise ValueError("No fields to update")
+
+        # Construct a dynamic SQL query to update specific fields
+        update_query = f"""
+            UPDATE users
+            SET {', '.join([f'{field} = %({field})s' for field in update_params.keys()])}
+            WHERE id = %(id)s;
+        """
+
+        # Add user_id to the update_params
+        update_params['id'] = id
+
+        # Execute the query using your database library
+        execute_query(update_query, params=update_params)
+
 #Update Users
     @classmethod
     def update_user_to_db(cls,id, eid, sid, full_name, dept, adhr, username, email, password, bio, file, role, timezone, langtype, active, deactive, exclude_from_email):
