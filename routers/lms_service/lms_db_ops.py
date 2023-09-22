@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from datetime import datetime
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -246,6 +246,13 @@ class LmsHandler:
         query = f""" DELETE FROM course WHERE id = '{id}'; """
         return execute_query(query)
     
+
+
+
+
+
+
+
 ###############################################################################################################
 
 
@@ -253,17 +260,97 @@ class LmsHandler:
     def insert_course_content(cls, params):
         query = """
             INSERT INTO {n_table_course_content} (
-                course_id, content_type, unit_name, file_url, video_unitname, video_file, ppt_unitname, ppt_file,
-                scorm_unitname, scorm_file, assignment_name, assignment_file, topic, instructor_led_name, submission_status, 
-                grade, comments, course_content_allowed, auth_token, request_token, token, active, deactive
+                course_id, video_unitname, video_file, course_content_allowed, auth_token, request_token, token, active, deactive
             )
-            VALUES (%(course_id)s, %(content_type)s, %(unit_name)s, %(file_url)s, %(video_unitname)s, 
-            %(video_file)s, %(ppt_unitname)s,%(ppt_file)s, %(scorm_unitname)s, %(scorm_file)s, %(assignment_name)s, 
-            %(assignment_file)s, %(topic)s, %(instructor_led_name)s, %(submission_status)s, %(grade)s, %(comments)s, %(course_content)s, %(auth_token)s, %(request_token)s, %(token)s, %(isActive)s, %(isHide)s);
+            VALUES (%(course_id)s, %(video_unitname)s, %(video_file)s, %(course_content_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s);
         """
         return execute_query(query, params=params)
+    
+#Course Content CRUD
+    def get_course_content_by_token(token):
+        query = f"""SELECT * FROM {n_table_course_content} where token=%(token)s and token is not NULL and token != '';"""
+        resp = execute_query(query=query, params={'token': token})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
 
+#Get Course Content data by id for update fields Mapping
+    def get_course_content_by_id(course_id):
+        query = f"""SELECT * FROM course_content WHERE course_id = %(course_id)s AND course_id IS NOT NULL AND course_id != '';"""
+        resp = execute_query(query=query, params={'course_id': course_id})
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(
+                status_code=401, detail="Token Expired or Invalid Token")
+        else:
+            return data
+        
+#Add Course Content
+    @classmethod
+    def add_course_content(cls, params):
+        query = f"""
+            INSERT INTO {n_table_course_content} (
+                course_id, video_unitname, video_file, course_content_allowed, auth_token, request_token, token, active, deactive
+            )
+            VALUES (%(course_id)s, %(video_unitname)s, %(video_file)s, %(course_content_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s);
+                    """
+        return execute_query(query, params=params)
+
+#Fetch Course Content
+    @classmethod
+    def get_all_course_contents(cls):
+        query = """ SELECT * FROM course_content; """
+        return execute_query(query).fetchall()
+
+#Fetch Course Content By virtualname
+    @classmethod
+    def get_course_content_by_video_unitname(cls, video_unitname):
+        query = f"SELECT * FROM {n_table_course_content} WHERE video_unitname = %(video_unitname)s"
+        params = {"video_unitname": video_unitname}
+        resp = execute_query(query=query, params=params)
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(status_code=401, detail="Course Content not found")
+        else:
+            return data
+        
+#Update Course Content
+    @classmethod
+    def update_course_content_to_db(cls, id, course_id, video_unitname, video_file, active, deactive):
+        query = f"""   
+        UPDATE course_content SET
+        course_id = %(course_id)s,
+        video_unitname = %(video_unitname)s,
+        video_file = %(video_file)s,
+        active = %(active)s,
+        deactive = %(deactive)s
+        WHERE id = %(id)s;
+        """
+        params = {
+        "id":id,
+        "course_id": course_id,
+        "video_unitname": video_unitname,
+        "video_file": video_file,
+        "active": active,
+        "deactive": deactive
+    }
+        return execute_query(query, params=params)
+    
+#Delete Course Content
+    @classmethod
+    def delete_course_content(cls, id):
+        query = f""" DELETE FROM course_content WHERE id = '{id}'; """
+        return execute_query(query)
+    
 ########################################################################################
+
+
+
+
+
 
 #Groups CRUD
     def get_group_by_token(token):

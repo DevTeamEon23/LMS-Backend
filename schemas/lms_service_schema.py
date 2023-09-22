@@ -161,3 +161,7 @@ class UnenrolledCourse_Group(BaseModel):
 class Remove_file(BaseModel):
     id: int
 
+####################                    Course Content                     ##############################
+
+class DeleteCourseContent(BaseModel):
+    id: int

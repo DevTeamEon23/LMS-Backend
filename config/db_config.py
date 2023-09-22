@@ -418,32 +418,26 @@ course_content_table = Table(
     n_table_course_content, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('course_id', Integer, nullable=False),
-    ForeignKeyConstraint(['course_id'], ['course.id'], name='fk_course_content_id'),
-    Column('content_type', String(50), nullable=False),  # Type of content: 'video', 'ppt', 'scorm', 'assignment', 'instructor-led'
-    
-    # Common fields for scorm content types
-    Column('unit_name', String(150), nullable=True),
-    Column('file_url', String(500), nullable=True),
     
     # Additional fields based on content type
     Column('video_unitname', String(150), nullable=True),
     Column('video_file', LONGBLOB, nullable=False),
-    #PPT/Documents
-    Column('ppt_unitname', String(150), nullable=True),
-    Column('ppt_file', LONGBLOB, nullable=False),
-    #Scorm File
-    Column('scorm_unitname', String(150), nullable=True),
-    Column('scorm_file', LONGBLOB, nullable=False),
-    #Assignment 
-    Column('assignment_name', String(150), nullable=True),
-    Column('assignment_file', LONGBLOB, nullable=False),
-    Column('topic', String(600), nullable=True),
-    Column('instructor_led_name', String(150), nullable=True),
+    # #PPT/Documents
+    # Column('ppt_unitname', String(150), nullable=True),
+    # Column('ppt_file', LONGBLOB, nullable=False),
+    # #Scorm File
+    # Column('scorm_unitname', String(150), nullable=True),
+    # Column('scorm_file', LONGBLOB, nullable=False),
+    # #Assignment 
+    # Column('assignment_name', String(150), nullable=True),
+    # Column('assignment_file', LONGBLOB, nullable=False),
+    # Column('topic', String(600), nullable=True),
+    # Column('instructor_led_name', String(150), nullable=True),
     
-    # Submission related fields (for assignments)
-    Column('submission_status', String(20), nullable=True),  # 'Pass', 'Not Passed', 'Pending'
-    Column('grade', Integer, nullable=True),  # 1-100
-    Column('comments', String(600), nullable=True),
+    # # Submission related fields (for assignments)
+    # Column('submission_status', String(20), nullable=True),  # 'Pass', 'Not Passed', 'Pending'
+    # Column('grade', Integer, nullable=True),  # 1-100
+    # Column('comments', String(600), nullable=True),
 
     Column('course_content_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
