@@ -158,6 +158,274 @@ async def create_users_from_excel(file: UploadFile = File(...)):
             "message": message
         })
 
+@service.post('/addusers_excel_superadmin')
+async def create_users_from_excel(file: UploadFile = File(...)):
+    try:
+        # Get the original file name provided by the user
+        original_filename = file.filename
+        
+        # Create a temporary file with the original filename to save the uploaded content
+        temp_file_path = original_filename
+        with open(temp_file_path, "wb") as temp_file:
+            while content := await file.read(1024):
+                temp_file.write(content)
+
+        # Read the uploaded Excel file using pandas (defaulting to the first sheet)
+        df = pd.read_excel(temp_file_path)
+        
+        total_rows = len(df)
+        success_count = 0
+        duplicate_count = 0
+        
+        # Create a set to keep track of seen emails
+        seen_emails = set()
+
+        # Process and insert the data from the DataFrame
+        for _, row in df.iterrows():
+            role = row['role']
+    
+            # Check if the role is not "Admin"
+            if role != "Admin":
+                continue
+
+            email = row['email']
+            
+            # Check if the email is already seen (in the current Excel file)
+            if email in seen_emails:
+                duplicate_count += 1
+                continue  # Skip adding duplicate users
+
+            # Call your user_exists function to check for duplicates by email
+            if user_exists(email):
+                duplicate_count += 1
+                continue  # Skip adding duplicate users
+            
+            data = {
+                'eid': row['eid'],
+                'sid': row['sid'],
+                'full_name': row['full_name'],
+                'email': email,  # Use the email variable from above
+                'dept': row['dept'],
+                'adhr': row['adhr'],
+                'username': row['username'],
+                'password': row['password'],
+                'bio': row['bio'],
+                'role': role,
+                'timezone': row['timezone'],
+                'langtype': row['langtype'],
+                'active': row['active'],
+                'deactive': row['deactive'],
+                'exclude_from_email': row['exclude_from_email'],
+                'generate_token': row['generate_token']
+            }
+
+            # Call your add_new function with the data
+            add_new_excel(email, password=row['password'], auth_token="", inputs=data)
+            success_count += 1
+
+            # Call your user_exists function to check for duplicates by email
+            if user_exists(email):
+                duplicate_count += 1
+                continue
+
+        message = f"{success_count} users added successfully from the Excel file."
+        if duplicate_count > 0:
+            message += f" {duplicate_count} users were skipped due to duplicates in the users' table."
+        return JSONResponse(status_code=status.HTTP_200_OK, content={
+            "status": "success",
+            "message": message
+        })
+    
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        duplicate_count = total_rows - success_count
+        message = f"{success_count} users added successfully from the Excel file."
+        if duplicate_count > 0:
+            message += f" {duplicate_count} users were skipped due to duplicates in the users' table."
+        return JSONResponse(status_code=status.HTTP_200_OK, content={
+            "status": "success",
+            "message": message
+        })
+    
+@service.post('/addusers_excel_admin')
+async def create_users_from_excel(file: UploadFile = File(...)):
+    try:
+        # Get the original file name provided by the user
+        original_filename = file.filename
+        
+        # Create a temporary file with the original filename to save the uploaded content
+        temp_file_path = original_filename
+        with open(temp_file_path, "wb") as temp_file:
+            while content := await file.read(1024):
+                temp_file.write(content)
+
+        # Read the uploaded Excel file using pandas (defaulting to the first sheet)
+        df = pd.read_excel(temp_file_path)
+        
+        total_rows = len(df)
+        success_count = 0
+        duplicate_count = 0
+        
+        # Create a set to keep track of seen emails
+        seen_emails = set()
+
+        # Process and insert the data from the DataFrame
+        for _, row in df.iterrows():
+            role = row['role']
+    
+            # Check if the role is not "Admin"
+            if role != "Instructor":
+                continue
+
+            email = row['email']
+            
+            # Check if the email is already seen (in the current Excel file)
+            if email in seen_emails:
+                duplicate_count += 1
+                continue  # Skip adding duplicate users
+
+            # Call your user_exists function to check for duplicates by email
+            if user_exists(email):
+                duplicate_count += 1
+                continue  # Skip adding duplicate users
+            
+            data = {
+                'eid': row['eid'],
+                'sid': row['sid'],
+                'full_name': row['full_name'],
+                'email': email,  # Use the email variable from above
+                'dept': row['dept'],
+                'adhr': row['adhr'],
+                'username': row['username'],
+                'password': row['password'],
+                'bio': row['bio'],
+                'role': role,
+                'timezone': row['timezone'],
+                'langtype': row['langtype'],
+                'active': row['active'],
+                'deactive': row['deactive'],
+                'exclude_from_email': row['exclude_from_email'],
+                'generate_token': row['generate_token']
+            }
+
+            # Call your add_new function with the data
+            add_new_excel(email, password=row['password'], auth_token="", inputs=data)
+            success_count += 1
+
+            # Call your user_exists function to check for duplicates by email
+            if user_exists(email):
+                duplicate_count += 1
+                continue
+
+        message = f"{success_count} users added successfully from the Excel file."
+        if duplicate_count > 0:
+            message += f" {duplicate_count} users were skipped due to duplicates in the users' table."
+        return JSONResponse(status_code=status.HTTP_200_OK, content={
+            "status": "success",
+            "message": message
+        })
+    
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        duplicate_count = total_rows - success_count
+        message = f"{success_count} users added successfully from the Excel file."
+        if duplicate_count > 0:
+            message += f" {duplicate_count} users were skipped due to duplicates in the users' table."
+        return JSONResponse(status_code=status.HTTP_200_OK, content={
+            "status": "success",
+            "message": message
+        })
+    
+@service.post('/addusers_excel_instructor')
+async def create_users_from_excel(file: UploadFile = File(...)):
+    try:
+        # Get the original file name provided by the user
+        original_filename = file.filename
+        
+        # Create a temporary file with the original filename to save the uploaded content
+        temp_file_path = original_filename
+        with open(temp_file_path, "wb") as temp_file:
+            while content := await file.read(1024):
+                temp_file.write(content)
+
+        # Read the uploaded Excel file using pandas (defaulting to the first sheet)
+        df = pd.read_excel(temp_file_path)
+        
+        total_rows = len(df)
+        success_count = 0
+        duplicate_count = 0
+        
+        # Create a set to keep track of seen emails
+        seen_emails = set()
+
+        # Process and insert the data from the DataFrame
+        for _, row in df.iterrows():
+            role = row['role']
+    
+            # Check if the role is not "Admin"
+            if role != "Learner":
+                continue
+
+            email = row['email']
+            
+            # Check if the email is already seen (in the current Excel file)
+            if email in seen_emails:
+                duplicate_count += 1
+                continue  # Skip adding duplicate users
+
+            # Call your user_exists function to check for duplicates by email
+            if user_exists(email):
+                duplicate_count += 1
+                continue  # Skip adding duplicate users
+            
+            data = {
+                'eid': row['eid'],
+                'sid': row['sid'],
+                'full_name': row['full_name'],
+                'email': email,  # Use the email variable from above
+                'dept': row['dept'],
+                'adhr': row['adhr'],
+                'username': row['username'],
+                'password': row['password'],
+                'bio': row['bio'],
+                'role': role,
+                'timezone': row['timezone'],
+                'langtype': row['langtype'],
+                'active': row['active'],
+                'deactive': row['deactive'],
+                'exclude_from_email': row['exclude_from_email'],
+                'generate_token': row['generate_token']
+            }
+
+            # Call your add_new function with the data
+            add_new_excel(email, password=row['password'], auth_token="", inputs=data)
+            success_count += 1
+
+            # Call your user_exists function to check for duplicates by email
+            if user_exists(email):
+                duplicate_count += 1
+                continue
+
+        message = f"{success_count} users added successfully from the Excel file."
+        if duplicate_count > 0:
+            message += f" {duplicate_count} users were skipped due to duplicates in the users' table."
+        return JSONResponse(status_code=status.HTTP_200_OK, content={
+            "status": "success",
+            "message": message
+        })
+    
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        duplicate_count = total_rows - success_count
+        message = f"{success_count} users added successfully from the Excel file."
+        if duplicate_count > 0:
+            message += f" {duplicate_count} users were skipped due to duplicates in the users' table."
+        return JSONResponse(status_code=status.HTTP_200_OK, content={
+            "status": "success",
+            "message": message
+        })
+    
+
 ####################################    Export Excel Api     ##################################
 
 CDN_DOMAIN = "https://v1.eonlearning.tech"
@@ -406,13 +674,29 @@ def delete_user(payload: DeleteUser):
 
 # Create Course
 @service.post('/addcourses')
-async def create_course(coursename: str = Form(...),description: str = Form(...), coursecode: str = Form(...), price: str = Form(...),courselink: str = Form(...), capacity: str = Form(...), startdate: str = Form(...), enddate: str = Form(...),timelimit: str = Form(...), certificate: str = Form(...), level: str = Form(...), category: str = Form(...), isActive: bool = Form(...), isHide: bool = Form(...), generate_token: bool = Form(...),file: UploadFile = File(...),coursevideo: UploadFile = File(...)):
-    with open("course/"+file.filename, "wb") as buffer:
+async def create_course(coursename: str = Form(...),description: str = Form(...), coursecode: str = Form(...), price: str = Form(...),courselink: str = Form(None), capacity: str = Form(...), startdate: str = Form(...), enddate: str = Form(...),timelimit: str = Form(...), certificate: str = Form(...), level: str = Form(...), category: str = Form(...), isActive: bool = Form(...), isHide: bool = Form(...), generate_token: bool = Form(...),file: UploadFile = File(...),coursevideo: UploadFile = File(None)):
+    with open("course/" + file.filename, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    url = str("course/"+file.filename)
-    with open("coursevideo/"+coursevideo.filename, "wb") as buffer:
-        shutil.copyfileobj(coursevideo.file, buffer)
-    urls = str("coursevideo/"+coursevideo.filename)
+    url = str("course/" + file.filename)
+
+    if coursevideo is not None:
+        with open("coursevideo/" + coursevideo.filename, "wb") as buffer:
+            shutil.copyfileobj(coursevideo.file, buffer)
+        urls = str("coursevideo/" + coursevideo.filename)
+    else:
+        urls = ""  # Initialize as an empty string if coursevideo is not provided
+
+    # Check if either courselink or coursevideo is provided
+    if not (courselink or coursevideo):
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Either courselink or coursevideo must be provided"
+        })
+
+    # Initialize courselink as an empty string if not provided
+    if not courselink:
+        courselink = ""
+
     try:
         return add_course(coursename,coursevideo,generate_token, auth_token="", inputs={
                 'coursename': coursename, 'description': description,'coursecode': coursecode,'price': price, 'courselink': courselink, 'capacity': capacity,'startdate': startdate,'enddate': enddate,'timelimit': timelimit,'file': url,'certificate': certificate, 'level': level, 'category': category, 'coursevideo': urls,'course_allowed': '[]', 'isActive': isActive, 'isHide': isHide, 'picture': ""})

@@ -711,7 +711,7 @@ def add_new_excel(email: str, generate_tokens: bool = False, auth_token="", inpu
                     'username': username,
                     'password': hash_password,
                     'bio': bio,
-                    'role': row_role,
+                    'role': role,
                     'timezone': timezone,
                     'langtype': langtype,
                     'active': active,
@@ -865,7 +865,7 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
         is_existing, is_active = check_existing_course(coursename)
 
         # If user Already Exists
-        if is_existing:
+        if is_existing: 
             # Check password
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
                 "message": "Course Already Exists"
@@ -891,6 +891,11 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
             isActive = inputs.get('isActive')
             isHide = inputs.get('isHide')
 
+            if not (courselink or coursevideo):
+                return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                    "message": "Either 'coursevideo' or 'courselink' must be provided."
+                })
+        
             # Token Generation
             token = create_course_token(coursename)
 
@@ -901,6 +906,11 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
                     'certificate': certificate, 'level': level, 'category': category, 'isActive': isActive, 'isHide': isHide,
                     'course_allowed': inputs.get('course_allowed', ''), 'auth_token': auth_token,
                     'request_token': request_token, 'token': token}
+            
+            if courselink:
+                data['courselink'] = courselink
+            if coursevideo:
+                data['coursevideo'] = coursevideo
 
             resp = LmsHandler.add_courses(data)
             # If token not required,
