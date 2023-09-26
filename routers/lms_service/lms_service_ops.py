@@ -319,7 +319,12 @@ def fetch_users_by_onlyid(id):
             return None
 
         # file_url = user.file.lstrip("b'").rstrip("'")
-        cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
+        if user.file is not None:
+            cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
+        else:
+            # Handle the case where user.file is None
+            cdn_file_link = "File not available"
+        # cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
         # full_image_url = backendBaseUrl + '/cdn/' + str(user.id) + '.jpg'
         # cdn_link = upload_blob_to_cdn(user.file, full_image_url)
 
@@ -1187,35 +1192,35 @@ def add_course_content(video_unitname: str,generate_tokens: bool = False, auth_t
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course Video added successfully'))
 
 
-def fetch_all_course_content_data():
-    try:
-        # Query all course_content from the database
-        course_contents = LmsHandler.get_all_course_contents()
+# def fetch_all_course_content_data():
+#     try:
+#         # Query all course_content from the database
+#         course_contents = LmsHandler.get_all_course_contents()
 
-        # Transform the course_content objects into a list of dictionaries
-        course_contents_data = []
-        for course_content in course_contents:
+#         # Transform the course_content objects into a list of dictionaries
+#         course_contents_data = []
+#         for course_content in course_contents:
 
-            course_content_data = {
-                "id": course_content.id,
-                "course_id": course_content.course_id,
-                "video_unitname": course_content.video_unitname,
-                "video_file": course_content.video_file,
-                "active": course_content.active,
-                "deactive": course_content.deactive,
-                "created_at": course_content.created_at,
-                "updated_at": course_content.updated_at,
-                # Include other course_content attributes as needed
-            }
-            course_contents_data.append(course_content_data)
+#             course_content_data = {
+#                 "id": course_content.id,
+#                 "course_id": course_content.course_id,
+#                 "video_unitname": course_content.video_unitname,
+#                 "video_file": course_content.video_file,
+#                 "active": course_content.active,
+#                 "deactive": course_content.deactive,
+#                 "created_at": course_content.created_at,
+#                 "updated_at": course_content.updated_at,
+#                 # Include other course_content attributes as needed
+#             }
+#             course_contents_data.append(course_content_data)
 
-        return course_contents_data
-    except Exception as exc:
-        logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "Failed to fetch course_contents data"
-        })
+#         return course_contents_data
+#     except Exception as exc:
+#         logger.error(traceback.format_exc())
+#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#             "status": "failure",
+#             "message": "Failed to fetch course_contents data"
+#         })
     
 #Get Virtual Training data by id for update fields Mapping
 def fetch_course_content_by_onlyid(course_id):
