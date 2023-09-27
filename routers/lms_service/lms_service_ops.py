@@ -172,41 +172,60 @@ def fetch_all_users_data():
         # Query all users from the database
         users = LmsHandler.get_all_users()
 
-        # Transform the user objects into a list of dictionaries
-        users_data = []
-        for user in users:
+        if not users:
+            # Handle the case when no user is found for the specified course
+            return None
 
-            user_data = {
-                "id": user.id,
-                "eid": user.eid,
-                "sid": user.sid,
-                "full_name": user.full_name,
-                "email": user.email,
-                "dept": user.dept,
-                "adhr": user.adhr,
-                "username": user.username,
-                "bio": user.bio,
-                "file": user.file,
-                "role": user.role,
-                "timezone": user.timezone,
-                "langtype": user.langtype,
-                "active": True if user.active == 1 else False,
-                "deactive": True if user.deactive == 1 else False,
-                "exclude_from_email": True if user.exclude_from_email == 1 else False,
-                "created_at": user.created_at,
-                "updated_at": user.updated_at,
-                # Include other user attributes as needed
-            }
-
-            users_data.append(user_data)
-
-        return users_data
+        return {
+            "users_data": users,
+        }
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
             "message": "Failed to fetch users data"
         })
+    
+# def fetch_all_users_data():
+#     try:
+#         # Query all users from the database
+#         users = LmsHandler.get_all_users()
+
+#         # Transform the user objects into a list of dictionaries
+#         users_data = []
+#         for user in users:
+
+#             user_data = {
+#                 "id": user.id,
+#                 "eid": user.eid,
+#                 "sid": user.sid,
+#                 "full_name": user.full_name,
+#                 "email": user.email,
+#                 "dept": user.dept,
+#                 "adhr": user.adhr,
+#                 "username": user.username,
+#                 "bio": user.bio,
+#                 "file": user.file,
+#                 "role": user.role,
+#                 "timezone": user.timezone,
+#                 "langtype": user.langtype,
+#                 "active": True if user.active == 1 else False,
+#                 "deactive": True if user.deactive == 1 else False,
+#                 "exclude_from_email": True if user.exclude_from_email == 1 else False,
+#                 "created_at": user.created_at,
+#                 "updated_at": user.updated_at,
+#                 # Include other user attributes as needed
+#             }
+
+#             users_data.append(user_data)
+
+#         return users_data
+#     except Exception as exc:
+#         logger.error(traceback.format_exc())
+#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#             "status": "failure",
+#             "message": "Failed to fetch users data"
+#         })
 
 # Fetch Instructor & Learners only for Instructor USERS LIST"
 def fetch_all_inst_learn_data():
@@ -214,35 +233,13 @@ def fetch_all_inst_learn_data():
         # Query all users from the database
         users = LmsHandler.get_all_inst_learner()
 
-        # Transform the user objects into a list of dictionaries
-        users_data = []
-        for user in users:
+        if not users:
+            # Handle the case when no user is found for the specified course
+            return None
 
-            user_data = {
-                "id": user.id,
-                "eid": user.eid,
-                "sid": user.sid,
-                "full_name": user.full_name,
-                "email": user.email,
-                "dept": user.dept,
-                "adhr": user.adhr,
-                "username": user.username,
-                "bio": user.bio,
-                "file": user.file,
-                "role": user.role,
-                "timezone": user.timezone,
-                "langtype": user.langtype,
-                "active": True if user.active == 1 else False,
-                "deactive": True if user.deactive == 1 else False,
-                "exclude_from_email": True if user.exclude_from_email == 1 else False,
-                "created_at": user.created_at,
-                "updated_at": user.updated_at,
-                # Include other user attributes as needed
-            }
-
-            users_data.append(user_data)
-
-        return users_data
+        return {
+            "users_data": users,
+        }
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -984,35 +981,13 @@ def fetch_all_courses_data():
         # Query all users from the database
         courses = LmsHandler.get_all_courses()
 
-        # Transform the user objects into a list of dictionaries
-        courses_data = []
-        for course in courses:
+        if not courses:
+            # Handle the case when no user is found for the specified course
+            return None
 
-            course_data = {
-                "id": course.id,
-                "coursename": course.coursename,
-                "file": course.file,
-                "description": course.description,
-                "coursecode": course.coursecode,
-                "price": course.price ,
-                "courselink": course.courselink,
-                "coursevideo": course.coursevideo,
-                "capacity": course.capacity,
-                "startdate": course.startdate,
-                "enddate": course.enddate,
-                "timelimit": course.timelimit,
-                "certificate": course.certificate,
-                "level": course.level,
-                "category": course.category,
-                "isActive": course.isActive,
-                "isHide": course.isHide,
-                "created_at": course.created_at,
-                "updated_at": course.updated_at,
-                # Include other course attributes as needed
-            }
-            courses_data.append(course_data)
-
-        return courses_data
+        return {
+            "courses_data": courses,
+        }
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -1025,35 +1000,13 @@ def fetch_active_courses_data():
         # Query for active courses from the database
         courses = LmsHandler.get_active_courses()
 
-        # Transform the user objects into a list of dictionaries
-        courses_data = []
-        for course in courses:
+        if not courses:
+            # Handle the case when no user is found for the specified course
+            return None
 
-            course_data = {
-                "id": course.id,
-                "coursename": course.coursename,
-                "file": course.file,
-                "description": course.description,
-                "coursecode": course.coursecode,
-                "price": course.price ,
-                "courselink": course.courselink,
-                "coursevideo": course.coursevideo,
-                "capacity": course.capacity,
-                "startdate": course.startdate,
-                "enddate": course.enddate,
-                "timelimit": course.timelimit,
-                "certificate": course.certificate,
-                "level": course.level,
-                "category": course.category,
-                "isActive": course.isActive,
-                "isHide": course.isHide,
-                "created_at": course.created_at,
-                "updated_at": course.updated_at,
-                # Include other course attributes as needed
-            }
-            courses_data.append(course_data)
-
-        return courses_data
+        return {
+            "courses_data": courses,
+        }
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -1350,8 +1303,8 @@ def add_group(groupname: str,generate_tokens: bool = False, auth_token="", input
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Group added successfully'))
 
-
-def fetch_all_groups_data():
+############################################### This is for Excel export #####################################################
+def fetch_all_groups_data_excel():
     try:
         # Query all group from the database
         groups = LmsHandler.get_all_groups()
@@ -1372,6 +1325,27 @@ def fetch_all_groups_data():
             groups_data.append(group_data)
 
         return groups_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch group data"
+        })
+    
+###############################################################################################################
+
+def fetch_all_groups_data():
+    try:
+        # Query all group from the database
+        groups = LmsHandler.get_all_groups()
+
+        if not groups:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "groups_data": groups,
+        }
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -1508,21 +1482,13 @@ def fetch_all_categories_data():
         # Query all group from the database
         categories = LmsHandler.get_all_categories()
 
-        # Transform the category objects into a list of dictionaries
-        categories_data = []
-        for category in categories:
+        if not categories:
+            # Handle the case when no user is found for the specified course
+            return None
 
-            category_data = {
-                "id": category.id,
-                "name": category.name,
-                "price": category.price,
-                "created_at": category.created_at,
-                "updated_at": category.updated_at,
-                # Include other group attributes as needed
-            }
-            categories_data.append(category_data)
-
-        return categories_data
+        return {
+            "categories_data": categories,
+        }
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -1660,22 +1626,13 @@ def fetch_all_events_data():
         # Query all group from the database
         events = LmsHandler.get_all_events()
 
-        # Transform the category objects into a list of dictionaries
-        events_data = []
-        for event in events:
+        if not events:
+            # Handle the case when no user is found for the specified course
+            return None
 
-            event_data = {
-                "id": event.id,
-                "ename": event.ename,
-                "eventtype": event.eventtype,
-                "recipienttype": event.recipienttype,
-                "created_at": event.created_at,
-                "updated_at": event.updated_at,
-                # Include other event attributes as needed
-            }
-            events_data.append(event_data)
-
-        return events_data
+        return {
+            "events_data": events,
+        }
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -1817,26 +1774,13 @@ def fetch_all_classroom_data():
         # Query all classroom from the database
         classrooms = LmsHandler.get_all_classrooms()
 
-        # Transform the classroom objects into a list of dictionaries
-        classrooms_data = []
-        for classroom in classrooms:
+        if not classrooms:
+            # Handle the case when no user is found for the specified course
+            return None
 
-            classroom_data = {
-                "id": classroom.id,
-                "instname": classroom.instname,
-                "classname": classroom.classname,
-                "date": classroom.date,
-                "starttime": classroom.starttime,
-                "venue": classroom.venue,
-                "messg": classroom.messg,
-                "duration": classroom.duration,
-                "created_at": classroom.created_at,
-                "updated_at": classroom.updated_at,
-                # Include other classroom attributes as needed
-            }
-            classrooms_data.append(classroom_data)
-
-        return classrooms_data
+        return {
+            "classrooms_data": classrooms,
+        }
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -1980,26 +1924,13 @@ def fetch_all_conference_data():
         # Query all conference from the database
         conferences = LmsHandler.get_all_conferences()
 
-        # Transform the conference objects into a list of dictionaries
-        conferences_data = []
-        for conference in conferences:
+        if not conferences:
+            # Handle the case when no user is found for the specified course
+            return None
 
-            conference_data = {
-                "id": conference.id,
-                "instname": conference.instname,
-                "confname": conference.confname,
-                "date": conference.date,
-                "starttime": conference.starttime,
-                "meetlink": conference.meetlink,
-                "messg": conference.messg,
-                "duration": conference.duration,
-                "created_at": conference.created_at,
-                "updated_at": conference.updated_at,
-                # Include other conference attributes as needed
-            }
-            conferences_data.append(conference_data)
-
-        return conferences_data
+        return {
+            "conferences_data": conferences,
+        }
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -2143,26 +2074,13 @@ def fetch_all_virtualtraining_data():
         # Query all virtualtraining from the database
         virtualtrainings = LmsHandler.get_all_virtualtrainings()
 
-        # Transform the virtualtraining objects into a list of dictionaries
-        virtualtrainings_data = []
-        for virtualtraining in virtualtrainings:
+        if not virtualtrainings:
+            # Handle the case when no user is found for the specified course
+            return None
 
-            virtualtraining_data = {
-                "id": virtualtraining.id,
-                "instname": virtualtraining.instname,
-                "virtualname": virtualtraining.virtualname,
-                "date": virtualtraining.date,
-                "starttime": virtualtraining.starttime,
-                "meetlink": virtualtraining.meetlink,
-                "messg": virtualtraining.messg,
-                "duration": virtualtraining.duration,
-                "created_at": virtualtraining.created_at,
-                "updated_at": virtualtraining.updated_at,
-                # Include other virtualtraining attributes as needed
-            }
-            virtualtrainings_data.append(virtualtraining_data)
-
-        return virtualtrainings_data
+        return {
+            "virtualtrainings_data": virtualtrainings,
+        }
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -2302,23 +2220,13 @@ def fetch_all_discussion_data():
         # Query all discussion from the database
         discussions = LmsHandler.get_all_discussions()
 
-        # Transform the discussion objects into a list of dictionaries
-        discussions_data = []
-        for discussion in discussions:
+        if not discussions:
+            # Handle the case when no user is found for the specified course
+            return None
 
-            discussion_data = {
-                "id": discussion.id,
-                "instname": discussion.topic,
-                "virtualname": discussion.messg,
-                "date": discussion.file,
-                "starttime": discussion.access,
-                "created_at": discussion.created_at,
-                "updated_at": discussion.updated_at,
-                # Include other discussion attributes as needed
-            }
-            discussions_data.append(discussion_data)
-
-        return discussions_data
+        return {
+            "discussions_data": discussions,
+        }
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -2457,25 +2365,13 @@ def fetch_all_calender_data():
         # Query all calender from the database
         calenders = LmsHandler.get_all_calenders()
 
-        # Transform the calender objects into a list of dictionaries
-        calenders_data = []
-        for calender in calenders:
+        if not calenders:
+            # Handle the case when no user is found for the specified course
+            return None
 
-            calender_data = {
-                "id": calender.id,
-                "cal_eventname": calender.cal_eventname,
-                "date": calender.date,
-                "starttime": calender.starttime,
-                "duration": calender.duration,
-                "audience": calender.audience,
-                "messg": calender.messg,
-                "created_at": calender.created_at,
-                "updated_at": calender.updated_at,
-                # Include other calender attributes as needed
-            }
-            calenders_data.append(calender_data)
-
-        return calenders_data
+        return {
+            "calenders_data": calenders,
+        }
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -2697,7 +2593,9 @@ def unenroll_courses_from_userby_id(id):
             "status": "failure",
             "message": "Failed to Unenrolled course from user"
         })
-    
+
+################################################################################################################
+
 def fetch_enrolled_courses_of_user(user_id):
     try:
         # Query user IDs from the database for the specified course
@@ -2706,9 +2604,6 @@ def fetch_enrolled_courses_of_user(user_id):
         if not course_ids:
             # Handle the case when no user is found for the specified course
             return None
-
-        # Now user_ids is a list of user IDs enrolled in the course
-        # You can return this list or process it further as needed
 
         return {
             "course_ids": course_ids,
@@ -2720,6 +2615,18 @@ def fetch_enrolled_courses_of_user(user_id):
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
             "message": "Failed to fetch enrolled courses data of user"
+        })
+    
+def unenroll_courses_from_enrolleduserby_id(data_user_course_enrollment_id):
+    try:
+        # Delete the user by ID
+        users = LmsHandler.unenroll_courses_from_enrolled_user(data_user_course_enrollment_id)
+        return users
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled course from user"
         })
     
 def fetch_added_groups_of_user(user_id):
@@ -2744,6 +2651,18 @@ def fetch_added_groups_of_user(user_id):
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
             "message": "Failed to fetch enrolled groups data of user"
+        })
+    
+def remove_group_from_enrolleduserby_id(data_user_group_enrollment_id):
+    try:
+        # Delete the user by ID
+        users = LmsHandler.remove_groups_from_enrolled_user(data_user_group_enrollment_id)
+        return users
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled user data from course"
         })
     
 ###################################### Enroll Groups to USER (USERS -> Group Page) ######################################################

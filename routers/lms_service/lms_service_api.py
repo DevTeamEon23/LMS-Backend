@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import List
 from zipfile import ZipFile
 from PIL import Image
+from datetime import timedelta
 from moviepy.editor import VideoFileClip
 from datetime import datetime
 from io import BytesIO
@@ -25,7 +26,7 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_all_inst_learn_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_courses_touser,user_exists,fetch_users_data_export,fetch_courses_data_export,fetch_users_course_enrolled,enroll_coursegroup_massaction,fetch_enrolled_unenroll_courses_of_user,unenroll_courses_from_userby_id,enroll_groups_touser,fetch_added_unadded_groups_of_user,remove_group_from_userby_id,enroll_users_tocourse,fetch_enrolled_unenroll_users_of_course,unenrolled_users_from_courseby_id,enroll_groups_tocourse,fetch_enrolled_unenroll_groups_of_course,unenrolled_groups_from_courseby_id,enroll_users_togroup,fetch_added_unadded_users_of_group,remove_user_from_groupby_id,enroll_courses_togroup,fetch_added_unadded_courses_of_group,remove_course_from_groupby_id,remove_course_from_all_groups_by_course_id,fetch_enrolled_unenroll_instructors_of_course,fetch_enrolled_unenroll_learners_of_course,fetch_added_unadded_instructors_of_group,fetch_added_unadded_learners_of_group,remove_file_by_id,fetch_enrolled_courses_of_user,fetch_added_groups_of_user,update_user,add_course_content, fetch_course_content_by_onlyid, change_course_content_details, delete_course_content_by_id
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_all_inst_learn_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,fetch_all_groups_data_excel,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_courses_touser,user_exists,fetch_users_data_export,fetch_courses_data_export,fetch_users_course_enrolled,enroll_coursegroup_massaction,fetch_enrolled_unenroll_courses_of_user,unenroll_courses_from_userby_id,enroll_groups_touser,fetch_added_unadded_groups_of_user,remove_group_from_userby_id,enroll_users_tocourse,fetch_enrolled_unenroll_users_of_course,unenrolled_users_from_courseby_id,enroll_groups_tocourse,fetch_enrolled_unenroll_groups_of_course,unenrolled_groups_from_courseby_id,enroll_users_togroup,fetch_added_unadded_users_of_group,remove_user_from_groupby_id,enroll_courses_togroup,fetch_added_unadded_courses_of_group,remove_course_from_groupby_id,remove_course_from_all_groups_by_course_id,fetch_enrolled_unenroll_instructors_of_course,fetch_enrolled_unenroll_learners_of_course,fetch_added_unadded_instructors_of_group,fetch_added_unadded_learners_of_group,remove_file_by_id,fetch_enrolled_courses_of_user,unenroll_courses_from_enrolleduserby_id,fetch_added_groups_of_user,remove_group_from_enrolleduserby_id,update_user,add_course_content, fetch_course_content_by_onlyid, change_course_content_details, delete_course_content_by_id
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import (Email,CategorySchema, AddUser,Users, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender,UnenrolledUsers_Course,UnenrolledUsers_Group,UnenrolledCourse_Group,UnenrolledUsers_Group,Remove_file, DeleteCourseContent)
 from utils import success_response
@@ -452,24 +453,24 @@ def fetch_users_data():
 def fetch_courses_data():
     try:
         # Fetch all users' data using your existing function
-        users_data = fetch_courses_data_export()
+        courses_data = fetch_courses_data_export()
 
         # Create a DataFrame from the fetched data
-        users_df = pd.DataFrame(users_data)
+        courses_df = pd.DataFrame(courses_data)
 
-        return users_df
+        return courses_df
 
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
-            "message": "Failed to fetch users data"
+            "message": "Failed to fetch courses data"
         })
     
 def fetch_groups_data():
     try:
         # Fetch all users' data using your existing function
-        users_data = fetch_all_groups_data()
+        users_data = fetch_all_groups_data_excel()
 
         # Create a DataFrame from the fetched data
         users_df = pd.DataFrame(users_data)
@@ -859,15 +860,19 @@ def fetch_all_course_content_data():
             video_path = course_content.video_file  # Assuming video_file is a str
             video_url = "C:/Users/Admin/Desktop/NEW_LIVE/LMS-Backend/" + video_path.decode('utf-8')  # Complete video URL
             print("video_url:", video_url)
+            
             # Calculate video duration based on the CDN URL
             video_duration = get_video_duration(video_url)
-
+            
+            # Format video_duration as hours, minutes, seconds, and milliseconds
+            duration_formatted = str(timedelta(seconds=video_duration))
+            
             course_content_data = {
                 "id": course_content.id,
                 "course_id": course_content.course_id,
                 "video_unitname": course_content.video_unitname,
                 "video_file": video_url,  # Use the CDN URL
-                "video_duration": video_duration,
+                "video_duration": duration_formatted,  # Format duration
                 "active": course_content.active,
                 "deactive": course_content.deactive,
                 "created_at": course_content.created_at,
@@ -884,6 +889,42 @@ def fetch_all_course_content_data():
             "message": "Failed to fetch course_contents data"
         })
     
+# def fetch_all_course_content_data():
+#     try:
+#         # Query all course_content from the database
+#         course_contents = LmsHandler.get_all_course_contents()
+
+#         # Transform the course_content objects into a list of dictionaries
+#         course_contents_data = []
+#         for course_content in course_contents:
+#             video_path = course_content.video_file  # Assuming video_file is a str
+#             video_url = "C:/Users/Admin/Desktop/NEW_LIVE/LMS-Backend/" + video_path.decode('utf-8')  # Complete video URL
+#             print("video_url:", video_url)
+#             # Calculate video duration based on the CDN URL
+#             video_duration = get_video_duration(video_url)
+
+#             course_content_data = {
+#                 "id": course_content.id,
+#                 "course_id": course_content.course_id,
+#                 "video_unitname": course_content.video_unitname,
+#                 "video_file": video_url,  # Use the CDN URL
+#                 "video_duration": video_duration,
+#                 "active": course_content.active,
+#                 "deactive": course_content.deactive,
+#                 "created_at": course_content.created_at,
+#                 "updated_at": course_content.updated_at,
+#                 # Include other course_content attributes as needed
+#             }
+#             course_contents_data.append(course_content_data)
+
+#         return course_contents_data
+#     except Exception as exc:
+#         logger.error(traceback.format_exc())
+#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#             "status": "failure",
+#             "message": "Failed to fetch course_contents data"
+#         })
+    
 def get_video_duration(video_url):
     try:
         # Calculate the duration of the video using moviepy without saving it locally
@@ -896,22 +937,22 @@ def get_video_duration(video_url):
         return None
     
 #Get Course Content data by id for update fields Mapping
-# @service.get("/course_contents_by_onlyid")
-# def fetch_course_contents_by_onlyid(id):
-#     try:
-#         # Fetch all course_content's data here
-#         course_contents = fetch_course_content_by_onlyid(id)
+@service.get("/course_contents_by_onlyid")
+def fetch_course_contents_by_onlyid(id):
+    try:
+        # Fetch all course_content's data here
+        course_contents = fetch_course_content_by_onlyid(id)
 
-#         return {
-#             "status": "success",
-#             "data": course_contents
-#         }
-#     except Exception as exc:
-#         logger.error(traceback.format_exc())
-#         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
-#             "status": "failure",
-#             "message": "Failed to fetch course_content's data"
-#         }) 
+        return {
+            "status": "success",
+            "data": course_contents
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch course_content's data"
+        }) 
 
 @service.post("/update_course_contents")
 def update_course_contents(id: int = Form(...),course_id: str = Form(...),video_unitname: str = Form(...), video_file: UploadFile = File(...), active: bool = Form(...), deactive: bool = Form(...)):
@@ -1964,6 +2005,8 @@ def unenroll_course_user(payload: UnenrolledUsers_Course):
             "message": "Failed to Unenrolled user data from course"
         })
     
+#############################################################################################################################
+
 @service.get("/fetch_enrolled_courses_of_users")
 def fetch_enrollusers_course_by_onlyuser_id(user_id: int):
     try:
@@ -1980,7 +2023,22 @@ def fetch_enrollusers_course_by_onlyuser_id(user_id: int):
             "status": "failure",
             "message": "Failed to fetch enrolled courses' data"
         }) 
-    
+
+@service.delete("/unenroll_courses_from_enrolled_user")
+def unenroll_course_from_enroll_user(data_user_course_enrollment_id: int):
+    try:
+        users = unenroll_courses_from_enrolleduserby_id(data_user_course_enrollment_id)
+        return {
+            "status": "success",
+            "data": users
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled user data from course"
+        })
+        
 @service.get("/fetch_enrolled_groups_of_users")
 def fetch_enrollusers_groups_by_onlyuser_id(user_id: int):
     try:
@@ -1996,7 +2054,23 @@ def fetch_enrollusers_groups_by_onlyuser_id(user_id: int):
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
             "status": "failure",
             "message": "Failed to fetch enrolled groups' data"
-        }) 
+        })
+    
+@service.delete("/remove_groups_from_enrolled_user")
+def unenroll_group_from_enroll_user(data_user_group_enrollment_id: int):
+    try:
+        groups = remove_group_from_enrolleduserby_id(data_user_group_enrollment_id)
+        return {
+            "status": "success",
+            "data": groups
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to Unenrolled group data from course"
+        })
+    
 ###################################### Enroll Group to USER (USERS -> Group Page) ###########################################
 
 # Create enroll_course

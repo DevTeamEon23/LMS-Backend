@@ -1052,7 +1052,8 @@ class LmsHandler:
                 c.*,
                 uce.id AS user_course_enrollment_id,
                 uce.created_at AS enrolled_on,
-                u.role AS user_role
+                u.role AS user_role,
+                uce.id AS data_user_course_enrollment_id
             FROM user_course_enrollment uce
             LEFT JOIN course c ON uce.course_id = c.id
             LEFT JOIN users u ON uce.user_id = u.id
@@ -1061,20 +1062,31 @@ class LmsHandler:
         params = {"user_id": user_id}
         return execute_query(query, params).fetchall()
 
+    @classmethod
+    def unenroll_courses_from_enrolled_user(cls, data_user_course_enrollment_id):
+        query = f""" DELETE FROM user_course_enrollment WHERE id = {data_user_course_enrollment_id}; """
+        return execute_query(query)
+    
 ############################# Groups List for Users according to enrollment to them #############################################
 
     @classmethod
     def fetch_enrolled_group_details(cls, user_id):
         query = """
-        SELECT
-            uge.group_id AS group_id,
-            lg.*
-        FROM user_group_enrollment uge
-        LEFT JOIN lmsgroup lg ON uge.group_id = lg.id
-        WHERE uge.user_id = %(user_id)s;
+            SELECT
+                uge.group_id AS group_id,
+                lg.*,
+                uge.id AS data_user_group_enrollment_id
+            FROM user_group_enrollment uge
+            LEFT JOIN lmsgroup lg ON uge.group_id = lg.id
+            WHERE uge.user_id = %(user_id)s;
             """
         params = {"user_id": user_id}
         return execute_query(query, params).fetchall()
+    
+    @classmethod
+    def remove_groups_from_enrolled_user(cls, data_user_group_enrollment_id):
+        query = f""" DELETE FROM user_group_enrollment WHERE id = {data_user_group_enrollment_id}; """
+        return execute_query(query)
     
 ######################################## Users TAB Group Page #################################################
 
