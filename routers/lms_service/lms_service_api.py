@@ -858,7 +858,7 @@ def fetch_all_course_content_data():
         course_contents_data = []
         for course_content in course_contents:
             video_path = course_content.video_file  # Assuming video_file is a str
-            video_url = "C:/Users/Admin/Desktop/NEW_LIVE/LMS-Backend/" + video_path.decode('utf-8')  # Complete video URL
+            video_url = "/home/ubuntu/LMS-Backend/" + video_path.decode('utf-8')  # Complete video URL
             print("video_url:", video_url)
             
             # Calculate video duration based on the CDN URL
