@@ -1,6 +1,6 @@
 import secrets
 from datetime import datetime
-
+import os
 import jwt
 import traceback
 import logging
@@ -9,13 +9,17 @@ from fastapi import Header, HTTPException
 from passlib.context import CryptContext
 from starlette import status
 from starlette.responses import JSONResponse
-
+from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from config.db_config import n_table_user,users_points
 from config import settings
 from config.logconfig import logger
 from routers.auth.auth_db_ops import UserDBHandler
 from routers.db_ops import execute_query
 from utils import md5, random_string, validate_email
+from schemas.auth_service_schema import (User)
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # This is used for the password hashing and validation
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -372,6 +376,60 @@ def add_new_user(email: str, generate_tokens: bool = False, auth_token="", input
     return message, active, is_mfa_enabled, request_token, token, details
 
 
+
+######################################## Signup Mail ########################################
+conf = ConnectionConfig(
+    MAIL_USERNAME=os.environ.get("MAIL_USERNAME"),
+    MAIL_PASSWORD=os.environ.get("MAIL_PASSWORD"),
+    MAIL_FROM=os.environ.get("MAIL_FROM"),
+    MAIL_PORT=int(os.environ.get("MAIL_PORT")),
+    MAIL_SERVER=os.environ.get("MAIL_SERVER"),
+    MAIL_STARTTLS=False,  # Disable STARTTLS
+    MAIL_SSL_TLS=True,    # Enable SSL/TLS
+    USE_CREDENTIALS=bool(os.environ.get("USE_CREDENTIALS")),
+    VALIDATE_CERTS=bool(os.environ.get("VALIDATE_CERTS"))
+)
+
+async def send_welcome_email(user: User):
+    # Customize your welcome email template here
+    template = """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Welcome to EonLearnings Pvt Ltd.</title>
+        </head>
+        <body>
+            <div style="font-family: Helvetica, Arial, sans-serif; min-width: 1000px; overflow: auto; line-height: 2">
+                <div style="margin: 50px auto; width: 70%; padding: 20px 0">
+                    <div style="border-bottom: 1px solid #eee">
+                        <a href="" style="font-size: 1.4em; color: #00466a; text-decoration: none; font-weight: 600">Welcome to EonLearnings</a>
+                    </div>
+                    <p style="font-size: 1.1em">Hi,</p>
+                    <p>Welcome to EonLearnings App! We're excited to have you on board.</p>
+                    <p style="font-size: 0.9em;">Thanks & Regards,<br />The EonLearnings Support Team</p>
+                    <hr style="border: none; border-top: 1px solid #eee" />
+                    <div style="float: right; padding: 8px 0; color: #aaa; font-size: 0.8em; line-height: 1; font-weight: 300">
+                        <p>EonLearnings Inc</p>
+                        <p>Dalal Street, CharniRoad(E)</p>
+                        <p>Mumbai - 400001</p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+    """
+    
+    message = MessageSchema(
+        subject="Welcome to EonLearning App",
+        recipients=[user.email],
+        body=template,
+        subtype="html"
+    )
+
+    fm = FastMail(conf)
+    await fm.send_message(message)
+
 def admin_add_new_user(email: str, generate_tokens: bool = False, auth_token="", inputs={}, password=None, skip_new_user=False):
     try:
         # Check Email Address
@@ -416,6 +474,9 @@ def admin_add_new_user(email: str, generate_tokens: bool = False, auth_token="",
             # If token not required,
             if not generate_tokens and len(auth_token) == 0:
                 token = None
+
+            user_data = User(email=v_email, fullname=full_name, password=hash_password)
+            send_welcome_email(user_data)
 
     except ValueError as exc:
         logger.error(traceback.format_exc())

@@ -1558,6 +1558,46 @@ class LmsHandler:
 
 ####################################################################################################################
 
+    @classmethod
+    def user_wise_infographics(cls, user_id):
+        query = """
+            SELECT 
+            u.full_name,
+            uce.course_id,
+            c.coursename,
+            up.points,
+            up.user_level,
+            uc.total_course_count
+        FROM
+            users u
+        LEFT JOIN
+            user_course_enrollment uce
+        ON
+            u.id = uce.user_id
+        LEFT JOIN
+            course c
+        ON
+            uce.course_id = c.id
+        JOIN
+            user_points up
+        ON
+            u.id = up.user_id
+        LEFT JOIN (
+            SELECT 
+                user_id,
+                COUNT(*) as total_course_count
+            FROM
+                user_course_enrollment
+            GROUP BY
+                user_id
+        ) uc
+        ON
+            u.id = uc.user_id
+        WHERE
+            u.id = %(user_id)s; 
+            """
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
 
     
 

@@ -3406,3 +3406,27 @@ def remove_file_by_id(id):
             "status": "failure",
             "message": "Failed to delete file"
         })
+    
+##########################################   INFOGRAPHICS   ####################################################
+
+def fetch_infographics_of_user(user_id):
+    try:
+        # Query user IDs from the database for the specified course
+        user_infographics = LmsHandler.user_wise_infographics(user_id)
+
+        if not user_infographics:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "user_infographics": user_infographics,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user_infographics"
+        })
+
