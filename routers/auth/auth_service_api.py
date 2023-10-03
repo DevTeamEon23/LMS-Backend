@@ -1,7 +1,7 @@
 import traceback
 import json
 import random
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query
 from fastapi.responses import JSONResponse
 from fastapi_mail import FastMail, MessageSchema,ConnectionConfig
 from passlib.context import CryptContext
@@ -136,18 +136,100 @@ def verify_access_token(request: Request):
         })
 
 
-# Signup 
-@auth.post("/signup")
-def signup(user: NewUser):
+# Signup &  Wellcome mail
+conf = ConnectionConfig(
+    MAIL_USERNAME=os.environ.get("MAIL_USERNAME"),
+    MAIL_PASSWORD=os.environ.get("MAIL_PASSWORD"),
+    MAIL_FROM=os.environ.get("MAIL_FROM"),
+    MAIL_PORT=int(os.environ.get("MAIL_PORT")),
+    MAIL_SERVER=os.environ.get("MAIL_SERVER"),
+    MAIL_STARTTLS=False,  # Disable STARTTLS
+    MAIL_SSL_TLS=True,    # Enable SSL/TLS
+    USE_CREDENTIALS=bool(os.environ.get("USE_CREDENTIALS")),
+    VALIDATE_CERTS=bool(os.environ.get("VALIDATE_CERTS"))
+)
+
+async def send_welcome_email(user: User):
+    # Customize your welcome email template here
     try:
-        return admin_add_new_user(user.email, generate_tokens=user.generate_token, password=user.password, auth_token="", inputs={
-            'full_name': user.fullname, 'role': 'Learner', 'users_allowed': '[]', 'active': False, 'picture': "", "password": None})
+        template = """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Welcome to EonLearnings Pvt Ltd.</title>
+            </head>
+            <body>
+                <div style="font-family: Helvetica, Arial, sans-serif; min-width: 1000px; overflow: auto; line-height: 2">
+                    <div style="margin: 50px auto; width: 70%; padding: 20px 0">
+                        <div style="border-bottom: 1px solid #eee">
+                            <a href="" style="font-size: 1.4em; color: #00466a; text-decoration: none; font-weight: 600">Welcome to EonLearnings</a>
+                        </div>
+                        <p style="font-size: 1.1em">Hi,</p>
+                        <p>Welcome to EonLearnings App! We're excited to have you on board.</p>
+                        <p style="font-size: 0.9em;">Thanks & Regards,<br />The EonLearnings Support Team</p>
+                        <hr style="border: none; border-top: 1px solid #eee" />
+                        <div style="float: right; padding: 8px 0; color: #aaa; font-size: 0.8em; line-height: 1; font-weight: 300">
+                            <p>EonLearnings Inc</p>
+                            <p>Dalal Street, CharniRoad(E)</p>
+                            <p>Mumbai - 400001</p>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+        """
+        
+        message = MessageSchema(
+            subject="Welcome to EonLearning App",
+            recipients=[user.email],
+            body=template,
+            subtype="html"
+        )
+
+        fm = FastMail(conf)
+        await fm.send_message(message)
+
+        # Log success
+        logger.info(f"Welcome email sent to {user.email}")
+
+    except Exception as e:
+        # Log any exceptions
+        logger.error(f"Error sending welcome email: {str(e)}")
+    
+
+@auth.post("/signup")
+async def signup(user: NewUser):
+    try:
+        # Create a new user and check if the registration was successful
+        registration_result = admin_add_new_user(
+            user.email,
+            generate_tokens=user.generate_token,
+            password=user.password,
+            auth_token="",
+            inputs={
+                'full_name': user.fullname,
+                'role': 'Learner',
+                'users_allowed': '[]',
+                'active': False,
+                'picture': "",
+                "password": None
+            }
+        )
+
+        if registration_result.status_code == status.HTTP_200_OK:
+            # If the user was added successfully, send the welcome email
+            await send_welcome_email(user)
+            return JSONResponse(status_code=status.HTTP_200_OK, content={
+                "status": "success",
+                "message": "User registered successfully"
+            })
+
+        return registration_result
+
     except Exception as exc:
         logger.error(traceback.format_exc())
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "status": "failure",
-            "message": "User is not registered"
-        })
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"message": "User is not registered"})
 
 
 # Reset Password 

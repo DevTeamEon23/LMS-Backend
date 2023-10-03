@@ -186,6 +186,26 @@ def fetch_all_users_data():
             "message": "Failed to fetch users data"
         })
     
+# Fetch the Maximum EID NO.(Last Eid for add users automation)
+def fetch_all_eids_data():
+    try:
+        # Query all users from the database
+        eid = LmsHandler.get_eid()
+
+        if not eid:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "eid_data": eid,
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch eid data"
+        })
+    
 # def fetch_all_users_data():
 #     try:
 #         # Query all users from the database

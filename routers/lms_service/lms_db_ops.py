@@ -113,6 +113,12 @@ class LmsHandler:
         query = """ SELECT * FROM users; """
         return execute_query(query).fetchall()
 
+# Fetch the Maximum EID NO.(Last Eid for add users automation)
+    @classmethod
+    def get_eid(cls):
+        query = """ SELECT MAX(CAST(eid AS UNSIGNED)) AS last_eid FROM users; """
+        return execute_query(query).fetchall()
+    
     @classmethod
     def get_all_inst_learner(cls):
         query = """ SELECT * FROM users WHERE role IN ('Instructor', 'Learner'); """

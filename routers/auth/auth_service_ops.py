@@ -475,16 +475,17 @@ def admin_add_new_user(email: str, generate_tokens: bool = False, auth_token="",
             if not generate_tokens and len(auth_token) == 0:
                 token = None
 
-            user_data = User(email=v_email, fullname=full_name, password=hash_password)
-            send_welcome_email(user_data)
+        user_data = User(email=email, fullname=full_name, password=hash_password)
+        send_welcome_email(user_data)
+
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "User registered successfully"})
 
     except ValueError as exc:
         logger.error(traceback.format_exc())
         message = exc.args[0]
         logger.error(message)
-
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='Success',message='User added successfully'))
-
+        
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"message": "User is not registered"})
 
 def generate_request_token(email):
     """
