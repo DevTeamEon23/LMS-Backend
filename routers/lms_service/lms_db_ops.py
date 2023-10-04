@@ -1410,26 +1410,32 @@ class LmsHandler:
     @classmethod
     def get_alllearner_of_group(cls, group_id):
         query = """ 
+            WITH LearnerUsers AS (
+                SELECT
+                    u.id AS user_id,
+                    u.role,
+                    u.full_name
+                FROM users u
+                WHERE u.role = 'Learner'
+            ),
+            GroupEnrollments AS (
+                SELECT
+                    u.id AS user_id,
+                    g.groupname AS enrolled_groupname,
+                    e.id AS user_group_enrollment_id
+                FROM users u
+                LEFT JOIN user_group_enrollment e ON u.id = e.user_id
+                LEFT JOIN lmsgroup g ON e.group_id = g.id
+                WHERE e.group_id = %(group_id)s
+            )
             SELECT
-                e.user_id AS user_id,
-                u.role,
-                u.full_name,
-                e.id AS user_group_enrollment_id
-            FROM user_group_enrollment e
-            JOIN users u ON e.user_id = u.id
-            WHERE e.group_id = %(group_id)s
-
-            UNION DISTINCT
-
-            SELECT
-                u.id AS user_id,
-                'Learner' AS role, -- Assuming role should be 'Learner'
-                u.full_name,
-                NULL AS user_group_enrollment_id
-            FROM users u
-            WHERE u.role = 'Learner'
-                AND u.id NOT IN (SELECT user_id FROM user_group_enrollment WHERE group_id = %(group_id)s)
-                ORDER BY user_id ASC; """
+                lu.user_id,
+                lu.role,
+                lu.full_name,
+                ge.enrolled_groupname,
+                ge.user_group_enrollment_id
+            FROM LearnerUsers lu
+            LEFT JOIN GroupEnrollments ge ON lu.user_id = ge.user_id; """
         params = {"group_id": group_id}
         return execute_query(query, params).fetchall()
         
