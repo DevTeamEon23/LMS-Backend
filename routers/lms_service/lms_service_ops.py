@@ -205,6 +205,25 @@ def fetch_all_eids_data():
             "status": "failure",
             "message": "Failed to fetch eid data"
         })
+
+def fetch_all_dept_data():
+    try:
+        # Query all users from the database
+        dept = LmsHandler.get_dept()
+
+        if not dept:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "dept_data": dept,
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch dept data"
+        })
     
 # def fetch_all_users_data():
 #     try:

@@ -153,33 +153,41 @@ async def send_welcome_email(user: User):
     # Customize your welcome email template here
     try:
         template = """
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>Welcome to EonLearnings Pvt Ltd.</title>
-            </head>
-            <body>
-                <div style="font-family: Helvetica, Arial, sans-serif; min-width: 1000px; overflow: auto; line-height: 2">
-                    <div style="margin: 50px auto; width: 70%; padding: 20px 0">
-                        <div style="border-bottom: 1px solid #eee">
-                            <a href="" style="font-size: 1.4em; color: #00466a; text-decoration: none; font-weight: 600">Welcome to EonLearnings</a>
-                        </div>
-                        <p style="font-size: 1.1em">Hi,</p>
-                        <p>Welcome to EonLearnings App! We're excited to have you on board.</p>
-                        <p style="font-size: 0.9em;">Thanks & Regards,<br />The EonLearnings Support Team</p>
-                        <hr style="border: none; border-top: 1px solid #eee" />
-                        <div style="float: right; padding: 8px 0; color: #aaa; font-size: 0.8em; line-height: 1; font-weight: 300">
-                            <p>EonLearnings Inc</p>
-                            <p>Dalal Street, CharniRoad(E)</p>
-                            <p>Mumbai - 400001</p>
-                        </div>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Welcome to EonLearning</title>
+        </head>
+        <body>
+            <div style="font-family: Helvetica, Arial, sans-serif; min-width: 1000px; overflow: auto; line-height: 2">
+                <div style="margin: 50px auto; width: 70%; padding: 20px 0">
+                    <div style="border-bottom: 1px solid #eee">
+                        <a href="" style="font-size: 1.4em; color: #00466a; text-decoration: none; font-weight: 600">Welcome to EonLearning</a>
+                    </div>
+                    <p style="font-size: 1.1em">Hi {fullname},</p>
+                    <p>Your EonLearning account has been successfully created.</p>
+                    <p>Get started with basic videos of EonLearning: <a href="https://www.youtube.com/watch?v=AD7oxMS0nEc">https://www.youtube.com/watch?v=AD7oxMS0nEc</a></p>
+                    <p>Feel free to contact our support team @ Aniruddha Durgule : +91 7021592861</p>
+                    <p>Or eonlearning123@gmail.com</p>
+                    <p>Make sure you are part of our Whatsapp group for all the updates, alerts, and instant support.</p>
+                    <p>WhatsApp Group Link: <a href="https://chat.whatsapp.com/JpUjNz2mZ0BCSHmBy1OmhJ">https://chat.whatsapp.com/JpUjNz2mZ0BCSHmBy1OmhJ</a></p>
+                    <p>This email was sent to {email} because you are using eonlearning.tech.</p>
+                    <p style="font-size: 0.9em;">Thanks & Regards,<br />The EonLearning Team</p>
+                    <hr style="border: none; border-top: 1px solid #eee" />
+                    <div style="float: right; padding: 8px 0; color: #aaa; font-size: 0.8em; line-height: 1; font-weight: 300">
+                        <p>EonLearnings Inc</p>
+                        <p>Dalal Street, CharniRoad(E)</p>
+                        <p>Mumbai - 400001</p>
                     </div>
                 </div>
-            </body>
-            </html>
+            </div>
+        </body>
+        </html>
         """
-        
+        template = template.replace("{fullname}", user.fullname)
+        template = template.replace("{email}", user.email)
+
         message = MessageSchema(
             subject="Welcome to EonLearning App",
             recipients=[user.email],
@@ -225,7 +233,10 @@ async def signup(user: NewUser):
                 "message": "User registered successfully"
             })
 
-        return registration_result
+        return {
+            "status": "success",
+            "data": registration_result
+        }
 
     except Exception as exc:
         logger.error(traceback.format_exc())

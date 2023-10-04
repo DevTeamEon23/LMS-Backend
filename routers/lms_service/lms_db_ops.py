@@ -124,6 +124,12 @@ class LmsHandler:
         query = """ SELECT * FROM users WHERE role IN ('Instructor', 'Learner'); """
         return execute_query(query).fetchall()
     
+#Fetch All dept from users table
+    @classmethod
+    def get_dept(cls):
+        query = """ SELECT DISTINCT dept FROM users WHERE dept IS NOT NULL; """
+        return execute_query(query).fetchall()
+    
 #Delete Users
     @classmethod
     def delete_users(cls, id):
