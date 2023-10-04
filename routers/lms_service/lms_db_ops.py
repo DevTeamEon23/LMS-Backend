@@ -112,7 +112,7 @@ class LmsHandler:
     def get_all_users(cls):
         query = """ SELECT * FROM users; """
         return execute_query(query).fetchall()
-
+    
 # Fetch the Maximum EID NO.(Last Eid for add users automation)
     @classmethod
     def get_eid(cls):
@@ -1314,7 +1314,8 @@ class LmsHandler:
                 cge.id AS course_group_enrollment_id
             FROM lmsgroup g
             LEFT JOIN course_group_enrollment cge ON g.id = cge.group_id AND cge.course_id = %(course_id)s
-            LEFT JOIN course c ON cge.course_id = c.id;
+            LEFT JOIN course c ON cge.course_id = c.id
+            ORDER BY g.id ASC;
             """
         params = {"course_id": course_id}
         return execute_query(query, params).fetchall()
