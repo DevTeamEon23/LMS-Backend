@@ -710,7 +710,7 @@ def delete_user(payload: DeleteUser):
 
 # Create Course
 @service.post('/addcourses')
-async def create_course(coursename: str = Form(...),description: str = Form(...), coursecode: str = Form(...), price: str = Form(...),courselink: str = Form(None), capacity: str = Form(...), startdate: str = Form(...), enddate: str = Form(...),timelimit: str = Form(...), certificate: str = Form(...), level: str = Form(...), category: str = Form(...), isActive: bool = Form(...), isHide: bool = Form(...), generate_token: bool = Form(...),file: UploadFile = File(...),coursevideo: UploadFile = File(None)):
+async def create_course(user_id: int = Form(...), coursename: str = Form(...),description: str = Form(...), coursecode: str = Form(...), price: str = Form(...),courselink: str = Form(None), capacity: str = Form(...), startdate: str = Form(...), enddate: str = Form(...),timelimit: str = Form(...), certificate: str = Form(...), level: str = Form(...), category: str = Form(...), isActive: bool = Form(...), isHide: bool = Form(...), generate_token: bool = Form(...),file: UploadFile = File(...),coursevideo: UploadFile = File(None)):
     with open("course/" + file.filename, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     url = str("course/" + file.filename)
@@ -735,7 +735,7 @@ async def create_course(coursename: str = Form(...),description: str = Form(...)
 
     try:
         return add_course(coursename,coursevideo,generate_token, auth_token="", inputs={
-                'coursename': coursename, 'description': description,'coursecode': coursecode,'price': price, 'courselink': courselink, 'capacity': capacity,'startdate': startdate,'enddate': enddate,'timelimit': timelimit,'file': url,'certificate': certificate, 'level': level, 'category': category, 'coursevideo': urls,'course_allowed': '[]', 'isActive': isActive, 'isHide': isHide, 'picture': ""})
+                'user_id': user_id, 'coursename': coursename, 'description': description,'coursecode': coursecode,'price': price, 'courselink': courselink, 'capacity': capacity,'startdate': startdate,'enddate': enddate,'timelimit': timelimit,'file': url,'certificate': certificate, 'level': level, 'category': category, 'coursevideo': urls,'course_allowed': '[]', 'isActive': isActive, 'isHide': isHide, 'picture': ""})
     except Exception as exc: 
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -810,7 +810,7 @@ def fetch_courses_by_onlyid(id):
         }) 
     
 @service.post("/update_courses")
-def update_courses(id: int = Form(...),coursename: str = Form(...),description: str = Form(...), coursecode: str = Form(...), price: str = Form(...),courselink: str = Form(...), capacity: str = Form(...), startdate: str = Form(...), enddate: str = Form(...),timelimit: str = Form(...), certificate: str = Form(...), level: str = Form(...), category: str = Form(...), isActive: bool = Form(...), isHide: bool = Form(...),file: UploadFile = File(...),coursevideo: UploadFile = File(...)):
+def update_courses(id: int = Form(...),user_id: int = Form(...),coursename: str = Form(...),description: str = Form(...), coursecode: str = Form(...), price: str = Form(...),courselink: str = Form(...), capacity: str = Form(...), startdate: str = Form(...), enddate: str = Form(...),timelimit: str = Form(...), certificate: str = Form(...), level: str = Form(...), category: str = Form(...), isActive: bool = Form(...), isHide: bool = Form(...),file: UploadFile = File(...),coursevideo: UploadFile = File(...)):
     with open("course/"+file.filename, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     file = str("course/"+file.filename)
@@ -819,7 +819,7 @@ def update_courses(id: int = Form(...),coursename: str = Form(...),description: 
     coursevideo = str("coursevideo/"+coursevideo.filename)
 
     try:
-        if change_course_details(id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):
+        if change_course_details(id, user_id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):
             return JSONResponse(status_code=status.HTTP_200_OK, content={
                 "status": "success",
                 "message": "Updated Course successfully"
@@ -1026,10 +1026,10 @@ def delete_course_contents(payload: DeleteCourseContent):
 
 # Create Group
 @service.post('/addgroups')
-async def create_group(groupname: str = Form(...),groupdesc: str = Form(...), groupkey: str = Form(...),generate_token: bool = Form(...)):
+async def create_group(user_id: int = Form(...), groupname: str = Form(...),groupdesc: str = Form(...), groupkey: str = Form(...),generate_token: bool = Form(...)):
     try:
         return add_group(generate_token, auth_token="", inputs={
-                'groupname': groupname, 'groupdesc': groupdesc, 'groupkey': groupkey, 'group_allowed': '[]','picture': ""})
+                'user_id': user_id, 'groupname': groupname, 'groupdesc': groupdesc, 'groupkey': groupkey, 'group_allowed': '[]','picture': ""})
     except Exception as exc: 
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -1074,9 +1074,9 @@ def fetch_groups_by_onlyid(id):
         }) 
     
 @service.post("/update_groups")
-def update_groups(id: int = Form(...),groupname: str = Form(...),groupdesc: str = Form(...), groupkey: str = Form(...)):
+def update_groups(id: int = Form(...),user_id: int = Form(...), groupname: str = Form(...),groupdesc: str = Form(...), groupkey: str = Form(...)):
     try:
-        if change_group_details(id, groupname, groupdesc, groupkey):
+        if change_group_details(id, user_id, groupname, groupdesc, groupkey):
             return JSONResponse(status_code=status.HTTP_200_OK, content={
                 "status": "success",
                 "message": "Updated Group successfully"
@@ -2188,10 +2188,10 @@ def fetch_added_users_tocourse_by_onlyuser_id(course_id: int):
         }) 
 
 @course_tab1.get("/fetch_enroll_instructors_of_course", tags=["Admin :-COURSE Tab: User Page"])
-def fetch_added_instructor_tocourse_by_onlyuser_id(course_id: int):
+def fetch_added_instructor_tocourse_by_onlyuser_id(course_id: int,user_id: int):
     try:
         # Fetch all enrolled users' data of the specified course
-        instructors = fetch_enrolled_unenroll_instructors_of_course(course_id)
+        instructors = fetch_enrolled_unenroll_instructors_of_course(course_id,user_id)
 
         return {
             "status": "success",

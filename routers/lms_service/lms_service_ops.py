@@ -914,6 +914,7 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
 
         elif not is_existing and not is_active and skip_new_course == False:
 
+            user_id = inputs.get('user_id')
             coursename = inputs.get('coursename', None)
             coursename = coursename.split('@')[0] if coursename is None or coursename == '' else coursename
             file = inputs.get('file')
@@ -943,7 +944,7 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
             request_token = ''
             
             # Add New User to the list of users
-            data = {'coursename': coursename,'file': file, 'description': description, 'coursecode': coursecode, 'price':price, 'courselink': courselink, 'coursevideo': coursevideo, 'capacity': capacity, 'startdate': startdate, 'enddate': enddate, 'timelimit': timelimit,
+            data = {'user_id': user_id, 'coursename': coursename,'file': file, 'description': description, 'coursecode': coursecode, 'price':price, 'courselink': courselink, 'coursevideo': coursevideo, 'capacity': capacity, 'startdate': startdate, 'enddate': enddate, 'timelimit': timelimit,
                     'certificate': certificate, 'level': level, 'category': category, 'isActive': isActive, 'isHide': isHide,
                     'course_allowed': inputs.get('course_allowed', ''), 'auth_token': auth_token,
                     'request_token': request_token, 'token': token}
@@ -1004,12 +1005,12 @@ def clone_course(id):
             "message": "An error occurred while cloning the course"
         })
     
-def change_course_details(id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):
+def change_course_details(id, user_id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):
     is_existing, _ = check_existing_course_by_id(id)
     if is_existing:
         # Update courses
          
-        LmsHandler.update_course_to_db(id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide)
+        LmsHandler.update_course_to_db(id, user_id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide)
         #     AWSClient.send_signup(email, password, subject='Password Change')
         return True
     else:
@@ -1071,6 +1072,7 @@ def fetch_course_by_onlyid(id):
         # Transform the category object into a dictionary
         course_data = {
                 "id": course.id,
+                "user_id": course.user_id,
                 "coursename": course.coursename,
                 "file": full_image_url,
                 "description": course.description,
@@ -1315,6 +1317,7 @@ def add_group(groupname: str,generate_tokens: bool = False, auth_token="", input
 
         elif not is_existing and not is_active and skip_new_group == False:
 
+            user_id = inputs.get('user_id')
             groupname = inputs.get('groupname', None)
             groupname = groupname.split('@')[0] if groupname is None or groupname == '' else groupname
             groupdesc = inputs.get('groupdesc')
@@ -1326,7 +1329,7 @@ def add_group(groupname: str,generate_tokens: bool = False, auth_token="", input
             request_token = ''
             
             # Add New User to the list of users
-            data = {'groupname': groupname, 'groupdesc': groupdesc, 'groupkey': groupkey,
+            data = {'user_id': user_id, 'groupname': groupname, 'groupdesc': groupdesc, 'groupkey': groupkey,
                     'group_allowed': inputs.get('group_allowed', ''), 'auth_token': auth_token,
                     'request_token': request_token, 'token': token, 'isActive': True}
 
@@ -1354,6 +1357,7 @@ def fetch_all_groups_data_excel():
 
             group_data = {
                 "id": group.id,
+                "user_id": group.user_id,
                 "groupname": group.groupname,
                 "groupdesc": group.groupdesc,
                 "groupkey": group.groupkey,
@@ -1406,6 +1410,7 @@ def fetch_group_by_onlyid(id):
         # Transform the group object into a dictionary
         group_data = {
                 "id": group.id,
+                "user_id": group.user_id,
                 "groupname": group.groupname,
                 "groupdesc": group.groupdesc,
                 "groupkey": group.groupkey,
@@ -1422,12 +1427,12 @@ def fetch_group_by_onlyid(id):
             "message": "Failed to fetch group data"
         })
     
-def change_group_details(id, groupname, groupdesc, groupkey):
+def change_group_details(id, user_id, groupname, groupdesc, groupkey):
     is_existing, _ = check_existing_group_by_id(id)
     if is_existing:
         # Update courses
          
-        LmsHandler.update_group_to_db(id, groupname, groupdesc, groupkey)
+        LmsHandler.update_group_to_db(id, user_id, groupname, groupdesc, groupkey)
         #     AWSClient.send_signup(email, password, subject='Password Change')
         return True
     else:
@@ -2852,10 +2857,10 @@ def fetch_enrolled_unenroll_users_of_course(course_id):
             "message": "Failed to fetch enrolled & unenrolled courses data of user"
         })
     
-def fetch_enrolled_unenroll_instructors_of_course(course_id):
+def fetch_enrolled_unenroll_instructors_of_course(course_id,user_id):
     try:
         # Query user IDs from the database for the specified course
-        user_ids = LmsHandler.get_allinst_of_course(course_id)
+        user_ids = LmsHandler.get_allinst_of_course(course_id,user_id)
 
         if not user_ids:
             # Handle the case when no user is found for the specified course

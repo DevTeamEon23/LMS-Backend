@@ -116,7 +116,7 @@ class LmsHandler:
 # Fetch the Maximum EID NO.(Last Eid for add users automation)
     @classmethod
     def get_eid(cls):
-        query = """ SELECT MAX(CAST(eid AS UNSIGNED)) AS last_eid FROM users; """
+        query = """ SELECT MAX(CAST(eid AS UNSIGNED)) + 1 AS next_eid FROM users; """
         return execute_query(query).fetchall()
     
     @classmethod
@@ -178,8 +178,8 @@ class LmsHandler:
 # Add Courses 
     @classmethod
     def add_courses(cls, params):
-        query = f"""   INSERT into {table_course}(coursename, file, description, coursecode,price,courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, course_allowed, auth_token, request_token, token, isActive, isHide) VALUES 
-                        (%(coursename)s, %(file)s, %(description)s, %(coursecode)s, %(price)s, %(courselink)s, %(coursevideo)s,%(capacity)s, %(startdate)s, %(enddate)s, %(timelimit)s, %(certificate)s, %(level)s, %(category)s, %(course_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(isActive)s, %(isHide)s)
+        query = f"""   INSERT into {table_course}(user_id, coursename, file, description, coursecode,price,courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, course_allowed, auth_token, request_token, token, isActive, isHide) VALUES 
+                        (%(user_id)s, %(coursename)s, %(file)s, %(description)s, %(coursecode)s, %(price)s, %(courselink)s, %(coursevideo)s,%(capacity)s, %(startdate)s, %(enddate)s, %(timelimit)s, %(certificate)s, %(level)s, %(category)s, %(course_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(isActive)s, %(isHide)s)
                         ; 
                     """
         return execute_query(query, params=params)
@@ -210,9 +210,10 @@ class LmsHandler:
         
 #Update Courses
     @classmethod
-    def update_course_to_db(cls,id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):
+    def update_course_to_db(cls,id, user_id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):
         query = f"""   
         UPDATE course SET
+            user_id = %(user_id)s,
             coursename = %(coursename)s,
             file = %(file)s,
             description = %(description)s,
@@ -233,6 +234,7 @@ class LmsHandler:
         """
         params = {
         "id":id,
+        "user_id": user_id,
         "coursename": coursename,
         "file": file,
         "description": description,
@@ -258,15 +260,7 @@ class LmsHandler:
         query = f""" DELETE FROM course WHERE id = '{id}'; """
         return execute_query(query)
     
-
-
-
-
-
-
-
 ###############################################################################################################
-
 
     @classmethod
     def insert_course_content(cls, params):
@@ -358,12 +352,6 @@ class LmsHandler:
         return execute_query(query)
     
 ########################################################################################
-
-
-
-
-
-
 #Groups CRUD
     def get_group_by_token(token):
         query = f"""SELECT * FROM {table_lmsgroup} where token=%(token)s and token is not NULL and token != '';"""
@@ -389,8 +377,8 @@ class LmsHandler:
 #Add Groups
     @classmethod
     def add_groups(cls, params):
-        query = f"""   INSERT into {table_lmsgroup} (groupname,groupdesc,groupkey, group_allowed, auth_token, request_token, token, isActive) VALUES 
-                        (%(groupname)s, %(groupdesc)s, %(groupkey)s, %(group_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(isActive)s)
+        query = f"""   INSERT into {table_lmsgroup} (user_id, groupname,groupdesc,groupkey, group_allowed, auth_token, request_token, token, isActive) VALUES 
+                        (%(user_id)s, %(groupname)s, %(groupdesc)s, %(groupkey)s, %(group_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(isActive)s)
                         ; 
                     """
         return execute_query(query, params=params)
@@ -415,9 +403,10 @@ class LmsHandler:
         
 #Update Courses
     @classmethod
-    def update_group_to_db(cls, id, groupname, groupdesc, groupkey):
+    def update_group_to_db(cls, id, user_id, groupname, groupdesc, groupkey):
         query = f"""   
         UPDATE lmsgroup SET
+            user_id = %(user_id)s,
             groupname = %(groupname)s,
             groupdesc = %(groupdesc)s,
             groupkey = %(groupkey)s
@@ -425,6 +414,7 @@ class LmsHandler:
         """
         params = {
         "id":id,
+        "user_id": user_id,
         "groupname": groupname,
         "groupdesc": groupdesc,
         "groupkey": groupkey,
@@ -1069,7 +1059,19 @@ class LmsHandler:
             FROM user_course_enrollment uce
             LEFT JOIN course c ON uce.course_id = c.id
             LEFT JOIN users u ON uce.user_id = u.id
-            WHERE uce.user_id = %(user_id)s;
+            WHERE uce.user_id = %(user_id)s
+
+            UNION
+
+            SELECT
+                cu.id AS course_id,
+                cu.*,
+                NULL AS user_course_enrollment_id,
+                NULL AS enrolled_on,
+                NULL AS user_role,
+                NULL AS data_user_course_enrollment_id
+            FROM course cu
+            WHERE cu.user_id = %(user_id)s;
             """
         params = {"user_id": user_id}
         return execute_query(query, params).fetchall()
@@ -1087,10 +1089,21 @@ class LmsHandler:
             SELECT
                 uge.group_id AS group_id,
                 lg.*,
+                uge.id AS user_group_enrollment_id,
                 uge.id AS data_user_group_enrollment_id
             FROM user_group_enrollment uge
             LEFT JOIN lmsgroup lg ON uge.group_id = lg.id
-            WHERE uge.user_id = %(user_id)s;
+            WHERE uge.user_id = %(user_id)s
+
+            UNION
+
+            SELECT
+                lu.id AS group_id,
+                lu.*,
+                NULL AS user_group_enrollment_id,
+                NULL AS data_user_group_enrollment_id
+            FROM lmsgroup lu
+            WHERE lu.user_id = %(user_id)s;
             """
         params = {"user_id": user_id}
         return execute_query(query, params).fetchall()
@@ -1211,36 +1224,38 @@ class LmsHandler:
         return execute_query(query, params).fetchall()
     
     @classmethod
-    def get_allinst_of_course(cls, course_id):
+    def get_allinst_of_course(cls, course_id, user_id):
         query = """
-        WITH InstructorUsers AS (
+            WITH InstructorUsers AS (
+                SELECT
+                    u.id AS user_id,
+                    u.role,
+                    u.full_name,
+                    u.dept 
+                FROM users u
+                WHERE u.role = 'Instructor'
+            ),
+            CourseEnrollments AS (
+                SELECT
+                    u.id AS user_id,
+                    c.coursename AS enrolled_coursename,
+                    e.id AS user_course_enrollment_id
+                FROM users u
+                LEFT JOIN user_course_enrollment e ON u.id = e.user_id
+                LEFT JOIN course c ON e.course_id = c.id
+                WHERE e.course_id = %(course_id)s
+            )
             SELECT
-                u.id AS user_id,
-                u.role,
-                u.full_name
-            FROM users u
-            WHERE u.role = 'Instructor'
-        ),
-        CourseEnrollments AS (
-            SELECT
-                u.id AS user_id,
-                c.coursename AS enrolled_coursename,
-                e.id AS user_course_enrollment_id
-            FROM users u
-            LEFT JOIN user_course_enrollment e ON u.id = e.user_id
-            LEFT JOIN course c ON e.course_id = c.id
-            WHERE e.course_id = %(course_id)s
-        )
-        SELECT
-            iu.user_id,
-            iu.role,
-            iu.full_name,
-            ce.enrolled_coursename,
-            ce.user_course_enrollment_id
-        FROM InstructorUsers iu
-        LEFT JOIN CourseEnrollments ce ON iu.user_id = ce.user_id;
+                iu.user_id,
+                iu.role,
+                iu.full_name,
+                ce.enrolled_coursename,
+                ce.user_course_enrollment_id
+            FROM InstructorUsers iu
+            LEFT JOIN CourseEnrollments ce ON iu.user_id = ce.user_id
+            WHERE iu.dept = (SELECT dept FROM users WHERE id = %(user_id)s);
         """
-        params = {"course_id": course_id}
+        params = {"course_id": course_id, "user_id": user_id}
         return execute_query(query, params).fetchall()
     
     @classmethod
