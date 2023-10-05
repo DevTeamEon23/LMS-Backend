@@ -208,6 +208,25 @@ class LmsHandler:
         else:
             return data
         
+    @classmethod
+    def update_course_fields(cls, id, update_params):
+        # Check if there are any fields to update
+        if not update_params:
+            raise ValueError("No fields to update")
+
+        # Construct a dynamic SQL query to update specific fields
+        update_query = f"""
+            UPDATE course
+            SET {', '.join([f'{field} = %({field})s' for field in update_params.keys()])}
+            WHERE id = %(id)s;
+        """
+
+        # Add course_id to the update_params
+        update_params['id'] = id
+
+        # Execute the query using your database library
+        execute_query(update_query, params=update_params)
+
 #Update Courses
     @classmethod
     def update_course_to_db(cls,id, user_id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):

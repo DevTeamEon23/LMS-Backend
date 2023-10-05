@@ -1016,6 +1016,76 @@ def change_course_details(id, user_id, coursename, file, description, coursecode
     else:
         raise ValueError("Course does not exists")
     
+def update_course(id, update_data):
+    # Get the user's current data from the database
+    course_data = LmsHandler.get_course_by_id(id)
+
+    if not course_data:
+        raise ValueError("User not found")
+
+    # Extract the fields to update from the incoming update_data
+    update_params = {}
+
+    # Example: Update the 'full_name' field if provided in update_data
+    if 'user_id' in update_data:
+        update_params['user_id'] = update_data['user_id']
+    if 'coursename' in update_data:
+        update_params['coursename'] = update_data['coursename']
+    if 'description' in update_data:
+        update_params['description'] = update_data['description']
+    if 'coursecode' in update_data:
+        update_params['coursecode'] = update_data['coursecode']
+    if 'price' in update_data:
+        update_params['price'] = update_data['price']
+    if 'courselink' in update_data:
+        update_params['courselink'] = update_data['courselink']
+    if 'capacity' in update_data:
+        update_params['capacity'] = update_data['capacity']
+    if 'startdate' in update_data:
+        update_params['startdate'] = update_data['startdate']
+    if 'enddate' in update_data:
+        update_params['enddate'] = update_data['enddate']
+    if 'timelimit' in update_data:
+        update_params['timelimit'] = update_data['timelimit']
+    if 'certificate' in update_data:
+        update_params['certificate'] = update_data['certificate']
+    if 'level' in update_data:
+        update_params['level'] = update_data['level']
+    if 'category' in update_data:
+        update_params['category'] = update_data['category']
+    if 'isActive' in update_data:
+        update_params['isActive'] = update_data['isActive']
+    if 'isHide' in update_data:
+        update_params['isHide'] = update_data['isHide']
+    # Check if 'file' is in update_data
+    if 'file' in update_data:
+        file = update_data['file']
+        
+        # Save the new file to the server
+        if file:
+            with open(f"course/{file.filename}", "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+
+            # Update the 'file' field in the update_params dictionary
+            update_params['file'] = f"course/{file.filename}"
+        # Check if 'file' is in update_data
+    if 'coursevideo' in update_data:
+        coursevideo = update_data['coursevideo']
+        
+        # Save the new coursevideo to the server
+        if coursevideo:
+            with open(f"coursevideo/{coursevideo.filename}", "wb") as buffer:
+                shutil.copyfileobj(coursevideo.file, buffer)
+
+            # Update the 'coursevideo' field in the update_params dictionary
+            update_params['coursevideo'] = f"coursevideo/{coursevideo.filename}"
+    # Continue this pattern for other fields you want to update
+
+    # Call the method to update user fields
+    LmsHandler.update_course_fields(id, update_params)
+
+    return "Course fields updated successfully"
+
 def fetch_all_courses_data():
     try:
         # Query all users from the database
