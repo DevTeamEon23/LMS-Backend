@@ -1073,8 +1073,7 @@ class LmsHandler:
                 c.*,
                 uce.id AS user_course_enrollment_id,
                 uce.created_at AS enrolled_on,
-                u.role AS user_role,
-                uce.id AS data_user_course_enrollment_id
+                u.role AS user_role
             FROM user_course_enrollment uce
             LEFT JOIN course c ON uce.course_id = c.id
             LEFT JOIN users u ON uce.user_id = u.id
@@ -1087,8 +1086,7 @@ class LmsHandler:
                 cu.*,
                 NULL AS user_course_enrollment_id,
                 NULL AS enrolled_on,
-                NULL AS user_role,
-                NULL AS data_user_course_enrollment_id
+                NULL AS user_role
             FROM course cu
             WHERE cu.user_id = %(user_id)s;
             """
