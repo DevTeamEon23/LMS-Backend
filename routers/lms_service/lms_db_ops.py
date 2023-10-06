@@ -1072,6 +1072,7 @@ class LmsHandler:
                 uce.course_id AS course_id,
                 c.*,
                 uce.id AS user_course_enrollment_id,
+                uce.user_id AS check_course_enrollment_id,
                 uce.created_at AS enrolled_on,
                 u.role AS user_role
             FROM user_course_enrollment uce
@@ -1085,6 +1086,7 @@ class LmsHandler:
                 cu.id AS course_id,
                 cu.*,
                 NULL AS user_course_enrollment_id,
+                NULL AS check_course_enrollment_id,
                 NULL AS enrolled_on,
                 NULL AS user_role
             FROM course cu
@@ -1107,7 +1109,7 @@ class LmsHandler:
                 uge.group_id AS group_id,
                 lg.*,
                 uge.id AS user_group_enrollment_id,
-                uge.id AS data_user_group_enrollment_id
+                uge.user_id AS check_group_enrollment_id
             FROM user_group_enrollment uge
             LEFT JOIN lmsgroup lg ON uge.group_id = lg.id
             WHERE uge.user_id = %(user_id)s
@@ -1118,7 +1120,7 @@ class LmsHandler:
                 lu.id AS group_id,
                 lu.*,
                 NULL AS user_group_enrollment_id,
-                NULL AS data_user_group_enrollment_id
+                NULL AS check_group_enrollment_id
             FROM lmsgroup lu
             WHERE lu.user_id = %(user_id)s;
             """
