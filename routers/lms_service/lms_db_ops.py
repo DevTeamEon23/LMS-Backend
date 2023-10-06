@@ -1063,7 +1063,31 @@ class LmsHandler:
         query = f""" DELETE FROM user_course_enrollment WHERE id = '{id}'; """
         return execute_query(query)
 
-############################# Courses List for Users according to enrollment to them #############################################
+######################################## Users TAB Courses Page(Admin,Instructor) #################################################
+
+    @classmethod
+    def get_enrollcourse_for_inst_learner(cls, user_id):
+        query = """
+            SELECT
+                uce.course_id AS course_id,
+                c.coursename
+            FROM user_course_enrollment uce
+            LEFT JOIN course c ON uce.course_id = c.id
+            WHERE uce.user_id = %(user_id)s
+
+            UNION
+
+            SELECT
+                c.id AS course_id,
+                c.coursename
+            FROM course c
+            WHERE c.user_id = %(user_id)s;
+        """
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
+
+
+############################# Courses Lists for for Admin,Instructor & Learner #############################################
 
     @classmethod
     def fetch_enrolled_course_details(cls, user_id):
@@ -1100,7 +1124,7 @@ class LmsHandler:
         query = f""" DELETE FROM user_course_enrollment WHERE id = {data_user_course_enrollment_id}; """
         return execute_query(query)
     
-############################# Groups List for Users according to enrollment to them #############################################
+############################# Groups Lists for Admin,Instructor & Learner #############################################
 
     @classmethod
     def fetch_enrolled_group_details(cls, user_id):
