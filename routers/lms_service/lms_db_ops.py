@@ -1065,28 +1065,61 @@ class LmsHandler:
 
 ######################################## Users TAB Courses Page(Admin,Instructor) #################################################
 
+    # @classmethod
+    # def get_enrollcourse_for_inst_learner(cls, user_id):
+    #     query = """
+    #         SELECT
+    #             uce.course_id AS course_id,
+    #             c.coursename
+    #         FROM user_course_enrollment uce
+    #         LEFT JOIN course c ON uce.course_id = c.id
+    #         WHERE uce.user_id = %(user_id)s
+
+    #         UNION
+
+    #         SELECT
+    #             c.id AS course_id,
+    #             c.coursename
+    #         FROM course c
+    #         WHERE c.user_id = %(user_id)s;
+    #     """
+    #     params = {"user_id": user_id}
+    #     return execute_query(query, params).fetchall()
+
     @classmethod
-    def get_enrollcourse_for_inst_learner(cls, user_id):
+    def get_enrollcourse_for_inst_learner(cls, user_id, admin_user_id):
         query = """
             SELECT
                 uce.course_id AS course_id,
-                c.coursename
+                c.coursename,
+                uce.id AS user_course_enrollment_id,
+                uce.created_at AS enrolled_on,
+                u.role AS user_role,
+                uce.id AS data_user_course_enrollment_id
             FROM user_course_enrollment uce
             LEFT JOIN course c ON uce.course_id = c.id
-            WHERE uce.user_id = %(user_id)s
+            LEFT JOIN users u ON uce.user_id = u.id
+            WHERE 
+                (u.role = 'instructor' OR u.role = 'learner') AND uce.user_id = %(user_id)s
 
             UNION
 
             SELECT
-                c.id AS course_id,
-                c.coursename
-            FROM course c
-            WHERE c.user_id = %(user_id)s;
+                uce.course_id AS course_id,
+                c.coursename,
+                uce.id AS user_course_enrollment_id,
+                uce.created_at AS enrolled_on,
+                u.role AS user_role,
+                uce.id AS data_user_course_enrollment_id
+            FROM user_course_enrollment uce
+            LEFT JOIN course c ON uce.course_id = c.id
+            LEFT JOIN users u ON uce.user_id = u.id
+            WHERE
+                u.role = 'admin' AND uce.user_id = %(admin_user_id)s;
         """
-        params = {"user_id": user_id}
+        params = {"user_id": user_id, "admin_user_id": admin_user_id}
         return execute_query(query, params).fetchall()
-
-
+    
 ############################# Courses Lists for for Admin,Instructor & Learner #############################################
 
     @classmethod

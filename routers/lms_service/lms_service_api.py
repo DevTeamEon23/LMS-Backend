@@ -2049,11 +2049,28 @@ def unenroll_course_user(payload: UnenrolledUsers_Course):
 
 ################################## Fecth to enroll course to Instructor and Learner ####################################################
 
+# @service.get("/fetch_enrolled_courses_for_inst_learn")
+# def fetch_enroll_course_for_inst_learner(user_id: int):
+#     try:
+#         # Fetch all enrolled users' data of course here
+#         courses = fetch_course_to_enroll_to_inst_learner(user_id)
+
+#         return {
+#             "status": "success",
+#             "data": courses
+#         }
+#     except Exception as exc:
+#         logger.error(traceback.format_exc())
+#         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+#             "status": "failure",
+#             "message": "Failed to fetch enrolled courses' data"
+#         }) 
+    
 @service.get("/fetch_enrolled_courses_for_inst_learn")
-def fetch_enroll_course_for_inst_learner(user_id: int):
+def fetch_enroll_course_for_inst_learner(user_id: int, admin_user_id: int):
     try:
         # Fetch all enrolled users' data of course here
-        courses = fetch_course_to_enroll_to_inst_learner(user_id)
+        courses = fetch_course_to_enroll_to_inst_learner(user_id, admin_user_id)
 
         return {
             "status": "success",
@@ -2064,7 +2081,7 @@ def fetch_enroll_course_for_inst_learner(user_id: int):
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
             "status": "failure",
             "message": "Failed to fetch enrolled courses' data"
-        }) 
+        })
     
 #############################################################################################################################
 

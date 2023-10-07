@@ -2709,10 +2709,31 @@ def unenroll_courses_from_userby_id(id):
         })
 ################################################################################################################
 
-def fetch_course_to_enroll_to_inst_learner(user_id):
+# def fetch_course_to_enroll_to_inst_learner(user_id):
+#     try:
+#         # Query user IDs from the database for the specified course
+#         course_ids = LmsHandler.get_enrollcourse_for_inst_learner(user_id)
+
+#         if not course_ids:
+#             # Handle the case when no user is found for the specified course
+#             return None
+
+#         return {
+#             "course_ids": course_ids,
+#             # Include other course attributes as needed
+#         }
+#     except Exception as exc:
+#         logger = logging.getLogger(__name__)
+#         logger.error(traceback.format_exc())
+#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#             "status": "failure",
+#             "message": "Failed to fetch enrolled courses data of user"
+#         })
+    
+def fetch_course_to_enroll_to_inst_learner(user_id, admin_user_id):
     try:
         # Query user IDs from the database for the specified course
-        course_ids = LmsHandler.get_enrollcourse_for_inst_learner(user_id)
+        course_ids = LmsHandler.get_enrollcourse_for_inst_learner(user_id, admin_user_id)
 
         if not course_ids:
             # Handle the case when no user is found for the specified course
@@ -2729,8 +2750,6 @@ def fetch_course_to_enroll_to_inst_learner(user_id):
             "status": "failure",
             "message": "Failed to fetch enrolled courses data of user"
         })
-    
-
 ################################################################################################################
 
 def fetch_enrolled_courses_of_user(user_id):
