@@ -187,10 +187,10 @@ def fetch_all_users_data():
         })
     
 # Fetch the Maximum EID NO.(Last Eid for add users automation)
-def fetch_all_eids_data():
+def fetch_last_eid_data():
     try:
         # Query all users from the database
-        eid = LmsHandler.get_eid()
+        eid = LmsHandler.get_last_eid()
 
         if not eid:
             # Handle the case when no user is found for the specified course

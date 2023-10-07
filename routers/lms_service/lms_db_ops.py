@@ -115,7 +115,7 @@ class LmsHandler:
     
 # Fetch the Maximum EID NO.(Last Eid for add users automation)
     @classmethod
-    def get_eid(cls):
+    def get_last_eid(cls):
         query = """ SELECT MAX(CAST(eid AS UNSIGNED)) + 1 AS next_eid FROM users; """
         return execute_query(query).fetchall()
     
