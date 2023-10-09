@@ -1094,28 +1094,34 @@ class LmsHandler:
                 c.coursename,
                 uce.id AS user_course_enrollment_id,
                 uce.created_at AS enrolled_on,
-                u.role AS user_role,
+                CASE
+                    WHEN u.role = 'admin' THEN 'Admin'
+                    ELSE u.role
+                END AS user_role,
                 uce.id AS data_user_course_enrollment_id
             FROM user_course_enrollment uce
             LEFT JOIN course c ON uce.course_id = c.id
             LEFT JOIN users u ON uce.user_id = u.id
             WHERE 
-                (u.role = 'instructor' OR u.role = 'learner') AND uce.user_id = %(user_id)s
-
+                (
+                    (u.role = 'instructor' OR u.role = 'learner')
+                    AND uce.user_id = %(user_id)s
+                )
+                OR
+                (
+                    u.role = 'admin'
+                    AND uce.user_id = %(admin_user_id)s
+                )
             UNION
-
             SELECT
-                uce.course_id AS course_id,
+                c.id AS course_id,
                 c.coursename,
-                uce.id AS user_course_enrollment_id,
-                uce.created_at AS enrolled_on,
-                u.role AS user_role,
-                uce.id AS data_user_course_enrollment_id
-            FROM user_course_enrollment uce
-            LEFT JOIN course c ON uce.course_id = c.id
-            LEFT JOIN users u ON uce.user_id = u.id
-            WHERE
-                u.role = 'admin' AND uce.user_id = %(admin_user_id)s;
+                NULL AS user_course_enrollment_id,
+                NULL AS enrolled_on,
+                'Admin' AS user_role, -- Specify 'Admin' for admin-enrolled courses
+                NULL AS data_user_course_enrollment_id
+            FROM course c
+            WHERE c.user_id = %(admin_user_id)s;
         """
         params = {"user_id": user_id, "admin_user_id": admin_user_id}
         return execute_query(query, params).fetchall()
