@@ -1065,27 +1065,6 @@ class LmsHandler:
 
 ######################################## Users TAB Courses Page(Admin,Instructor) #################################################
 
-    # @classmethod
-    # def get_enrollcourse_for_inst_learner(cls, user_id):
-    #     query = """
-    #         SELECT
-    #             uce.course_id AS course_id,
-    #             c.coursename
-    #         FROM user_course_enrollment uce
-    #         LEFT JOIN course c ON uce.course_id = c.id
-    #         WHERE uce.user_id = %(user_id)s
-
-    #         UNION
-
-    #         SELECT
-    #             c.id AS course_id,
-    #             c.coursename
-    #         FROM course c
-    #         WHERE c.user_id = %(user_id)s;
-    #     """
-    #     params = {"user_id": user_id}
-    #     return execute_query(query, params).fetchall()
-
     @classmethod
     def get_enrollcourse_for_inst_learner(cls, user_id, admin_user_id):
         query = """
@@ -1162,6 +1141,48 @@ class LmsHandler:
     def unenroll_courses_from_enrolled_user(cls, data_user_course_enrollment_id):
         query = f""" DELETE FROM user_course_enrollment WHERE id = {data_user_course_enrollment_id}; """
         return execute_query(query)
+    
+######################################## Users TAB Groups Page(Admin,Instructor) #################################################
+
+    @classmethod
+    def get_enrollgroup_for_inst_learner(cls, user_id, admin_user_id):
+        query = """
+            SELECT
+                uge.group_id AS group_id,
+                lg.groupname,
+                uge.id AS user_group_enrollment_id,
+                uge.created_at AS enrolled_on,
+                CASE
+                    WHEN u.role = 'admin' THEN 'Admin'
+                    ELSE u.role
+                END AS user_role,
+                uge.id AS data_user_group_enrollment_id
+            FROM user_group_enrollment uge
+            LEFT JOIN lmsgroup lg ON uge.group_id = lg.id
+            LEFT JOIN users u ON uge.user_id = u.id
+            WHERE 
+                (
+                    (u.role = 'instructor' OR u.role = 'learner')
+                    AND uge.user_id = %(user_id)s
+                )
+                OR
+                (
+                    u.role = 'admin'
+                    AND uge.user_id = %(admin_user_id)s
+                )
+            UNION
+            SELECT
+                lg.id AS group_id,
+                lg.groupname,
+                NULL AS user_group_enrollment_id,
+                NULL AS enrolled_on,
+                'Admin' AS user_role, -- Specify 'Admin' for admin-enrolled groups
+                NULL AS data_user_group_enrollment_id
+            FROM lmsgroup lg
+            WHERE lg.user_id = %(admin_user_id)s;
+        """
+        params = {"user_id": user_id, "admin_user_id": admin_user_id}
+        return execute_query(query, params).fetchall()
     
 ############################# Groups Lists for Admin,Instructor & Learner #############################################
 
@@ -1248,7 +1269,6 @@ class LmsHandler:
         query = f""" DELETE FROM user_group_enrollment WHERE id = '{id}'; """
         return execute_query(query)
     
-
 ######################################## Course TAB User Page #################################################
 
     @classmethod
