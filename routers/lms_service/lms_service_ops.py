@@ -356,7 +356,7 @@ def fetch_users_by_onlyid(id):
 
         # file_url = user.file.lstrip("b'").rstrip("'")
         if user.file is not None:
-            cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace("'", '')
+            cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
         else:
             # Handle the case where user.file is None
             cdn_file_link = "File not available"
@@ -3289,6 +3289,28 @@ def remove_user_from_groupby_id(id):
             "message": "Failed to Unenrolled user data from group"
         })
     
+################################################################################################################
+    
+def fetch_enrollusers_of_group_to_inst_learner(group_id, admin_user_id):
+    try:
+        # Query course IDs from the database for the specified group
+        group_ids = LmsHandler.get_enrollusers_of_group_for_inst_learner(group_id, admin_user_id)
+
+        if not group_ids:
+            # Handle the case when no course is found for the specified course
+            return None
+
+        return {
+            "group_ids": group_ids,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled courses data of course"
+        })
 ###################################### Enroll Course to GROUP (GROUPS -> Course Page) ######################################################
 
 def check_existing_userid(id):
@@ -3369,7 +3391,27 @@ def remove_course_from_groupby_id(id):
             "message": "Failed to Unenrolled course data from group"
         })
 
+################################################################################################################
+    
+def fetch_course_enroll_to_group_of_inst_learner(group_id):
+    try:
+        # Query course IDs from the database for the specified group
+        course_ids = LmsHandler.get_enrollcourse_to_group_for_inst_learner(group_id)
 
+        if not course_ids:
+            # Handle the case when no groups is found for the specified course
+            return None
+
+        return {
+            "course_ids": course_ids,
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled groups data of courses of inst & learner"
+        })
 ######################################## Mass Action to enroll course_id to all groups ##################################################
 # def enroll_coursegroup_massaction(id=int, generate_tokens: bool = False, auth_token="", inputs={}, skip_new_crgroupenroll=False):
 #     try:

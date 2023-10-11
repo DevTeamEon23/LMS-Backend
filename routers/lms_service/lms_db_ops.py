@@ -1641,6 +1641,48 @@ class LmsHandler:
         query = f""" DELETE FROM user_group_enrollment WHERE id = '{id}'; """
         return execute_query(query)
     
+######################################## Groups TAB Users Page(Admin,Instructor) #################################################
+
+    @classmethod
+    def get_enrollusers_of_group_for_inst_learner(cls, group_id, admin_user_id):
+        query = """
+            WITH AdminDept AS (
+                SELECT dept
+                FROM users
+                WHERE id = %(admin_user_id)s
+            ),
+
+            FilteredUsers AS (
+                SELECT
+                    u.id AS user_id,
+                    u.full_name,
+                    u.role,
+                    NULL AS enrolled_on
+                FROM users u
+                JOIN AdminDept ad ON u.dept = ad.dept
+                WHERE u.role IN ('Instructor', 'Learner')
+                AND u.id != %(admin_user_id)s -- Exclude the admin_user_id
+            ),
+
+            EnrolledUsers AS (
+                SELECT
+                    u.id AS user_id,
+                    u.full_name,
+                    u.role,
+                    uge.created_at AS enrolled_on
+                FROM user_group_enrollment uge
+                JOIN users u ON uge.user_id = u.id
+                JOIN AdminDept ad ON u.dept = ad.dept
+                WHERE uge.group_id = %(group_id)s
+            )
+
+            SELECT * FROM FilteredUsers
+            UNION ALL
+            SELECT * FROM EnrolledUsers;
+        """
+        params = {"group_id": group_id,"admin_user_id": admin_user_id}
+        return execute_query(query, params).fetchall()
+    
 ######################################## Group TAB Course Page #################################################
 
     @classmethod
@@ -1755,6 +1797,39 @@ class LmsHandler:
         ) AS combined_data; """
         return execute_query(query).fetchall()
 
+######################################## Courses TAB Groups Page(Admin,Instructor) #################################################
+
+    @classmethod
+    def get_enrollcourse_to_group_for_inst_learner(cls, group_id):
+        query = """
+            SELECT
+                cge.group_id,
+                cg.id AS course_id,
+                cg.coursename,
+                cg.user_id,
+                u.role AS user_role,
+                cge.id AS course_group_enrollment_id
+            FROM course_group_enrollment cge
+            JOIN course cg ON cge.course_id = cg.id
+            JOIN users u ON cg.user_id = u.id
+            WHERE cge.group_id = %(group_id)s
+            UNION ALL
+            SELECT
+                cge.group_id,
+                cg.id AS course_id,
+                cg.coursename,
+                NULL AS user_id,
+                u.role AS user_role,
+                cge.id AS course_group_enrollment_id
+            FROM course_group_enrollment cge
+            JOIN course cg ON cge.course_id = cg.id
+            LEFT JOIN users u ON cg.user_id = u.id
+            WHERE cge.group_id = %(group_id)s
+            ORDER BY course_id ASC;
+        """
+        params = {"group_id": group_id}
+        return execute_query(query, params).fetchall()
+    
 ####################################################################################################################
 
 #Files / Documents
