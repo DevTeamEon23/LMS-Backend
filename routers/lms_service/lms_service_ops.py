@@ -356,7 +356,7 @@ def fetch_users_by_onlyid(id):
 
         # file_url = user.file.lstrip("b'").rstrip("'")
         if user.file is not None:
-            cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
+            cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace("'", '')
         else:
             # Handle the case where user.file is None
             cdn_file_link = "File not available"
