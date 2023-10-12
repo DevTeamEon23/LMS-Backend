@@ -1286,7 +1286,8 @@ class LmsHandler:
                     u.id AS user_id,
                     u.full_name,
                     u.role,
-                    NULL AS enrolled_on -- Add a placeholder for enrolled_on
+                    NULL AS enrolled_on, -- Add a placeholder for enrolled_on
+                    NULL AS user_course_enrollment_id
                 FROM users u
                 JOIN AdminDept ad ON u.dept = ad.dept
                 WHERE u.role IN ('Instructor', 'Learner')
@@ -1298,7 +1299,8 @@ class LmsHandler:
                     u.id AS user_id,
                     u.full_name,
                     u.role,
-                    uce.created_at AS enrolled_on
+                    uce.created_at AS enrolled_on,
+                    uce.id AS user_course_enrollment_id -- Include user_course_enrollment_id
                 FROM user_course_enrollment uce
                 JOIN users u ON uce.user_id = u.id
                 JOIN AdminDept ad ON u.dept = ad.dept
@@ -1657,7 +1659,8 @@ class LmsHandler:
                     u.id AS user_id,
                     u.full_name,
                     u.role,
-                    NULL AS enrolled_on
+                    NULL AS enrolled_on,
+                    NULL AS user_group_enrollment_id
                 FROM users u
                 JOIN AdminDept ad ON u.dept = ad.dept
                 WHERE u.role IN ('Instructor', 'Learner')
@@ -1669,7 +1672,8 @@ class LmsHandler:
                     u.id AS user_id,
                     u.full_name,
                     u.role,
-                    uge.created_at AS enrolled_on
+                    uge.created_at AS enrolled_on,
+                    uge.id AS user_group_enrollment_id
                 FROM user_group_enrollment uge
                 JOIN users u ON uge.user_id = u.id
                 JOIN AdminDept ad ON u.dept = ad.dept
