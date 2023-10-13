@@ -398,8 +398,7 @@ n_table_user_files = 'documents'
 user_files_table = Table(
     n_table_user_files, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('user_id', Integer, nullable=False),
-    ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_user_files_user_id'),  # Foreign key with a specific name
+    Column('user_id', Integer, nullable=False),  # Foreign key with a specific name
     Column('filename', VARCHAR(150), nullable=False),
     Column('files', LONGBLOB, nullable=False),
     Column('files_allowed', VARCHAR(150), nullable=False),
@@ -410,7 +409,6 @@ user_files_table = Table(
     Column('deactive', BOOLEAN, default=False, nullable=True),
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    UniqueConstraint('user_id', name='uq_user_files_user_id'),
     Index(f'idx_{n_table_user_files}_token', 'token'),
 )
 
