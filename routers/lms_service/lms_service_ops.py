@@ -362,7 +362,6 @@ def fetch_users_by_onlyid(id):
             cdn_file_link = "File not available"
         # cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
         # full_image_url = backendBaseUrl + '/cdn/' + str(user.id) + '.jpg'
-        # cdn_link = upload_blob_to_cdn(user.file, full_image_url)
 
         # Transform the user object into a dictionary
         user_data = {
@@ -394,22 +393,7 @@ def fetch_users_by_onlyid(id):
             "message": "Failed to fetch user data"
         })
 
-def upload_blob_to_cdn(blob_data, cdn_url):
-    try:
-        # Create a PUT request to upload the blob_data to the CDN URL
-        response = requests.put(cdn_url, data=blob_data)
 
-        # Check the HTTP response status code
-        if response.status_code == 200:
-            # Successful upload, return the CDN URL
-            return cdn_url
-        else:
-            logger.error(f"CDN upload failed with status code: {response.status_code}")
-            return None
-
-    except Exception as exc:
-        logger.error(traceback.format_exc())
-        return None
     
 def delete_user_by_id(id):
     try:
@@ -1317,13 +1301,18 @@ def fetch_course_content_by_onlyid(course_id):
         if not course_content:
             # Handle the case when no course_content is found for the specified id
             return None
+        if course_content.video_file is not None:
+            cdn_file_link = backendBaseUrl + '/' + course_content.video_file.decode('utf-8').replace("'", '')
+        else:
+            # Handle the case where user.file is None
+            cdn_file_link = "File not available"
 
         # Transform the course_content object into a dictionary
         course_content_data = {
                 "id": course_content.id,
                 "course_id": course_content.course_id,
                 "video_unitname": course_content.video_unitname,
-                "video_file": course_content.video_file,
+                "video_file": cdn_file_link,
                 "active": course_content.active,
                 "deactive": course_content.deactive,
                 "created_at": course_content.created_at,
