@@ -400,6 +400,7 @@ user_files_table = Table(
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('user_id', Integer, nullable=False),
     ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_user_files_user_id'),  # Foreign key with a specific name
+    Column('filename', VARCHAR(150), nullable=False),
     Column('files', LONGBLOB, nullable=False),
     Column('files_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
