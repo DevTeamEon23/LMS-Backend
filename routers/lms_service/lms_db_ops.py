@@ -178,8 +178,8 @@ class LmsHandler:
 # Add Courses 
     @classmethod
     def add_courses(cls, params):
-        query = f"""   INSERT into {table_course}(user_id, coursename, file, description, coursecode,price,courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, course_allowed, auth_token, request_token, token, isActive, isHide) VALUES 
-                        (%(user_id)s, %(coursename)s, %(file)s, %(description)s, %(coursecode)s, %(price)s, %(courselink)s, %(coursevideo)s,%(capacity)s, %(startdate)s, %(enddate)s, %(timelimit)s, %(certificate)s, %(level)s, %(category)s, %(course_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(isActive)s, %(isHide)s)
+        query = f"""   INSERT into {table_course}(id, user_id, coursename, file, description, coursecode,price,courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, course_allowed, auth_token, request_token, token, isActive, isHide) VALUES 
+                        (%(id)s, %(user_id)s, %(coursename)s, %(file)s, %(description)s, %(coursecode)s, %(price)s, %(courselink)s, %(coursevideo)s,%(capacity)s, %(startdate)s, %(enddate)s, %(timelimit)s, %(certificate)s, %(level)s, %(category)s, %(course_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(isActive)s, %(isHide)s)
                         ; 
                     """
         return execute_query(query, params=params)
@@ -188,6 +188,12 @@ class LmsHandler:
     @classmethod
     def get_all_courses(cls):
         query = """ SELECT * FROM course; """
+        return execute_query(query).fetchall()
+    
+# Fetch the Maximum EID NO.(Last Eid for add users automation)
+    @classmethod
+    def get_last_id(cls):
+        query = """ SELECT MAX(CAST(id AS UNSIGNED)) + 1 AS next_id FROM course; """
         return execute_query(query).fetchall()
     
 #Fetch Only Active Courses for Admin Courses page

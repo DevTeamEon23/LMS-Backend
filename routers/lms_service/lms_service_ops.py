@@ -869,6 +869,26 @@ def update_user(id, update_data):
          
 ##################################################   COURSES  ###########################################################################
 
+# Fetch the Maximum EID NO.(Last Eid for add users automation)
+def fetch_last_id_data():
+    try:
+        # Query all users from the database
+        id = LmsHandler.get_last_id()
+
+        if not id:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "id_data": id,
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch id data"
+        })
+    
 #Function for Add Course to stop the Course name unique voilation
 def check_existing_course(coursename):
 
@@ -914,6 +934,7 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
 
         elif not is_existing and not is_active and skip_new_course == False:
 
+            id = inputs.get('id')
             user_id = inputs.get('user_id')
             coursename = inputs.get('coursename', None)
             coursename = coursename.split('@')[0] if coursename is None or coursename == '' else coursename
@@ -944,7 +965,7 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
             request_token = ''
             
             # Add New User to the list of users
-            data = {'user_id': user_id, 'coursename': coursename,'file': file, 'description': description, 'coursecode': coursecode, 'price':price, 'courselink': courselink, 'coursevideo': coursevideo, 'capacity': capacity, 'startdate': startdate, 'enddate': enddate, 'timelimit': timelimit,
+            data = {'id': id, 'user_id': user_id, 'coursename': coursename,'file': file, 'description': description, 'coursecode': coursecode, 'price':price, 'courselink': courselink, 'coursevideo': coursevideo, 'capacity': capacity, 'startdate': startdate, 'enddate': enddate, 'timelimit': timelimit,
                     'certificate': certificate, 'level': level, 'category': category, 'isActive': isActive, 'isHide': isHide,
                     'course_allowed': inputs.get('course_allowed', ''), 'auth_token': auth_token,
                     'request_token': request_token, 'token': token}
@@ -964,7 +985,7 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
         message = exc.args[0]
         logger.error(message)
 
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course added successfully'))
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course added successfully', course_id= id))
             
 def clone_course(id):
     try:
