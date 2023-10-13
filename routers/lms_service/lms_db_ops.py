@@ -7,8 +7,8 @@ from ..db_ops import execute_query
 class LmsHandler:
 # Users CRUD
     def get_user_by_token(token):
-        query = f"""SELECT * FROM {n_table_user} where token=%(token)s and active=%(active)s and token is not NULL and token != '';"""
-        resp = execute_query(query=query, params={'token': token, 'active': True})
+        query = f"""SELECT * FROM {n_table_user} where token=%(token)s and token is not NULL and token != '';"""
+        resp = execute_query(query=query, params={'token': token})
         data = resp.fetchone()
         if data is None:
             raise HTTPException(
@@ -18,8 +18,8 @@ class LmsHandler:
 
 #Get User data by id for update fields Mapping
     def get_user_by_id(id):
-        query = f"""SELECT * FROM users WHERE id = %(id)s AND active = %(active)s AND id IS NOT NULL AND id != '';"""
-        resp = execute_query(query=query, params={'id': id, 'active': True})
+        query = f"""SELECT * FROM users WHERE id = %(id)s AND id IS NOT NULL AND id != '';"""
+        resp = execute_query(query=query, params={'id': id})
         data = resp.fetchone()
         if data is None:
             raise HTTPException(
