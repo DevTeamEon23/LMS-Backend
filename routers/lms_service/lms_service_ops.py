@@ -102,20 +102,6 @@ def create_calender_token(cal_eventname):
     token = md5(base)
     return token
 
-# def create_courseenroll_token(user_id):
-#     base = random_string(8) + str(user_id) + random_string(8)
-#     token = MD5(base)
-#     return token
-
-# def create_groupenroll_token(user_id):
-#     base = random_string(8) + str(user_id) + random_string(8)
-#     token = MD5(base)
-#     return token
-
-# def create_course_groupenroll_token(course_id):
-#     base = random_string(8) + str(course_id) + random_string(8)
-#     token = MD5(base)
-#     return token
 #------------------------------------------------------
 ################### Users Tab Course Page ###################
 def create_courses_touserenroll_token(user_id):
@@ -224,47 +210,6 @@ def fetch_all_dept_data():
             "status": "failure",
             "message": "Failed to fetch dept data"
         })
-    
-# def fetch_all_users_data():
-#     try:
-#         # Query all users from the database
-#         users = LmsHandler.get_all_users()
-
-#         # Transform the user objects into a list of dictionaries
-#         users_data = []
-#         for user in users:
-
-#             user_data = {
-#                 "id": user.id,
-#                 "eid": user.eid,
-#                 "sid": user.sid,
-#                 "full_name": user.full_name,
-#                 "email": user.email,
-#                 "dept": user.dept,
-#                 "adhr": user.adhr,
-#                 "username": user.username,
-#                 "bio": user.bio,
-#                 "file": user.file,
-#                 "role": user.role,
-#                 "timezone": user.timezone,
-#                 "langtype": user.langtype,
-#                 "active": True if user.active == 1 else False,
-#                 "deactive": True if user.deactive == 1 else False,
-#                 "exclude_from_email": True if user.exclude_from_email == 1 else False,
-#                 "created_at": user.created_at,
-#                 "updated_at": user.updated_at,
-#                 # Include other user attributes as needed
-#             }
-
-#             users_data.append(user_data)
-
-#         return users_data
-#     except Exception as exc:
-#         logger.error(traceback.format_exc())
-#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-#             "status": "failure",
-#             "message": "Failed to fetch users data"
-#         })
 
 # Fetch Instructor & Learners only for Instructor USERS LIST"
 def fetch_all_inst_learn_data():
@@ -286,7 +231,6 @@ def fetch_all_inst_learn_data():
             "message": "Failed to fetch Instructor & Learners data"
         })
     
-
 def get_image(file: str):
     imgpath = "C:/Users/Admin/Desktop/LIVE/LMS-Backend/media/"
     image_path = os.path.join(imgpath, file)
@@ -294,56 +238,6 @@ def get_image(file: str):
         return FileResponse(image_path, media_type="image/jpeg")
     else:
         return {"error": "Image not found"}
-    
-# def fetch_users_by_onlyid(id):
-#     try:
-#         # Query user from the database for the specified id
-#         user = LmsHandler.get_user_by_id(id)
-
-#         if not user:
-#             # Handle the case when no user is found for the specified id
-#             return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
-#                 "status": "failure",
-#                 "message": "User not found"
-#             })
-
-#         # Assuming user.file contains the binary image data as a blob
-#         # image_blob = user.file  # Replace with your actual blob data
-#         cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
-        
-#         # if image_blob:
-#         #     # Encode the image blob as a base64 string
-#         #     image_base64 = base64.b64encode(image_blob).decode('utf-8')
-
-#             # Prepare the user data JSON
-#         if user_data = {
-#             "id": user.id,
-#             "eid": user.eid,
-#             "sid": user.sid,
-#             "full_name": user.full_name,
-#             "email": user.email,
-#             "dept": user.dept,
-#             "adhr": user.adhr,
-#             "username": user.username,
-#             "bio": user.bio,
-#             "file": user.file,  # Include the base64-encoded image here
-#             "cdn_file_link": cdn_file_link,
-#             "role": user.role,
-#             "timezone": user.timezone,
-#             "langtype": user.langtype,
-#             "active": True if user.active == 1 else False,
-#             "deactive": True if user.deactive == 1 else False,
-#             "exclude_from_email": True if user.exclude_from_email == 1 else False,
-#             # Include other user attributes as needed
-#         }
-
-#         return user_data
-#     except Exception as exc:
-#         logger.error(traceback.format_exc())
-#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-#             "status": "failure",
-#             "message": "Failed to fetch user data"
-#         })
     
 def fetch_users_by_onlyid(id):
     try:
@@ -616,67 +510,6 @@ def user_exists(email):
     except Exception as e:
         return False  # Return False if no rows were found or an error occurred
 
-# for excel import 
-# def add_new_excel(email: str, generate_tokens: bool = False, auth_token="", inputs={}, password=None, skip_new_user=False):
-#     try:
-#         # Check Email Address
-#         v_email = user_exists(email)
-
-#         # If user Already Exists
-#         if v_email:
-#             # Check password
-#             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-#                 "message": "User Already Exists"
-#             })
-
-#         eid = inputs.get('eid')
-#         sid = md5(email)
-#         full_name = inputs.get('full_name', None)
-#         full_name = v_email.split('@')[0] if full_name is None or full_name == '' else full_name
-#         email = inputs.get('username')
-#         dept = inputs.get('email')
-#         adhr = inputs.get('dept')
-#         username = inputs.get('adhr')
-#         bio = inputs.get('bio')
-#         role = inputs.get('role')
-#         timezone = inputs.get('timezone')
-#         langtype = inputs.get('langtype')
-#         active = inputs.get('active')
-#         deactive = inputs.get('deactive')
-#         exclude_from_email = inputs.get('exclude_from_email')
-        
-#         # Password for manual signing
-#         if password is None:
-#             password = random_password()
-#         if password is None:
-#             hash_password = ""
-#         else:
-#             hash_password = get_password_hash(password)
-
-#         # Token Generation
-#         token = create_token(email)
-
-#         request_token = ''
-        
-#         # Add New User to the list of users
-#         data = {'eid': eid, 'sid': sid, 'full_name': full_name, 'email': email, 'dept': dept, 'adhr': adhr,
-#                 'username': username, 'password': hash_password, 'bio': bio, 'role': role, 'timezone': timezone,
-#                 'langtype': langtype, "active": active, "deactive": deactive, "exclude_from_email": exclude_from_email,
-#                 'users_allowed': inputs.get('users_allowed', ''), 'auth_token': auth_token,
-#                 'request_token': request_token, 'token': token}
-
-#         resp = LmsHandler.add_users_excel(data)
-#         # If token not required,
-#         if not generate_tokens and len(auth_token) == 0:
-#             token = None
-
-#     except ValueError as exc:
-#         logger.error(traceback.format_exc())
-#         message = exc.args[0]
-#         logger.error(message)
-
-#     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='User added successfully'))
-
 def add_new_excel(email: str, generate_tokens: bool = False, auth_token="", inputs={}, password=None, skip_new_user=False):
     try:
         # Check Email Address
@@ -818,38 +651,17 @@ def update_user(id, update_data):
     if 'file' in update_data:
         file = update_data['file']
         
-        # Save the new file to the server
         if file:
             with open(f"media/{file.filename}", "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
 
-            # Update the 'file' field in the update_params dictionary
+            # This will Update the 'file' field in the update_params dictionary
             update_params['file'] = f"media/{file.filename}"
-    # Continue this pattern for other fields you want to update
 
-    # Call the method to update user fields
+    # Calling the method to update user fields
     LmsHandler.update_user_fields(id, update_params)
 
     return "User fields updated successfully"
-
-# def change_user_details(id, eid, sid, full_name, dept, adhr, username, email, password, bio, cdn_file_link, role, timezone, langtype, active, deactive, exclude_from_email):
-#     is_existing, existing_user = check_existing_user(email)
-#     if is_existing:
-#         # Update user password
-#         if password is None:
-#             password = random_password()
-#         password_hash = get_password_hash(password)
-
-#         sid = md5(email)
-
-#         # Update the CDN URL for the user's image
-#         existing_user.cdn_file_link = cdn_file_link
-
-#         LmsHandler.update_user_to_db(id, eid, sid, full_name, dept, adhr, username, email, password_hash, bio, cdn_file_link, role, timezone, langtype, active, deactive, exclude_from_email)
-#         # AWSClient.send_signup(email, password, subject='Password Change')
-#         return True
-#     else:
-#         raise ValueError("User does not exist")
          
 ##################################################   COURSES  ###########################################################################
 
@@ -1166,7 +978,6 @@ def fetch_course_by_onlyid(id):
                 "isHide": course.isHide,
                 "created_at": course.created_at,
                 "updated_at": course.updated_at,
-            # Include other course attributes as needed
         }
 
         return course_data
@@ -1259,37 +1070,6 @@ def add_course_content(video_unitname: str,generate_tokens: bool = False, auth_t
         logger.error(message)
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course Video added successfully'))
-
-
-# def fetch_all_course_content_data():
-#     try:
-#         # Query all course_content from the database
-#         course_contents = LmsHandler.get_all_course_contents()
-
-#         # Transform the course_content objects into a list of dictionaries
-#         course_contents_data = []
-#         for course_content in course_contents:
-
-#             course_content_data = {
-#                 "id": course_content.id,
-#                 "course_id": course_content.course_id,
-#                 "video_unitname": course_content.video_unitname,
-#                 "video_file": course_content.video_file,
-#                 "active": course_content.active,
-#                 "deactive": course_content.deactive,
-#                 "created_at": course_content.created_at,
-#                 "updated_at": course_content.updated_at,
-#                 # Include other course_content attributes as needed
-#             }
-#             course_contents_data.append(course_content_data)
-
-#         return course_contents_data
-#     except Exception as exc:
-#         logger.error(traceback.format_exc())
-#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-#             "status": "failure",
-#             "message": "Failed to fetch course_contents data"
-#         })
     
 #Get Virtual Training data by id for update fields Mapping
 def fetch_course_content_by_onlyid(course_id):
@@ -1337,6 +1117,37 @@ def change_course_content_details(id, course_id, video_unitname, video_file, act
     else:
         raise ValueError("Course Video does not exists")
     
+def update_course_content(course_id, update_data):
+    # This will get the course_content's current data from the course_content table
+    course_content_data = LmsHandler.get_course_content_by_course_id(course_id)
+
+    if not course_content_data:
+        raise ValueError("Course Content not found")
+
+    # Extract the fields to update from the incoming update_data
+    update_params = {}
+
+    if 'video_unitname' in update_data:
+        update_params['video_unitname'] = update_data['video_unitname']
+    if 'active' in update_data:
+        update_params['active'] = update_data['active']
+    if 'deactive' in update_data:
+        update_params['deactive'] = update_data['deactive']
+    # Check if 'file' is in update_data
+    if 'video_file' in update_data:
+        file = update_data['video_file']
+        
+        if file:
+            with open(f"coursevideo/{file.filename}", "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+
+            # This will Update the 'file' field in the update_params dictionary
+            update_params['video_file'] = f"coursevideo/{file.filename}"
+
+    # Calling the method to update course_content fields
+    LmsHandler.update_course_content_fields(course_id, update_params)
+
+    return "Course Content fields updated successfully"
 
 def delete_course_content_by_id(id):
     try:
@@ -1349,8 +1160,6 @@ def delete_course_content_by_id(id):
             "status": "failure",
             "message": "Failed to delete course_content data"
         })
-
-
 
 ###################################################   GROUPS   #######################################################################
 
@@ -2626,7 +2435,6 @@ def fetch_courses_data_export():
                 "isHide": course.isHide,
                 "created_at": course.created_at,
                 "updated_at": course.updated_at,
-                # Include other course attributes as needed
             }
             courses_data.append(course_data)
 
@@ -2696,7 +2504,6 @@ def fetch_enrolled_unenroll_courses_of_user(user_id):
 
         return {
             "course_ids": course_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -2730,7 +2537,6 @@ def fetch_course_to_enroll_to_inst_learner(user_id, admin_user_id):
 
         return {
             "course_ids": course_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -2753,7 +2559,6 @@ def fetch_enrolled_courses_of_user(user_id):
 
         return {
             "course_ids": course_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -2808,9 +2613,6 @@ def fetch_added_groups_of_user(user_id):
         if not group_ids:
             # Handle the case when no user is found for the specified group
             return None
-
-        # Now user_ids is a list of user IDs enrolled in the group
-        # You can return this list or process it further as needed
 
         return {
             "group_ids": group_ids,
@@ -2894,7 +2696,6 @@ def fetch_added_unadded_groups_of_user(user_id):
 
         return {
             "user_ids": user_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -2974,7 +2775,6 @@ def fetch_enrolled_unenroll_users_of_course(course_id):
 
         return {
             "user_ids": user_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -2993,12 +2793,11 @@ def fetch_enrolled_unenroll_instructors_of_course(course_id,user_id):
             # Handle the case when no user is found for the specified course
             return None
 
-        # Now user_ids is a list of user IDs enrolled in the course
+        # Now user_ids is a list of Admin & Instructor, Learner IDs enrolled in the course
         # You can return this list or process it further as needed
 
         return {
             "user_ids": user_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -3022,7 +2821,6 @@ def fetch_enrolled_unenroll_learners_of_course(course_id):
 
         return {
             "user_ids": user_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -3058,7 +2856,6 @@ def fetch_users_enroll_to_inst_learner(course_id, admin_user_id):
 
         return {
             "course_ids": course_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -3126,7 +2923,6 @@ def fetch_enrolled_unenroll_groups_of_course(course_id):
 
         return {
             "groups_ids": groups_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -3228,7 +3024,6 @@ def fetch_added_unadded_users_of_group(group_id):
 
         return {
             "user_ids": user_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -3252,7 +3047,6 @@ def fetch_added_unadded_instructors_of_group(group_id):
 
         return {
             "instructors_ids": instructors_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -3276,7 +3070,6 @@ def fetch_added_unadded_learners_of_group(group_id):
 
         return {
             "learners_ids": learners_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -3312,7 +3105,6 @@ def fetch_enrollusers_of_group_to_inst_learner(group_id, admin_user_id):
 
         return {
             "group_ids": group_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -3379,7 +3171,6 @@ def fetch_added_unadded_courses_of_group(group_id):
 
         return {
             "courses_ids": courses_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -3643,7 +3434,6 @@ def fetch_users_course_enrolled():
 
         return {
             "user_ids": user_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -3678,7 +3468,6 @@ def fetch_infographics_of_user(user_id):
 
         return {
             "user_infographics": user_infographics,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)

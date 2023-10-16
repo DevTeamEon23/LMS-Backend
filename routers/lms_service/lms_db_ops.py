@@ -287,16 +287,6 @@ class LmsHandler:
     
 ###############################################################################################################
 
-    @classmethod
-    def insert_course_content(cls, params):
-        query = """
-            INSERT INTO {n_table_course_content} (
-                course_id, video_unitname, video_file, course_content_allowed, auth_token, request_token, token, active, deactive
-            )
-            VALUES (%(course_id)s, %(video_unitname)s, %(video_file)s, %(course_content_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s);
-        """
-        return execute_query(query, params=params)
-    
 #Course Content CRUD
     def get_course_content_by_token(token):
         query = f"""SELECT * FROM {n_table_course_content} where token=%(token)s and token is not NULL and token != '';"""
@@ -307,9 +297,9 @@ class LmsHandler:
                 status_code=401, detail="Token Expired or Invalid Token")
         else:
             return data
-
-#Get Course Content data by id for update fields Mapping
-    def get_course_content_by_id(course_id):
+        
+#Get Course Content data by course_id for update fields Mapping
+    def get_course_content_by_course_id(course_id):
         query = f"""SELECT * FROM course_content WHERE course_id = %(course_id)s AND course_id IS NOT NULL AND course_id != '';"""
         resp = execute_query(query=query, params={'course_id': course_id})
         data = resp.fetchone()
@@ -318,6 +308,16 @@ class LmsHandler:
                 status_code=401, detail="Token Expired or Invalid Token")
         else:
             return data
+        
+    @classmethod
+    def insert_course_content(cls, params):
+        query = """
+            INSERT INTO {n_table_course_content} (
+                course_id, video_unitname, video_file, course_content_allowed, auth_token, request_token, token, active, deactive
+            )
+            VALUES (%(course_id)s, %(video_unitname)s, %(video_file)s, %(course_content_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s);
+        """
+        return execute_query(query, params=params)
         
 #Add Course Content
     @classmethod
@@ -370,6 +370,26 @@ class LmsHandler:
     }
         return execute_query(query, params=params)
     
+#Update Put call for course content fields and video
+    @classmethod
+    def update_course_content_fields(cls, course_id, update_params):
+        # Check if there are any fields to update
+        if not update_params:
+            raise ValueError("No fields to update")
+
+        # Construct a dynamic SQL query to update specific fields
+        update_query = f"""
+            UPDATE course_content
+            SET {', '.join([f'{field} = %({field})s' for field in update_params.keys()])}
+            WHERE course_id = %(course_id)s;
+        """
+
+        # Add user_id to the update_params
+        update_params['course_id'] = course_id
+
+        # Execute the query using your database library
+        execute_query(update_query, params=update_params)
+
 #Delete Course Content
     @classmethod
     def delete_course_content(cls, id):
@@ -1752,19 +1772,6 @@ class LmsHandler:
 
 
 ##################################################################################################################
-    # @classmethod
-    # def add_course_group_enrollment(cls, params):
-    #     query = f"""  INSERT INTO {courses_groups_enrollment} (course_id, group_id, c_g_enrollment_allowed, auth_token, request_token, token)
-    #                 VALUES (%(course_id)s, %(group_id)s, %(c_g_enrollment_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
-    #                 ON DUPLICATE KEY UPDATE
-    #                 course_id = VALUES(course_id),
-    #                 group_id = VALUES(group_id),
-    #                 c_g_enrollment_allowed = VALUES(c_g_enrollment_allowed),
-    #                 auth_token = VALUES(auth_token),
-    #                 request_token = VALUES(request_token),
-    #                 token = VALUES(token);
-    #                 """
-    #     return execute_query(query, params=params)
 
     @classmethod
     def add_course_group_enrollment(cls, params):
