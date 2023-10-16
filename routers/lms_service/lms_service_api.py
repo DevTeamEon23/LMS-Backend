@@ -542,7 +542,7 @@ async def export_data_to_excel_and_download():
         file_path = os.path.join(EXPORT_FOLDER, file_name)
 
         # Create an XlsxWriter workbook and add sheets
-        workbook = xlsxwriter.Workbook(file_path, {'nan_inf_to_errors': True})  
+        workbook = xlsxwriter.Workbook(file_path, {'nan_inf_to_errors': True, 'file_options': {'default_extension': 'xlsx'}})  
 
         for table, data in table_data.items():
             worksheet = workbook.add_worksheet(table)
@@ -564,12 +564,45 @@ async def export_data_to_excel_and_download():
         return e
     
 
+@service.get("/export_to_csv")
+async def export_data_to_csv():
+    try:
+        # Fetch data for users, courses, and lmsgroup
+        users_data = fetch_users_data()
+        courses_data = fetch_courses_data()
+        groups_data = fetch_groups_data()
+
+        # Define the file name
+        file_name = "exported_data.csv"
+
+        # Create the full file path
+        file_path = os.path.join(EXPORT_FOLDER, file_name)
+
+        # Create a dictionary with dataframes
+        table_data = {
+            "users": users_data,
+            "courses": courses_data,
+            "lmsgroup": groups_data
+        }
+
+        # Export data to CSV
+        for table, data in table_data.items():
+            data.to_csv(file_path, mode="a", header=True, index=False, sep=',', encoding="utf-8")
+
+        return JSONResponse(status_code=200, content={"message": "Data exported successfully.", "download_link": f"{CDN_DOMAIN}/{EXPORT_FOLDER}/{file_name}"})
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to export data: {e}")
+
+
+
+
 @service.get("/download/{file_name}")
 async def download_file(file_name: str):
     # Ensure the requested file exists in the export folder
     file_path = os.path.join(EXPORT_FOLDER, file_name)
     if os.path.exists(file_path):
-        return FileResponse(file_path, filename=file_name)
+        return FileResponse(file_path, filename=file_name, headers={"Content-Disposition": f'attachment; filename={file_name}'})
     else:
         return {"error": "File not found"}
     
