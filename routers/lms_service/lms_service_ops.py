@@ -1076,7 +1076,7 @@ def fetch_course_content_by_onlyid(course_id):
 
     try:
         # Query course_content from the database for the specified id
-        course_content = LmsHandler.get_course_content_by_id(course_id)
+        course_content = LmsHandler.get_course_content_by_course_id(course_id)
 
         if not course_content:
             # Handle the case when no course_content is found for the specified id
@@ -3312,78 +3312,6 @@ def check_existing_files(user_id):
         return False
     else:
         return True
-
-def upload_file_to_db(user_id, file_data, files_allowed, auth_token, request_token, token, active, deactive):
-    query = """
-        INSERT INTO documents (user_id, files, files_allowed, auth_token, request_token, token, active, deactive, created_at, updated_at)
-        VALUES (%(user_id)s, %(files)s, %(files_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s, %(created_at)s, %(updated_at)s);
-    """
-    params = {
-        "user_id": user_id,
-        "files": file_data,  # Binary file data
-        "files_allowed": files_allowed,
-        "auth_token": auth_token,
-        "request_token": request_token,
-        "token": token,
-        "active": active,
-        "deactive": deactive,
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow(),
-    }
-    return execute_query(query, params=params)
-
-# Add Files and select active or deactive for user access
-# def add_files(user_id: int, files: bytes, files_allowed: bool = False,generate_tokens: bool = False, auth_token="", inputs={},skip_new_files=False):
-#     try:
-#         # Check if files already exist and if it's allowed
-#         is_existing = check_existing_files(user_id)  # Implement this function as needed
-
-#         if is_existing:
-#             # File already exists
-#             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-#                 "message": "Files for this user already exist"
-#             })
-
-#         elif not is_existing and not skip_new_files:
-#             # Extract parameters
-#             user_id = inputs.get('user_id')
-#             files = inputs.get('files')
-#             files_allowed = inputs.get('files_allowed')
-#             auth_token = inputs.get('auth_token')
-
-#             # Generate tokens if needed
-#             token = create_files_token(user_id)
-
-#             request_token = ''
-
-#             # Add new files to the database
-#             data = {
-#                 'user_id': user_id,
-#                 'files': files,
-#                 'files_allowed': files_allowed,
-#                 'auth_token': auth_token,
-#                 'request_token': request_token,
-#                 'token': token
-#             }
-
-#             # Call the function to add files (replace with your actual function)
-#             resp = LmsHandler.add_files(data)
-
-#             # If tokens are not required
-#             if not generate_tokens and len(auth_token) == 0:
-#                 token = None
-
-#     except ValueError as exc:
-#         # Handle exceptions
-#         logger.error(traceback.format_exc())
-#         message = exc.args[0]
-#         logger.error(message)
-#         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
-
-#     return JSONResponse(status_code=status.HTTP_200_OK, content={
-#         "status": "success",
-#         "message": "Files added successfully"
-#     })
 
 #Fetch Files
 def fetch_active_files():

@@ -15,6 +15,7 @@ from PIL import Image
 from datetime import timedelta
 from moviepy.editor import VideoFileClip
 from datetime import datetime
+import pytz
 from io import BytesIO
 import routers.lms_service.lms_service_ops as model
 from fastapi.responses import JSONResponse,HTMLResponse,FileResponse
@@ -961,10 +962,10 @@ def get_video_duration(video_url):
     
 #Get Course Content data by id for update fields Mapping
 @service.get("/course_contents_by_onlyid")
-def fetch_course_contents_by_onlyid(id):
+def fetch_course_contents_by_onlyid(course_id):
     try:
         # Fetch all course_content's data here
-        course_contents = fetch_course_content_by_onlyid(id)
+        course_contents = fetch_course_content_by_onlyid(course_id)
 
         return {
             "status": "success",
@@ -1806,24 +1807,6 @@ MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024
 # List of allowed file extensions
 ALLOWED_EXTENSIONS = {'pdf', 'jpg', 'jpeg', 'png', 'docx' }
 
-def upload_file_to_db(user_id, file_data, files_allowed, auth_token, request_token, token, active):
-    query = """
-        INSERT INTO documents (user_id, files, files_allowed, auth_token, request_token, token, active, created_at, updated_at)
-        VALUES (%(user_id)s, %(files)s, %(files_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(created_at)s, %(updated_at)s);
-    """
-    params = {
-        "user_id": user_id,
-        "files": file_data,  # Binary file data
-        "files_allowed": files_allowed,
-        "auth_token": auth_token,
-        "request_token": request_token,
-        "token": token,
-        "active": active,
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow(),
-    }
-    return execute_query(query, params=params)
-
 @service.post("/upload_file/")
 async def upload_file_api(user_id: int, file: UploadFile, active: bool):
     try:
@@ -1845,17 +1828,23 @@ async def upload_file_api(user_id: int, file: UploadFile, active: bool):
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
+        ist = pytz.timezone('Asia/Kolkata')
+        utc_now = datetime.utcnow()
+        ist_now = utc_now.replace(tzinfo=pytz.utc).astimezone(ist)
+                                                              
         # Save file information to the database using execute_query
         query = """
             INSERT INTO documents
             (user_id, files, files_allowed, auth_token, request_token, token, active, created_at, updated_at, filename)
             VALUES
-            (%(user_id)s, %(files)s, 'some_value', 'some_value', 'some_value', 'some_value', %(active)s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, %(filename)s)
+            (%(user_id)s, %(files)s, '', '', '', '', %(active)s, %(created_at)s, %(updated_at)s, %(filename)s)
         """
         params = {
             "user_id": user_id,
             "files": file_path,
             "active": active,
+            "created_at": ist_now,
+            "updated_at": ist_now,
             "filename": file.filename,
         }
 
@@ -1867,6 +1856,56 @@ async def upload_file_api(user_id: int, file: UploadFile, active: bool):
         raise HTTPException(status_code=500, detail="Failed to upload file")
 
 
+@service.put("/update_file/{file_id}/")
+async def update_file_api(file_id: int, user_id: int, file: UploadFile, active: bool):
+    try:
+        # Check if the file extension is allowed
+        file_ext = file.filename.split(".")[-1].lower()
+        if file_ext not in ALLOWED_FILE_TYPES:
+            raise HTTPException(status_code=400, detail="File type not allowed")
+
+        # Calculate the file size
+        file_size_bytes = len(file.file.read())
+        file.file.seek(0)
+
+        # Check if the file size exceeds the allowed limit
+        if file_size_bytes > MAX_FILE_SIZE_BYTES:
+            raise HTTPException(status_code=400, detail="File size exceeds the allowed limit")
+
+        # Save the updated file to the upload directory
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        ist = pytz.timezone('Asia/Kolkata')
+        utc_now = datetime.utcnow()
+        ist_now = utc_now.replace(tzinfo=pytz.utc).astimezone(ist)
+
+        # Update file information in the database using execute_query
+        query = """
+            UPDATE documents
+            SET files = %(files)s,
+                active = %(active)s,
+                updated_at = %(updated_at)s,
+                filename = %(filename)s
+            WHERE id = %(file_id)s AND user_id = %(user_id)s
+        """
+        params = {
+            "file_id": file_id,
+            "user_id": user_id,
+            "files": file_path,
+            "active": active,
+            "updated_at": ist_now,
+            "filename": file.filename,
+        }
+
+        execute_query(query, params=params)
+
+        return JSONResponse(status_code=200, content={"message": "File updated successfully"})
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Failed to update file")
+    
 # Fetch active files
 @service.get("/files/")
 def fetch_user_enrollcourse_by_onlycourse_id():
