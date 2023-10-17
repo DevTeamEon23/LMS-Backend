@@ -492,48 +492,46 @@ EXPORT_FOLDER = "exported_files"
 os.makedirs(EXPORT_FOLDER, exist_ok=True)
 
     
-def export_to_excel_with_multiple_sheets():
-    try:
-        table_data = {
-            "users": fetch_users_data(),
-            "course": fetch_courses_data(),
-            "lmsgroup": fetch_groups_data()
-        }
+# def export_to_excel_with_multiple_sheets():
+#     try:
+#         table_data = {
+#             "users": fetch_users_data(),
+#             "course": fetch_courses_data(),
+#             "lmsgroup": fetch_groups_data()
+#         }
 
-        # Specify the pre-defined file name
-        file_name = "exported_data.xlsx"
+#         # Specify the pre-defined file name
+#         file_name = "exported_data.xlsx"
 
-        # Create the file path
-        file_path = os.path.join(EXPORT_FOLDER, file_name)
+#         # Create the file path
+#         file_path = os.path.join(EXPORT_FOLDER, file_name)
 
-        # Create an XlsxWriter workbook and add sheets
-        workbook = xlsxwriter.Workbook(file_path, {'nan_inf_to_errors': True})  # Add nan_inf_to_errors option
+#         # Create an XlsxWriter workbook and add sheets
+#         workbook = xlsxwriter.Workbook(file_path, {'nan_inf_to_errors': True})  # Add nan_inf_to_errors option
 
-        for table, data in table_data.items():
-            worksheet = workbook.add_worksheet(table)
+#         for table, data in table_data.items():
+#             worksheet = workbook.add_worksheet(table)
 
-            # Write the data to the sheet
-            for row_num, row_data in enumerate(data.values):
-                for col_num, cell_value in enumerate(row_data):
-                    worksheet.write(row_num, col_num, cell_value)
+#             # Write the data to the sheet
+#             for row_num, row_data in enumerate(data.values):
+#                 for col_num, cell_value in enumerate(row_data):
+#                     worksheet.write(row_num, col_num, cell_value)
 
-        # Close the workbook
-        workbook.close()
+#         # Close the workbook
+#         workbook.close()
 
-        return file_name
+#         return file_name
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to export data: {e}")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Failed to export data: {e}")
 
 
 @service.get("/export_to_excel")
 async def export_data_to_excel_and_download():
     try:
-        table_data = {
-            "users": fetch_users_data(),
-            "course": fetch_courses_data(),
-            "lmsgroup": fetch_groups_data()
-        }
+        users_data = fetch_users_data_export()
+        courses_data = fetch_courses_data_export()
+        groups_data = fetch_all_groups_data_excel()
 
         # Specify the pre-defined file name
         file_name = "exported_data.xlsx"
@@ -541,18 +539,29 @@ async def export_data_to_excel_and_download():
         # Create the file path
         file_path = os.path.join(EXPORT_FOLDER, file_name)
 
-        # Create an XlsxWriter workbook and add sheets
-        workbook = xlsxwriter.Workbook(file_path, {'nan_inf_to_errors': True, 'file_options': {'default_extension': 'xlsx'}})  
+        table_data = {
+            "users": users_data,
+            "courses": courses_data,
+            "lmsgroup": groups_data
+        }
+
+        # Create an XlsxWriter workbook
+        workbook = xlsxwriter.Workbook(file_path, {'nan_inf_to_errors': True, 'file_options': {'default_extension': 'xlsx'}})
 
         for table, data in table_data.items():
             worksheet = workbook.add_worksheet(table)
 
-            # Write the data to the sheet
-            for row_num, row_data in enumerate(data.values):
-                for col_num, cell_value in enumerate(row_data):
-                    worksheet.write(row_num, col_num, cell_value)
+            # Create headers based on the keys in the first row
+            headers = list(data[0].keys())
+            for col_num, header in enumerate(headers):
+                worksheet.write(0, col_num, header)
 
-        # Close the workbook
+            # Write the data to the sheet
+            for row_num, row_data in enumerate(data):
+                for col_num, cell_value in enumerate(row_data.values()):
+                    worksheet.write(row_num + 1, col_num, cell_value)
+
+        # Close the workbook to save it
         workbook.close()
 
         # Create the full download link with the CDN domain

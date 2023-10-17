@@ -1250,9 +1250,10 @@ def fetch_all_groups_data_excel():
                 "groupname": group.groupname,
                 "groupdesc": group.groupdesc,
                 "groupkey": group.groupkey,
-                "created_at": group.created_at,
-                "updated_at": group.updated_at,
-                # Include other group attributes as needed
+                "isActive": True if group.isActive == 1 else False,
+                "isHide": True if group.isHide == 1 else False,
+                "Created At": datetime.strftime(group.created_at, '%Y-%m-%d %H:%M:%S'),  # Format the date
+                "Updated At": datetime.strftime(group.updated_at, '%Y-%m-%d %H:%M:%S'), 
             }
             groups_data.append(group_data)
 
@@ -2393,8 +2394,8 @@ def fetch_users_data_export():
                 "active": True if user.active == 1 else False,
                 "deactive": True if user.deactive == 1 else False,
                 "exclude_from_email": True if user.exclude_from_email == 1 else False,
-                "created_at": user.created_at,
-                "updated_at": user.updated_at,
+                "created_at": datetime.strftime(user.created_at, '%Y-%m-%d %H:%M:%S'),
+                "updated_at": datetime.strftime(user.updated_at, '%Y-%m-%d %H:%M:%S'),
                 # Include other user attributes as needed
             }
 
@@ -2419,6 +2420,7 @@ def fetch_courses_data_export():
 
             course_data = {
                 "id": course.id,
+                "user_id": course.user_id,
                 "coursename": course.coursename,
                 "description": course.description,
                 "coursecode": course.coursecode,
@@ -2431,10 +2433,10 @@ def fetch_courses_data_export():
                 "certificate": course.certificate,
                 "level": course.level,
                 "category": course.category,
-                "isActive": course.isActive,
-                "isHide": course.isHide,
-                "created_at": course.created_at,
-                "updated_at": course.updated_at,
+                "isActive": True if course.isActive == 1 else False,
+                "isHide": True if course.isHide == 1 else False,
+                "created_at": datetime.strftime(course.created_at, '%Y-%m-%d %H:%M:%S'),
+                "updated_at": datetime.strftime(course.updated_at, '%Y-%m-%d %H:%M:%S'),
             }
             courses_data.append(course_data)
 
