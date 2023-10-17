@@ -833,6 +833,17 @@ def change_course_details(id, user_id, coursename, file, description, coursecode
     else:
         raise ValueError("Course does not exists")
     
+def change_course_details_new(id, user_id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):
+    is_existing, _ = check_existing_course_by_id(id)
+    if is_existing:
+        # Update courses
+         
+        LmsHandler.update_course_to_db(id, user_id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide)
+        #     AWSClient.send_signup(email, password, subject='Password Change')
+        return True
+    else:
+        raise ValueError("Course does not exists")
+    
 def update_course(id, update_data):
     # Get the user's current data from the database
     course_data = LmsHandler.get_course_by_id(id)
@@ -1245,13 +1256,13 @@ def fetch_all_groups_data_excel():
         for group in groups:
 
             group_data = {
-                "id": group.id,
-                "user_id": group.user_id,
-                "groupname": group.groupname,
-                "groupdesc": group.groupdesc,
-                "groupkey": group.groupkey,
-                "isActive": True if group.isActive == 1 else False,
-                "isHide": True if group.isHide == 1 else False,
+                "Group_ID": group.id,
+                "User_id": group.user_id,
+                "Groupname": group.groupname,
+                "Groupdesc": group.groupdesc,
+                "Groupkey": group.groupkey,
+                "Active": True if group.isActive == 1 else False,
+                "Hide": True if group.isHide == 1 else False,
                 "Created At": datetime.strftime(group.created_at, '%Y-%m-%d %H:%M:%S'),  # Format the date
                 "Updated At": datetime.strftime(group.updated_at, '%Y-%m-%d %H:%M:%S'), 
             }
@@ -2379,23 +2390,23 @@ def fetch_users_data_export():
         for user in users:
 
             user_data = {
-                "id": user.id,
-                "eid": user.eid,
-                "sid": user.sid,
-                "full_name": user.full_name,
-                "email": user.email,
-                "dept": user.dept,
-                "adhr": user.adhr,
-                "username": user.username,
-                "bio": user.bio,
-                "role": user.role,
-                "timezone": user.timezone,
-                "langtype": user.langtype,
-                "active": True if user.active == 1 else False,
-                "deactive": True if user.deactive == 1 else False,
-                "exclude_from_email": True if user.exclude_from_email == 1 else False,
-                "created_at": datetime.strftime(user.created_at, '%Y-%m-%d %H:%M:%S'),
-                "updated_at": datetime.strftime(user.updated_at, '%Y-%m-%d %H:%M:%S'),
+                "ID": user.id,
+                "E_id": user.eid,
+                "S_id": user.sid,
+                "Full_name": user.full_name,
+                "Email": user.email,
+                "Department": user.dept,
+                "Aadhaar No.": user.adhr,
+                "Username": user.username,
+                "Bio": user.bio,
+                "Role": user.role,
+                "Timezone": user.timezone,
+                "Langtype": user.langtype,
+                "Active": True if user.active == 1 else False,
+                "Deactive": True if user.deactive == 1 else False,
+                "Exclude_from_email": True if user.exclude_from_email == 1 else False,
+                "Created At": datetime.strftime(user.created_at, '%Y-%m-%d %H:%M:%S'),
+                "Updated At": datetime.strftime(user.updated_at, '%Y-%m-%d %H:%M:%S'),
                 # Include other user attributes as needed
             }
 
@@ -2419,24 +2430,24 @@ def fetch_courses_data_export():
         for course in courses:
 
             course_data = {
-                "id": course.id,
-                "user_id": course.user_id,
-                "coursename": course.coursename,
-                "description": course.description,
-                "coursecode": course.coursecode,
-                "price": course.price ,
-                "courselink": course.courselink,
-                "capacity": course.capacity,
-                "startdate": course.startdate,
-                "enddate": course.enddate,
-                "timelimit": course.timelimit,
-                "certificate": course.certificate,
-                "level": course.level,
-                "category": course.category,
-                "isActive": True if course.isActive == 1 else False,
-                "isHide": True if course.isHide == 1 else False,
-                "created_at": datetime.strftime(course.created_at, '%Y-%m-%d %H:%M:%S'),
-                "updated_at": datetime.strftime(course.updated_at, '%Y-%m-%d %H:%M:%S'),
+                "ID": course.id,
+                "User_id": course.user_id,
+                "Coursename": course.coursename,
+                "Description": course.description,
+                "Coursecode": course.coursecode,
+                "Price": course.price ,
+                "Courselink": course.courselink,
+                "Capacity": course.capacity,
+                "Startdate": course.startdate,
+                "Enddate": course.enddate,
+                "Timelimit": course.timelimit,
+                "Certificate": course.certificate,
+                "Level": course.level,
+                "Category": course.category,
+                "Active": True if course.isActive == 1 else False,
+                "Hide": True if course.isHide == 1 else False,
+                "Created At": datetime.strftime(course.created_at, '%Y-%m-%d %H:%M:%S'),
+                "Updated At": datetime.strftime(course.updated_at, '%Y-%m-%d %H:%M:%S'),
             }
             courses_data.append(course_data)
 

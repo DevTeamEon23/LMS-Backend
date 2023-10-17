@@ -279,6 +279,83 @@ class LmsHandler:
     }
         return execute_query(query, params=params)
 
+    @classmethod
+    def update_course_to_db_new(
+        cls,
+        id,
+        user_id,
+        coursename,
+        file,
+        description,
+        coursecode,
+        price,
+        courselink,
+        coursevideo,
+        capacity,
+        startdate,
+        enddate,
+        timelimit,
+        certificate,
+        level,
+        category,
+        isActive,
+        isHide
+    ):
+
+        # Create the update query and parameter dictionary
+        query = """
+            UPDATE course SET
+                user_id = %(user_id)s,
+                coursename = %(coursename)s,
+                description = %(description)s,
+                coursecode = %(coursecode)s,
+                price = %(price)s,
+                courselink = %(courselink)s,
+                capacity = %(capacity)s,
+                startdate = %(startdate)s,
+                enddate = %(enddate)s,
+                timelimit = %(timelimit)s,
+                certificate = %(certificate)s,
+                level = %(level)s,
+                category = %(category)s,
+                isActive = %(isActive)s,
+                isHide = %(isHide)s
+        """
+
+        params = {
+            "id": id,
+            "user_id": user_id,
+            "coursename": coursename,
+            "description": description,
+            "coursecode": coursecode,
+            "price": price,
+            "courselink": courselink,
+            "capacity": capacity,
+            "startdate": startdate,
+            "enddate": enddate,
+            "timelimit": timelimit,
+            "certificate": certificate,
+            "level": level,
+            "category": category,
+            "isActive": isActive,
+            "isHide": isHide,
+        }
+
+        # Check if a new file is provided and update it if necessary
+        if file:
+            query += ", file = %(file)s"
+            params["file"] = file
+
+        # Check if a new course video is provided and update it if necessary
+        if coursevideo:
+            query += ", coursevideo = %(coursevideo)s"
+            params["coursevideo"] = coursevideo
+
+        # Add a WHERE clause to update the specific course based on its ID
+        query += " WHERE id = %(id)s"
+
+        return execute_query(query, params=params)
+
 #Delete Courses
     @classmethod
     def delete_courses(cls, id):
