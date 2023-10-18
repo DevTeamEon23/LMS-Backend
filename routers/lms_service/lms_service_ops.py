@@ -3418,3 +3418,53 @@ def fetch_infographics_of_user(user_id):
             "message": "Failed to fetch user_infographics"
         })
 
+def fetch_overview_of_learner(user_id):
+    try:
+        # Query user data from the database
+        user_infographics = LmsHandler.learner_overview(user_id)
+
+        if not user_infographics:
+            return None
+
+        user_info = user_infographics[0]  # Assume user info is the same for all courses
+
+        main_data = {
+            "full_name": user_info["full_name"],
+            "points": user_info["points"],
+            "user_level": user_info["user_level"],
+            "total_course_count": user_info["total_course_count"],
+            "bio": user_info["bio"],
+            "created_at": user_info["created_at"],
+        }
+
+        course_names = set()
+
+        # Include users.file as CDN link
+        if user_info["file"] is not None:
+            backend_base_url = "https://v1.eonlearning.tech"
+            cdn_file_link = backend_base_url + '/' + user_info["file"].decode('utf-8').replace('b', '').replace("'", '')
+            main_data["file"] = cdn_file_link
+        else:
+            main_data["file"] = "File not available"
+
+        for info in user_infographics:
+            course_name = info.get("coursename")  # Correct the key name
+            if course_name:  # Check if course_name is not None
+                course_names.add(course_name)
+
+        return {
+            "status": "success",
+            "data": {
+                "user_infographics": main_data,
+                "course_names": list(course_names)
+            }
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user_infographics"
+        })
+
+
