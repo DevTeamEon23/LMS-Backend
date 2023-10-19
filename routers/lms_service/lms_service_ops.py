@@ -250,11 +250,11 @@ def fetch_users_by_onlyid(id):
 
         # file_url = user.file.lstrip("b'").rstrip("'")
         if user.file is not None:
-            cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
+            cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace("'", '')
         else:
             # Handle the case where user.file is None
             cdn_file_link = "File not available"
-        # cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace('b', '').replace("'", '')
+        # cdn_file_link = backendBaseUrl + '/' + user.file.decode('utf-8').replace("'", '')
         # full_image_url = backendBaseUrl + '/cdn/' + str(user.id) + '.jpg'
 
         # Transform the user object into a dictionary
@@ -964,7 +964,7 @@ def fetch_course_by_onlyid(id):
             # Handle the case when no category is found for the specified id
             return None
 
-        full_image_url = backendBaseUrl + '/' + course.file.decode('utf-8').replace('b', '').replace("'", '')
+        full_image_url = backendBaseUrl + '/' + course.file.decode('utf-8').replace("'", '')
         full_video_url = backendBaseUrl + '/' + course.coursevideo.decode('utf-8').replace("'", '')
 
         # Transform the category object into a dictionary
@@ -3442,7 +3442,7 @@ def fetch_overview_of_learner(user_id):
         # Include users.file as CDN link
         if user_info["file"] is not None:
             backend_base_url = "https://v1.eonlearning.tech"
-            cdn_file_link = backend_base_url + '/' + user_info["file"].decode('utf-8').replace('b', '').replace("'", '')
+            cdn_file_link = backend_base_url + '/' + user_info["file"].decode('utf-8').replace("'", '')
             main_data["file"] = cdn_file_link
         else:
             main_data["file"] = "File not available"
