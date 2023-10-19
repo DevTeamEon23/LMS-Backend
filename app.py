@@ -27,6 +27,7 @@ app.mount("/course/", StaticFiles(directory="course/"), name="course")
 app.mount("/coursevideo/", StaticFiles(directory="coursevideo/"), name="coursevideo")
 app.mount("/files/", StaticFiles(directory="files/"), name="files")
 app.mount("/exported_files/", StaticFiles(directory="exported_files/"), name="exported_files")
+app.mount("/uploads/", StaticFiles(directory="uploads/"), name="uploads")
 
 # Modify Default Exception Handler
 @app.exception_handler(RequestValidationError)

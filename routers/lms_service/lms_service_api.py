@@ -2019,10 +2019,12 @@ def fetch_user_enrollcourse_by_onlycourse_id():
             "message": "Failed to fetch enrolled courses' data"
         })
     
+backendBaseUrl = "https://v1.eonlearning.tech"
+
 @service.get("/fetch_files")
 def fetch_files_api():
     try:
-        # Modify the query to select filename, file type, active status, and format the file size
+        # Modify the query to select filename, file type, active status, format the file size, and include the file data
         query = """
             SELECT
                 id,
@@ -2080,9 +2082,13 @@ def fetch_files_api():
         # Execute the query and get the result (replace with your actual database query function)
         files_metadata = execute_query(query)
 
-        # Process the result and return it
+        # Process the result and return it with file data using backendBaseUrl
         result = []
         for row in files_metadata:
+            file_data = row["files"]
+            # Encode the file data in Base64
+            file_path = file_data.decode('utf-8').replace("\\", "/")  # Replace backslashes with forward slashes
+            encoded_file_data = backendBaseUrl + '/' + file_path
             result.append({
                 "id": row["id"],
                 "user_id": row["user_id"],
@@ -2090,7 +2096,8 @@ def fetch_files_api():
                 "file_type": row["file_type"],
                 "file_size_formatted": row["file_size_formatted"],
                 "active": row["active"],
-                "created_at": row["created_at"]
+                "created_at": row["created_at"],
+                "file_data": encoded_file_data
             })
 
         return {
