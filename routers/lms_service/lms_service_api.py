@@ -2111,6 +2111,69 @@ def fetch_files_api():
             "message": "Failed to fetch files"
         })
 
+@service.get("/fetch_active_files")
+def fetch_active_files_api_for_learner():
+    try:
+        # Modify the query to select filename, file type, active status, format the file size, and include the file data
+        query = """
+            SELECT
+                id,
+                user_id,
+                filename,
+                SUBSTRING_INDEX(filename, '.', -1) as file_type,
+                files,
+                CONCAT(
+                    CASE
+                        WHEN LENGTH(files) >= 1024*1024*1024 THEN ROUND(LENGTH(files) / (1024*1024*1024), 2)
+                        WHEN LENGTH(files) >= 1024*1024 THEN ROUND(LENGTH(files) / (1024*1024), 2)
+                        WHEN LENGTH(files) >= 1024 THEN ROUND(LENGTH(files) / 1024, 2)
+                        ELSE LENGTH(files)
+                    END,
+                    CASE
+                        WHEN LENGTH(files) >= 1024*1024*1024 THEN ' GB'
+                        WHEN LENGTH(files) >= 1024*1024 THEN ' MB'
+                        WHEN LENGTH(files) >= 1024 THEN ' KB'
+                        ELSE 'bytes'
+                    END
+                ) AS file_size_formatted,
+                active,
+                created_at
+            FROM documents
+            WHERE active = 1;
+        """
+
+        # Execute the query and get the result (replace with your actual database query function)
+        files_metadata = execute_query(query)
+
+        # Process the result and return it with file data using backendBaseUrl
+        result = []
+        for row in files_metadata:
+            file_data = row["files"]
+            # Encode the file data in Base64
+            file_path = file_data.decode('utf-8').replace("\\", "/")  # Replace backslashes with forward slashes
+            encoded_file_data = backendBaseUrl + '/' + file_path
+            result.append({
+                "id": row["id"],
+                "user_id": row["user_id"],
+                "filename": row["filename"],
+                "file_type": row["file_type"],
+                "file_size_formatted": row["file_size_formatted"],
+                "active": row["active"],
+                "created_at": row["created_at"],
+                "file_data": encoded_file_data
+            })
+
+        return {
+            "status": "success",
+            "data": result
+        }
+    except Exception as exc:
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={
+            "status": "failure",
+            "message": "Failed to fetch files"
+        })
+    
 @service.delete("/remove_file_byid")
 def delete_file(payload: Remove_file):
     try:
