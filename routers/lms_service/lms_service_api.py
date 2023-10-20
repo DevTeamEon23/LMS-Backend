@@ -613,7 +613,6 @@ async def download_file(file_name: str):
         return FileResponse(file_path, filename=file_name, headers={"Content-Disposition": f'attachment; filename={file_name}'})
     else:
         return {"error": "File not found"}
-    
 
 # Read Users list
 @service.get("/users")
@@ -2001,6 +2000,67 @@ async def update_file_api(file_id: int, user_id: int, file: UploadFile, active: 
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail="Failed to update file")
     
+@service.put("/update_file_new/{file_id}/")
+async def update_file_new_api(file_id: int, user_id: int, file: UploadFile = File(None), active: bool = Form(None)):
+    try:
+        ist = pytz.timezone('Asia/Kolkata')
+        utc_now = datetime.utcnow()
+        ist_now = utc_now.replace(tzinfo=pytz.utc).astimezone(ist)
+
+        # Initialize an empty dictionary for query parameters
+        params = {
+            "file_id": file_id,
+            "user_id": user_id,
+            "updated_at": ist_now,
+        }
+
+        # Initialize an empty list to store the query components
+        query_components = []
+
+        if file is not None:
+            # If a new file is provided, update the 'files' field
+            # Check if the file extension is allowed
+            file_ext = file.filename.split(".")[-1].lower()
+            if file_ext not in ALLOWED_FILE_TYPES:
+                raise HTTPException(status_code=400, detail="File type not allowed")
+
+            # Calculate the file size
+            file_size_bytes = len(file.file.read())
+            file.file.seek(0)
+
+            # Check if the file size exceeds the allowed limit
+            if file_size_bytes > MAX_FILE_SIZE_BYTES:
+                raise HTTPException(status_code=400, detail="File size exceeds the allowed limit")
+
+            # Save the updated file to the upload directory
+            file_path = os.path.join(UPLOAD_DIR, file.filename)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+
+            # Add 'files' field to the query
+            query_components.append("files = %(files)s")
+            params["files"] = file_path
+
+        if active is not None:
+            # If 'active' is provided, update the 'active' field
+            # Add 'active' field to the query
+            query_components.append("active = %(active)s")
+            params["active"] = active
+
+        # Construct the final query by joining query components
+        query = f"""
+            UPDATE documents
+            SET {', '.join(query_components)}
+            WHERE id = %(file_id)s AND user_id = %(user_id)s
+        """
+
+        execute_query(query, params=params)
+
+        return JSONResponse(status_code=200, content={"message": "File information updated successfully"})
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Failed to update file information")
+    
 # Fetch active files
 @service.get("/files/")
 def fetch_user_enrollcourse_by_onlycourse_id():
@@ -2111,6 +2171,75 @@ def fetch_files_api():
             "message": "Failed to fetch files"
         })
 
+@service.get("/fetch_files_byId/{file_id}")
+def fetch_files_by_id_api(file_id: int):
+    try:
+        # Modify the query to select the file by ID
+        query = """
+            SELECT
+                id,
+                user_id,
+                filename,
+                SUBSTRING_INDEX(filename, '.', -1) as file_type,
+                files,
+                CONCAT(
+                    CASE
+                        WHEN LENGTH(files) >= 1024*1024*1024 THEN ROUND(LENGTH(files) / (1024*1024*1024), 2)
+                        WHEN LENGTH(files) >= 1024*1024 THEN ROUND(LENGTH(files) / (1024*1024), 2)
+                        WHEN LENGTH(files) >= 1024 THEN ROUND(LENGTH(files) / 1024, 2)
+                        ELSE LENGTH(files)
+                    END,
+                    CASE
+                        WHEN LENGTH(files) >= 1024*1024*1024 THEN ' GB'
+                        WHEN LENGTH(files) >= 1024*1024 THEN ' MB'
+                        WHEN LENGTH(files) >= 1024 THEN ' KB'
+                        ELSE 'bytes'
+                    END
+                ) AS file_size_formatted,
+                active,
+                created_at
+            FROM documents
+            WHERE id = %s;
+        """
+
+        # Execute the query and get the result (replace with your actual database query function)
+        files_metadata = execute_query(query, (file_id,))
+
+        # Check if a file with the given ID was found
+        if not files_metadata:
+            return JSONResponse(status_code=404, content={
+                "status": "failure",
+                "message": "File not found"
+            })
+
+        # Process the result and return it with file data using backendBaseUrl
+        row = files_metadata.first()  # Use the first() method to access the first result
+        file_data = row["files"]
+        file_path = file_data.decode('utf-8').replace("\\", "/")  # Replace backslashes with forward slashes
+        encoded_file_data = backendBaseUrl + '/' + file_path
+
+        result = {
+            "id": row["id"],
+            "user_id": row["user_id"],
+            "filename": row["filename"],
+            "file_type": row["file_type"],
+            "file_size_formatted": row["file_size_formatted"],
+            "active": row["active"],
+            "created_at": row["created_at"],
+            "file_data": encoded_file_data
+        }
+
+        return {
+            "status": "success",
+            "data": result
+        }
+    except Exception as exc:
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={
+            "status": "failure",
+            "message": "Failed to fetch the file"
+        })
+    
 @service.get("/fetch_active_files")
 def fetch_active_files_api_for_learner():
     try:
@@ -2724,7 +2853,7 @@ async def download_files(files_name: str):
     # Ensure the requested file exists in the export folder
     file_path = os.path.join(UPLOAD_DIR, files_name)
     if os.path.exists(file_path):
-        return FileResponse(file_path, filename=files_name)
+        return FileResponse(file_path, filename=files_name, headers={"Content-Disposition": f'attachment; filename={file_name}'})
     else:
         return {"error": "File not found"}
 
