@@ -782,7 +782,7 @@ def add_course(coursename: str,file: bytes,coursevideo: bytes,generate_tokens: b
         logger.error(message)
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course added successfully', course_id= id))
-            
+    
 def clone_course(id):
     try:
         course_data = LmsHandler.get_course_by_id(id)
@@ -791,14 +791,37 @@ def clone_course(id):
             course_data.pop('id', None)
             course_data['coursename'] = f"{course_data['coursename']} (Clone)"
 
-            # # Generate MD5 hash of the coursename
-            # md5_hash = hashlib.md5(course_data['coursename'].encode()).hexdigest()
-            # course_data['coursecode'] = f"{md5_hash}_clone"
             # Generate MD5 hash of the coursename
             md5_hash = md5(course_data['coursename'])  # Using your md5 function here
             course_data['coursecode'] = f"{md5_hash}_clone"
             
-            new_course_id = LmsHandler.add_courses(course_data)
+            # Create a dictionary of parameters to pass to your custom execute_query function
+            parameters = {
+                'user_id': course_data['user_id'],
+                'coursename': course_data['coursename'],
+                'file': course_data['file'],
+                'description': course_data['description'],
+                'coursecode': course_data['coursecode'],
+                'price': course_data['price'],
+                'courselink': course_data['courselink'],
+                'coursevideo': course_data['coursevideo'],
+                'capacity': course_data['capacity'],
+                'startdate': course_data['startdate'],
+                'enddate': course_data['enddate'],
+                'timelimit': course_data['timelimit'],
+                'certificate': course_data['certificate'],
+                'level': course_data['level'],
+                'category': course_data['category'],
+                'course_allowed': course_data['course_allowed'],
+                'auth_token': course_data['auth_token'],
+                'request_token': course_data['request_token'],
+                'token': course_data['token'],
+                'isActive': course_data['isActive'],
+                'isHide': course_data['isHide']
+            }
+            
+            # Call your custom execute_query function to execute the SQL query
+            new_course_id = LmsHandler.add_clone_courses(parameters)
 
             if new_course_id:
                 return JSONResponse(status_code=status.HTTP_200_OK, content={
@@ -808,7 +831,7 @@ def clone_course(id):
             else:
                 return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
                     "status": "failure",
-                    "message": "Failed to clone course"
+                    "message": "Failed to clone the course"
                 })
         else:
             return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={

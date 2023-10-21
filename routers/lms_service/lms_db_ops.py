@@ -183,7 +183,15 @@ class LmsHandler:
                         ; 
                     """
         return execute_query(query, params=params)
-
+    
+    @classmethod
+    def add_clone_courses(cls, params):
+        query = f"""   INSERT into {table_course}(user_id, coursename, file, description, coursecode,price,courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, course_allowed, auth_token, request_token, token, isActive, isHide) VALUES 
+                        (%(user_id)s, %(coursename)s, %(file)s, %(description)s, %(coursecode)s, %(price)s, %(courselink)s, %(coursevideo)s,%(capacity)s, %(startdate)s, %(enddate)s, %(timelimit)s, %(certificate)s, %(level)s, %(category)s, %(course_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(isActive)s, %(isHide)s)
+                        ; 
+                    """
+        return execute_query(query, params=params)
+    
 #Fetch All Courses for Superadmin Course Store page
     @classmethod
     def get_all_courses(cls):
