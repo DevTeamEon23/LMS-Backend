@@ -795,6 +795,15 @@ def clone_course(id):
             md5_hash = md5(course_data['coursename'])  # Using your md5 function here
             course_data['coursecode'] = f"{md5_hash}_clone"
             
+            # Check if a course with the same characteristics already exists
+            existing_clone = LmsHandler.get_course_by_characteristics(course_data)  # Implement this method
+
+            if existing_clone:
+                return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                    "status": "failure",
+                    "message": "A clone with the same characteristics already exists"
+                })
+            
             # Create a dictionary of parameters to pass to your custom execute_query function
             parameters = {
                 'user_id': course_data['user_id'],
@@ -845,6 +854,7 @@ def clone_course(id):
             "message": "An error occurred while cloning the course"
         })
     
+
 def change_course_details(id, user_id, coursename, file, description, coursecode, price, courselink, coursevideo, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):
     is_existing, _ = check_existing_course_by_id(id)
     if is_existing:

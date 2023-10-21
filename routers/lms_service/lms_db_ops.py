@@ -192,6 +192,25 @@ class LmsHandler:
                     """
         return execute_query(query, params=params)
     
+    
+    def get_course_by_characteristics(course_data):
+        query = f"""SELECT * FROM {table_course} 
+                    WHERE coursename = %(coursename)s 
+                    AND price = %(price)s 
+                    AND description = %(description)s
+                    AND coursecode = %(coursecode)s
+                    AND user_id = %(user_id)s
+                    ;"""
+        
+        result = execute_query(query, params=course_data)
+        
+        # Check if any rows were returned
+        if result:
+            first_row = result.first()  # Use the 'first' method to get the first row
+            if first_row:
+                return dict(first_row)  # Convert the row to a dictionary
+        return None
+    
 #Fetch All Courses for Superadmin Course Store page
     @classmethod
     def get_all_courses(cls):
