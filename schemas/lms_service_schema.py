@@ -36,6 +36,16 @@ class CategorySchema(BaseModel):
 
 
 # class LocalUser(BaseModel):
+class User(BaseModel):
+    email: str
+    fullname: Union[str, None] = None
+    password: str
+
+
+class NewUser(User):
+    generate_token: bool
+
+
 
 
 class AddUser(BaseModel):

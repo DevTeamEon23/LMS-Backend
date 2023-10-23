@@ -35,7 +35,7 @@ class LmsHandler:
                         ; 
                     """
         return execute_query(query, params=params)
-
+    
     @classmethod
     def add_users_excel(cls, params):
         query = f"""   INSERT into {n_table_user}(eid, sid, full_name, email,dept,adhr, username, password, bio, role, timezone, langtype, users_allowed, auth_token, request_token, token, active, deactive, exclude_from_email) VALUES 
