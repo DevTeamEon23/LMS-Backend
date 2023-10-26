@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from datetime import datetime
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_user_rating_feedback
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -2044,9 +2044,96 @@ class LmsHandler:
         params = {"user_id": user_id}
         return execute_query(query, params).fetchall()
 
+###############################################################################################################################
+
+    @classmethod
+    def give_ratings_and_feedback(cls, params):
+        query = f"""INSERT into {n_table_user_rating_feedback} (user_id, course_id, rating, feedback, rating_allowed, auth_token, request_token, token, created_at, updated_at) VALUES 
+                    (%(user_id)s, %(course_id)s, %(rating)s, %(feedback)s, %(rating_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(created_at)s, %(updated_at)s);
+                """
+        return execute_query(query, params=params)
+
+    @classmethod
+    def get_rating_by_user_course_id(cls, user_id, course_id):
+        query = f"SELECT * FROM {n_table_user_rating_feedback} WHERE user_id = %(user_id)s AND course_id = %(course_id)s;"
+        params = {"user_id": user_id, "course_id": course_id}
+        resp = execute_query(query=query, params=params)
+        data = resp.fetchone()
+        if data is None:
+            raise HTTPException(status_code=401, detail="ratings & feedback not found")
+        else:
+            return data
+        
+#Update Ratings & Feedback
+    @classmethod
+    def update_ratings_to_db(cls, id, user_id,course_id,rating,feedback):
+        query = f"""   
+        UPDATE rating_feedback SET
+            user_id = %(user_id)s,
+            course_id = %(course_id)s,
+            rating = %(rating)s,
+            feedback = %(feedback)s
+        WHERE id = %(id)s;
+        """
+        params = {
+        "id":id,
+        "user_id": user_id,
+        "course_id": course_id,
+        "rating":rating,
+        "feedback": feedback,
+    }
+        return execute_query(query, params=params)
     
 
+############################################ Superadmin Dashboard #########################################################
 
-
-
+    @classmethod
+    def get_all_data_count(cls):
+        query = """ SELECT
+            subquery.dept,
+            'Admin' AS role,
+            COUNT(DISTINCT subquery.course_id) AS total_enrolled_course_count,
+            (
+                SELECT COUNT(DISTINCT uce2.course_id)
+                FROM user_course_enrollment uce2
+                WHERE uce2.user_id IN (SELECT id FROM users WHERE role = 'Admin')
+            ) AS overall_enrolled_courses,
+            (
+                SELECT COUNT(*) -- This part counts all courses from the course table
+                FROM course
+            ) AS total_courses,
+            (
+                (
+                    SELECT COUNT(*) -- This part counts all courses from the course table
+                    FROM course
+                ) - (
+                    SELECT COUNT(DISTINCT uce2.course_id)
+                    FROM user_course_enrollment uce2
+                    WHERE uce2.user_id IN (SELECT id FROM users WHERE role = 'Admin')
+                )
+            ) AS upcoming_courses
+        FROM (
+            SELECT
+                u.dept,
+                u.role,
+                u.id AS admin_id,
+                uce.course_id
+            FROM users u
+            LEFT JOIN user_course_enrollment uce ON u.id = uce.user_id
+            WHERE u.role = 'Admin'
+        ) AS subquery
+        GROUP BY subquery.dept; 
+        """
+        return execute_query(query).fetchall()
     
+
+    @classmethod
+    def get_all_users_deptwise_counts(cls):
+        query = """ SELECT dept,
+            SUM(CASE WHEN role = 'Admin' THEN 1 ELSE 0 END) AS admin_count,
+            SUM(CASE WHEN role = 'Instructor' THEN 1 ELSE 0 END) AS instructor_count,
+            SUM(CASE WHEN role = 'Learner' THEN 1 ELSE 0 END) AS learner_count
+        FROM users
+        GROUP BY dept; 
+                """
+        return execute_query(query).fetchall()

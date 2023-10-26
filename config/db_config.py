@@ -468,6 +468,22 @@ combined_table = Table(
     CheckConstraint('correct_option IN (\'A\', \'B\', \'C\', \'D\')', name='ck_correct_option')
 )
 
+n_table_user_rating_feedback = 'rating_feedback'
+rating_feedback_files_table = Table(
+    n_table_user_rating_feedback, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('user_id', Integer, nullable=False),
+    Column('course_id', Integer, nullable=False),
+    Column('rating', Integer, nullable=False),
+    Column('feedback', VARCHAR(255), nullable=True),
+    Column('rating_allowed', VARCHAR(150), nullable=False),
+    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
+    Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA
+    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Index(f'idx_{n_table_user_rating_feedback}_token', 'token'),
+)
 
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')
 metadata.create_all(meta_engine, checkfirst=True)

@@ -103,6 +103,11 @@ def create_calender_token(cal_eventname):
     token = md5(base)
     return token
 
+def create_rating_token(feedback):
+    base = random_string(8) + feedback + random_string(8)
+    token = md5(base)
+    return token
+
 #------------------------------------------------------
 ################### Users Tab Course Page ###################
 def create_courses_touserenroll_token(user_id):
@@ -3566,4 +3571,87 @@ def fetch_overview_of_learner(user_id):
             "message": "Failed to fetch user_infographics"
         })
 
+######################################### Rating & Feedback #####################################################
 
+def add_ratings_feedback(user_id, generate_tokens=False, auth_token="", inputs={}, skip_new_user=False):
+    try:
+        course_id = inputs.get('course_id')
+        rating = inputs.get('rating')
+        feedback = inputs.get('feedback')
+        created_at = datetime.now()
+        updated_at = datetime.now()
+ 
+        # Token Generation
+        token = create_token(feedback)
+        request_token = ''
+
+        data = {
+            'user_id': user_id,
+            'course_id': course_id,
+            'rating': rating,
+            'feedback': feedback,
+            'rating_allowed': inputs.get('rating_allowed', ''),
+            'auth_token': auth_token,
+            'request_token': request_token,
+            'token': token,
+            'created_at': created_at,
+            'updated_at': updated_at
+        }
+
+        resp = LmsHandler.give_ratings_and_feedback(data)
+
+        # If token not required,
+        if not generate_tokens and len(auth_token) == 0:
+            token = None
+
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Something went wrong!"
+        })
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content={
+        "status": "success",
+        "message": "Thanks For Your Feedback"
+    })
+
+########################################### Superadmin Dashboard #########################################################
+
+def fetch_all_data_counts_data():
+    try:
+        # Query all users from the database
+        data_counts = LmsHandler.get_all_data_count()
+
+        if not data_counts:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "data_counts_data": data_counts,
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch data_counts"
+        })
+
+def fetch_all_deptwise_users_counts():
+    try:
+        # Query all users from the database
+        dept_counts = LmsHandler.get_all_users_deptwise_counts()
+
+        if not dept_counts:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "dept_counts_data": dept_counts,
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch dept_counts data"
+        })
