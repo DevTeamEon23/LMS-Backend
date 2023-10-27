@@ -19,6 +19,7 @@ from fastapi_mail import FastMail, MessageSchema,ConnectionConfig
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
 from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content
+from ..auth.auth_service_ops import update_user_points
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import AddUser, User
@@ -3573,6 +3574,49 @@ def fetch_overview_of_learner(user_id):
 
 ######################################### Rating & Feedback #####################################################
 
+# def add_ratings_feedback(user_id, generate_tokens=False, auth_token="", inputs={}, skip_new_user=False):
+#     try:
+#         course_id = inputs.get('course_id')
+#         rating = inputs.get('rating')
+#         feedback = inputs.get('feedback')
+#         created_at = datetime.now()
+#         updated_at = datetime.now()
+ 
+#         # Token Generation
+#         token = create_token(feedback)
+#         request_token = ''
+
+#         data = {
+#             'user_id': user_id,
+#             'course_id': course_id,
+#             'rating': rating,
+#             'feedback': feedback,
+#             'rating_allowed': inputs.get('rating_allowed', ''),
+#             'auth_token': auth_token,
+#             'request_token': request_token,
+#             'token': token,
+#             'created_at': created_at,
+#             'updated_at': updated_at
+#         }
+
+#         resp = LmsHandler.give_ratings_and_feedback(data)
+
+#         # If token not required,
+#         if not generate_tokens and len(auth_token) == 0:
+#             token = None
+
+#     except Exception as exc:
+#         logger.error(traceback.format_exc())
+#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#             "status": "failure",
+#             "message": "Something went wrong!"
+#         })
+
+#     return JSONResponse(status_code=status.HTTP_200_OK, content={
+#         "status": "success",
+#         "message": "Thanks For Your Feedback"
+#     })
+
 def add_ratings_feedback(user_id, generate_tokens=False, auth_token="", inputs={}, skip_new_user=False):
     try:
         course_id = inputs.get('course_id')
@@ -3580,7 +3624,10 @@ def add_ratings_feedback(user_id, generate_tokens=False, auth_token="", inputs={
         feedback = inputs.get('feedback')
         created_at = datetime.now()
         updated_at = datetime.now()
- 
+
+        # Calculate the points
+        points = 5  # 5 points for each rating or feedback
+
         # Token Generation
         token = create_token(feedback)
         request_token = ''
@@ -3600,6 +3647,9 @@ def add_ratings_feedback(user_id, generate_tokens=False, auth_token="", inputs={
 
         resp = LmsHandler.give_ratings_and_feedback(data)
 
+        # Update user points in the user_points table
+        update_user_points(user_id, points)
+
         # If token not required,
         if not generate_tokens and len(auth_token) == 0:
             token = None
@@ -3615,7 +3665,6 @@ def add_ratings_feedback(user_id, generate_tokens=False, auth_token="", inputs={
         "status": "success",
         "message": "Thanks For Your Feedback"
     })
-
 ########################################### Superadmin Dashboard #########################################################
 
 def fetch_all_data_counts_data():
@@ -3654,4 +3703,197 @@ def fetch_all_deptwise_users_counts():
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
             "message": "Failed to fetch dept_counts data"
+        })
+    
+def get_user_enrolledcourses_info():
+    try:
+        # Query user IDs from the database for the specified course
+        enrolled_info = LmsHandler.get_user_enroll_course_info()
+
+        if not enrolled_info:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        # Now enrolled_info is a list of user IDs enrolled in the course
+        # You can return this list or process it further as needed
+
+        return {
+            "enrolled_info": enrolled_info,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user enrolled course data"
+        })
+########################################### Admin Dashboard #########################################################
+
+def fetch_all_admin_data_counts_data():
+    try:
+        # Query all users from the database
+        data_counts = LmsHandler.get_all_admin_data_count()
+
+        if not data_counts:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "data_counts_data": data_counts,
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch data_counts"
+        })
+
+def get_user_points_by_user_for_admin():
+    try:
+        # Query user IDs from the database for the specified course
+        user_ids = LmsHandler.get_user_points_for_admin()
+
+        if not user_ids:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "user_ids": user_ids,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user enrolled course data"
+        })
+    
+def fetch_all_deptwise_users_counts_for_admin():
+    try:
+        # Query all users from the database
+        dept_counts = LmsHandler.get_all_users_deptwise_counts_for_admin()
+
+        if not dept_counts:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "dept_counts_data": dept_counts,
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch dept_counts data"
+        })
+
+def get_user_enrolledcourses_info_for_admin():
+    try:
+        # Query user IDs from the database for the specified course
+        enrolled_info = LmsHandler.get_user_enroll_course_info_admin()
+
+        if not enrolled_info:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        # Now enrolled_info is a list of user IDs enrolled in the course
+        # You can return this list or process it further as needed
+
+        return {
+            "enrolled_info": enrolled_info,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user enrolled course data for admin"
+        })
+    
+########################################### Instructor Dashboard #########################################################
+
+def fetch_all_instructor_data_counts_data():
+    try:
+        # Query all users from the database
+        data_counts = LmsHandler.get_all_instructor_data_count()
+
+        if not data_counts:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "data_counts_data": data_counts,
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch data_counts for instructor"
+        })
+
+def get_user_points_by_user_for_instructor():
+    try:
+        # Query user IDs from the database for the specified course
+        user_ids = LmsHandler.get_user_points_for_instructor()
+
+        if not user_ids:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "user_ids": user_ids,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user enrolled course data for instructor"
+        })
+    
+def fetch_all_deptwise_users_counts_for_instructor():
+    try:
+        # Query all users from the database
+        dept_counts = LmsHandler.get_all_users_deptwise_counts_for_instructor()
+
+        if not dept_counts:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "dept_counts_data": dept_counts,
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch dept_counts data for instructor"
+        })
+
+def get_user_enrolledcourses_info_for_instructor():
+    try:
+        # Query user IDs from the database for the specified course
+        enrolled_info = LmsHandler.get_user_enroll_course_info_instructor()
+
+        if not enrolled_info:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        # Now enrolled_info is a list of user IDs enrolled in the course
+        # You can return this list or process it further as needed
+
+        return {
+            "enrolled_info": enrolled_info,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user enrolled course data for instructor"
         })

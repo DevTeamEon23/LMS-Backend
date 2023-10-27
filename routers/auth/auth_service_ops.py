@@ -279,7 +279,7 @@ def get_user_points_by_user():
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
-            "message": "Failed to fetch user enrolled course data"
+            "message": "Failed to fetch users data"
         })
     
 # def update_user_points(user_id, points):
@@ -298,11 +298,13 @@ def update_user_points(user_id, points):
         INSERT INTO user_points (user_id, points, user_level)
         VALUES (%(user_id)s, %(points)s, 0)
         ON DUPLICATE KEY UPDATE points = points + %(points)s,
-                                user_level = CASE
-                                    WHEN points + %(points)s >= 600 THEN 2
-                                    WHEN points + %(points)s >= 300 THEN 1
-                                    ELSE 0
-                                END;
+                                    user_level = CASE
+                                        WHEN points + %(points)s >= 4000 THEN 4
+                                        WHEN points + %(points)s >= 3000 THEN 3
+                                        WHEN points + %(points)s >= 2000 THEN 2
+                                        WHEN points + %(points)s >= 1000 THEN 1
+                                        ELSE 0
+                                    END;
     """
     params = {"user_id": user_id, "points": points}
     execute_query(query, params=params)
