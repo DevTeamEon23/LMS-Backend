@@ -1268,6 +1268,25 @@ class LmsHandler:
         return execute_query(query, params).fetchall()
 
     @classmethod
+    def fetch_created_course(cls, user_id):
+        query = """
+            SELECT
+                c.id AS course_id,
+                c.*,
+                NULL AS user_course_enrollment_id,
+                NULL AS enrolled_on,
+                NULL AS user_role,
+                NULL AS data_user_course_enrollment_id
+            FROM course c
+            WHERE c.user_id = %(user_id)s
+                AND c.id NOT IN (
+                    SELECT course_id
+                    FROM user_course_enrollment);
+            """
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
+    
+    @classmethod
     def unenroll_courses_from_enrolled_user(cls, data_user_course_enrollment_id):
         query = f""" DELETE FROM user_course_enrollment WHERE id = {data_user_course_enrollment_id}; """
         return execute_query(query)
