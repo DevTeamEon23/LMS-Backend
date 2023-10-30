@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from starlette.requests import Request
 from routers.auth.auth_db_ops import UserDBHandler
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from .auth_service_ops import verify_token, admin_add_new_user,add_new_user, change_user_password, flush_tokens,fetch_user_id_from_db,get_user_points_by_user_id,update_user_points,get_user_points_by_user,get_dept_by_users_id
+from .auth_service_ops import verify_token, admin_add_new_user,add_new_user, change_user_password, flush_tokens,fetch_user_id_from_db,get_user_points_by_user_id,update_user_points,get_user_points_by_user,get_dept_by_users_id,increment_login_count,get_login_count,award_badges
 from config.logconfig import logger
 from dotenv import load_dotenv
 from schemas.auth_service_schema import (Email, NewUser, User,EmailSchema, UserPassword)
@@ -64,6 +64,41 @@ def create_login_response(message, active, is_mfa_enabled, request_token, token,
             "error": None
         }
     
+# @auth.post('/login')
+# def login(user: User):
+#     email = user.email
+#     password = user.password
+
+#     # Verify the email and password
+#     message, active, is_mfa_enabled, request_token, token, details = add_new_user(email, password=password, auth_token="",
+#                                                                                   inputs={
+#                                                                                       'full_name': user.fullname, 'role': 'user', 'dept': 'user',
+#                                                                                       'users_allowed': '[]', 'active': False,
+#                                                                                       'picture': ""}, skip_new_user=True)
+    
+#     # Fetch the user's ID based on the provided email
+#     user_id = fetch_user_id_from_db(email)
+    
+#     id = fetch_user_id_from_db(email)
+#     user_dept = get_dept_by_users_id(id)
+    
+#     # Award points to the user (e.g., 25 points for each login)
+#     if active:
+#         points = 25
+#         update_user_points(user_id, points)
+
+#     # Get the user's current points
+#     user_points = get_user_points_by_user_id(user_id)
+
+
+#     # Create a login response including the user ID and points
+#     login_response = create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id, user_dept, user_points)
+
+#     # # Add user points to the response
+#     # login_response["user_points"] = user_points
+
+#     return JSONResponse(content=login_response)
+
 @auth.post('/login')
 def login(user: User):
     email = user.email
@@ -79,6 +114,12 @@ def login(user: User):
     # Fetch the user's ID based on the provided email
     user_id = fetch_user_id_from_db(email)
     
+    # Increment the user's login count in the database
+    increment_login_count(user_id)
+    
+    # Get the user's current login count
+    login_count = get_login_count(user_id)
+    
     id = fetch_user_id_from_db(email)
     user_dept = get_dept_by_users_id(id)
     
@@ -90,13 +131,15 @@ def login(user: User):
     # Get the user's current points
     user_points = get_user_points_by_user_id(user_id)
 
+    # Award badges based on login count
+    award_badges(user_id, login_count)
 
-    # Create a login response including the user ID and points
+    # Create a login response including the user ID, points, and badges
     login_response = create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id, user_dept, user_points)
 
     # # Add user points to the response
     # login_response["user_points"] = user_points
-
+    
     return JSONResponse(content=login_response)
 
 

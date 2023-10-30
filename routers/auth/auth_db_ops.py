@@ -19,7 +19,7 @@ class UserDBHandler:
     @classmethod
     def add_user_to_db(cls, params):
         query = f"""   INSERT into {n_table_user}(full_name, username, email,password, role, users_allowed, auth_token, request_token, token, active) VALUES 
-                        (%(full_name)s, %(username)s, %(email)s,%(password)s, %(role)s, %(users_allowed)s,  %(auth_token)s, %(request_token)s, %(token)s, %(active)s)
+                        (%(full_name)s, %(username)s, %(email)s,%(password)s, %(role)s, %(users_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s)
                         ; 
                     """
         return execute_query(query, params=params)
