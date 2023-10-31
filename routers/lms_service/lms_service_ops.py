@@ -2194,6 +2194,56 @@ def delete_virtualtraining_by_id(id):
             "message": "Failed to delete virtualtraining data"
         })
     
+
+def fetch_classroom_data():
+    try:
+        query = """SELECT * FROM classroom;"""
+        classroom_data = execute_query(query).fetchall()
+        return classroom_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return None
+    
+def fetch_conference_data():
+    try:
+        query = """SELECT * FROM conference;"""
+        conference_data = execute_query(query).fetchall()
+        return conference_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return None
+    
+def fetch_virtualtraining_data():
+    try:
+        query = """SELECT * FROM virtualtraining;"""
+        conference_data = execute_query(query).fetchall()
+        return conference_data
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return None
+
+def fetch_all_training_data():
+    try:
+        classroom_data = fetch_classroom_data()
+        conference_data = fetch_conference_data()
+        virtualtraining_data = fetch_virtualtraining_data()
+
+        response_data = {
+            "classroom_data": classroom_data,
+            "conference_data": conference_data,
+            "virtualtraining_data": virtualtraining_data
+        }
+
+        return {
+            "status": "success",
+            "data": response_data
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=500, content={
+            "status": "failure",
+            "message": "Failed to fetch training data"
+        })
 ##########################################################################################################################
 
 def check_existing_discussion(topic):
