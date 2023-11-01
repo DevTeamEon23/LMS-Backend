@@ -1193,10 +1193,10 @@ class LmsHandler:
         query = f""" DELETE FROM user_course_enrollment WHERE id = '{id}'; """
         return execute_query(query)
 
-######################################## Users TAB Courses Page(Admin,Instructor) #################################################
+######################################## Users TAB Courses Page(Admin) #################################################
 
     @classmethod
-    def get_enrollcourse_for_inst_learner(cls, user_id, admin_user_id):
+    def get_enrollcourse_for_admin_inst(cls, user_id, admin_user_id):
         query = """
             SELECT
                 uce.course_id AS course_id,
@@ -1233,6 +1233,48 @@ class LmsHandler:
             WHERE c.user_id = %(admin_user_id)s;
         """
         params = {"user_id": user_id, "admin_user_id": admin_user_id}
+        return execute_query(query, params).fetchall()
+    
+######################################## Users TAB Courses Page(Instructor) #################################################
+
+    @classmethod
+    def get_enrollcourse_for_inst_learner(cls, user_id, inst_user_id):
+        query = """
+            SELECT
+                uce.course_id AS course_id,
+                c.coursename,
+                uce.id AS user_course_enrollment_id,
+                uce.created_at AS enrolled_on,
+                CASE
+                    WHEN u.role = 'instructor' THEN 'Instructor'
+                    ELSE u.role
+                END AS user_role,
+                uce.id AS data_user_course_enrollment_id
+            FROM user_course_enrollment uce
+            LEFT JOIN course c ON uce.course_id = c.id
+            LEFT JOIN users u ON uce.user_id = u.id
+            WHERE 
+                (
+                    (u.role = 'learner')
+                    AND uce.user_id = %(user_id)s
+                )
+                OR
+                (
+                    u.role = 'instructor'
+                    AND uce.user_id = %(inst_user_id)s
+                )
+            UNION
+            SELECT
+                c.id AS course_id,
+                c.coursename,
+                NULL AS user_course_enrollment_id,
+                NULL AS enrolled_on,
+                'Instructor' AS user_role, -- Specify 'Instructor' for instructor-enrolled courses
+                NULL AS data_user_course_enrollment_id
+            FROM course c
+            WHERE c.user_id = %(inst_user_id)s;
+        """
+        params = {"user_id": user_id, "inst_user_id": inst_user_id}
         return execute_query(query, params).fetchall()
     
 ############################# Courses Lists for for Admin,Instructor & Learner #############################################
@@ -1291,10 +1333,10 @@ class LmsHandler:
         query = f""" DELETE FROM user_course_enrollment WHERE id = {data_user_course_enrollment_id}; """
         return execute_query(query)
     
-######################################## Users TAB Groups Page(Admin,Instructor) #################################################
+######################################## Users TAB Groups Page(Admin) #################################################
 
     @classmethod
-    def get_enrollgroup_for_inst_learner(cls, user_id, admin_user_id):
+    def get_enrollgroup_for_admin(cls, user_id, admin_user_id):
         query = """
             SELECT
                 uge.group_id AS group_id,
@@ -1331,6 +1373,48 @@ class LmsHandler:
             WHERE lg.user_id = %(admin_user_id)s;
         """
         params = {"user_id": user_id, "admin_user_id": admin_user_id}
+        return execute_query(query, params).fetchall()
+    
+######################################## Users TAB Groups Page(Instructor) #################################################
+
+    @classmethod
+    def get_enrollgroup_for_inst_learner(cls, user_id, inst_user_id):
+        query = """
+            SELECT
+                uge.group_id AS group_id,
+                lg.groupname,
+                uge.id AS user_group_enrollment_id,
+                uge.created_at AS enrolled_on,
+                CASE
+                    WHEN u.role = 'instructor' THEN 'Instructor'
+                    ELSE u.role
+                END AS user_role,
+                uge.id AS data_user_group_enrollment_id
+            FROM user_group_enrollment uge
+            LEFT JOIN lmsgroup lg ON uge.group_id = lg.id
+            LEFT JOIN users u ON uge.user_id = u.id
+            WHERE 
+                (
+                    (u.role = 'learner')
+                    AND uge.user_id = %(user_id)s
+                )
+                OR
+                (
+                    u.role = 'instructor'
+                    AND uge.user_id = %(inst_user_id)s
+                )
+            UNION
+            SELECT
+                lg.id AS group_id,
+                lg.groupname,
+                NULL AS user_group_enrollment_id,
+                NULL AS enrolled_on,
+                'Instructor' AS user_role, -- Specify 'Instructor' for instructor-enrolled groups
+                NULL AS data_user_group_enrollment_id
+            FROM lmsgroup lg
+            WHERE lg.user_id = %(inst_user_id)s;
+        """
+        params = {"user_id": user_id, "inst_user_id": inst_user_id}
         return execute_query(query, params).fetchall()
     
 ############################# Groups Lists for Admin,Instructor & Learner #############################################
@@ -1418,10 +1502,10 @@ class LmsHandler:
         query = f""" DELETE FROM user_group_enrollment WHERE id = '{id}'; """
         return execute_query(query)
     
-######################################## Courses TAB Users Page(Admin,Instructor) #################################################
+######################################## Courses TAB Users Page(Admin) #################################################
 
     @classmethod
-    def get_enrollusers_to_course_for_inst_learner(cls, course_id, admin_user_id):
+    def get_enrollusers_to_course_for_admin(cls, course_id, admin_user_id):
         query = """
             WITH AdminDept AS (
                 SELECT
@@ -1461,6 +1545,55 @@ class LmsHandler:
             SELECT * FROM EnrolledUsers;
         """
         params = {"course_id": course_id, "admin_user_id": admin_user_id}
+        return execute_query(query, params).fetchall()
+    
+######################################## Courses TAB Users Page(Instructor) #################################################
+
+    @classmethod
+    def get_enrollusers_to_course_for_inst_learner(cls, course_id, inst_user_id):
+        query = """
+            WITH LearnerDept AS (
+                SELECT dept
+                FROM users
+                WHERE id = %(inst_user_id)s
+            ),
+            LearnerEnrolled AS (
+                SELECT
+                    u.id AS user_id,
+                    u.full_name,
+                    u.role,
+                    uce.created_at AS enrolled_on,
+                    uce.id AS user_course_enrollment_id
+                FROM user_course_enrollment uce
+                JOIN users u ON uce.user_id = u.id
+                JOIN LearnerDept ld ON u.dept = ld.dept
+                WHERE uce.course_id = %(course_id)s
+                AND u.role = 'Learner'
+            )
+            SELECT * FROM LearnerEnrolled
+            UNION ALL
+            SELECT
+                u.id AS user_id,
+                u.full_name,
+                'Learner' AS role,
+                NULL AS enrolled_on,
+                NULL AS user_course_enrollment_id
+            FROM users u
+            JOIN LearnerDept ld ON u.dept = ld.dept
+            WHERE u.id = %(inst_user_id)s
+            UNION ALL
+            SELECT
+                u.id AS user_id,
+                u.full_name,
+                'Learner' AS role,
+                NULL AS enrolled_on,
+                NULL AS user_course_enrollment_id
+            FROM users u
+            WHERE u.dept = (SELECT dept FROM LearnerDept)
+            AND u.role = 'Learner'
+            AND u.id != %(inst_user_id)s;
+        """
+        params = {"course_id": course_id, "inst_user_id": inst_user_id}
         return execute_query(query, params).fetchall()
     
 ######################################## Course TAB User Page #################################################
