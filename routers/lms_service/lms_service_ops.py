@@ -3349,12 +3349,12 @@ def remove_user_from_groupby_id(id):
             "message": "Failed to Unenrolled user data from group"
         })
     
-################################################################################################################
+############################################### Groups TAB Users Page(Admin) #################################################################
     
-def fetch_enrollusers_of_group_to_inst_learner(group_id, admin_user_id):
+def fetch_enrollusers_of_group_to_admin(group_id, admin_user_id):
     try:
         # Query course IDs from the database for the specified group
-        group_ids = LmsHandler.get_enrollusers_of_group_for_inst_learner(group_id, admin_user_id)
+        group_ids = LmsHandler.get_enrollusers_of_group_for_admin(group_id, admin_user_id)
 
         if not group_ids:
             # Handle the case when no course is found for the specified course
@@ -3368,8 +3368,31 @@ def fetch_enrollusers_of_group_to_inst_learner(group_id, admin_user_id):
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
-            "message": "Failed to fetch enrolled courses data of course"
+            "message": "Failed to fetch enrolled courses data of admin for instructor"
         })
+
+############################################### Groups TAB Users Page(Instructor) #################################################################
+    
+def fetch_enrollusers_of_group_to_inst_learner(group_id, inst_user_id):
+    try:
+        # Query course IDs from the database for the specified group
+        group_ids = LmsHandler.get_enrollusers_of_group_for_inst_learner(group_id, inst_user_id)
+
+        if not group_ids:
+            # Handle the case when no course is found for the specified course
+            return None
+
+        return {
+            "group_ids": group_ids,
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled courses data of instructor for learner"
+        })
+    
 ###################################### Enroll Course to GROUP (GROUPS -> Course Page) ######################################################
 
 def check_existing_userid(id):

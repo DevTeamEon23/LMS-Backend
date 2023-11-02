@@ -1925,10 +1925,10 @@ class LmsHandler:
         query = f""" DELETE FROM user_group_enrollment WHERE id = '{id}'; """
         return execute_query(query)
     
-######################################## Groups TAB Users Page(Admin,Instructor) #################################################
+######################################## Groups TAB Users Page(Admin) #################################################
 
     @classmethod
-    def get_enrollusers_of_group_for_inst_learner(cls, group_id, admin_user_id):
+    def get_enrollusers_of_group_for_admin(cls, group_id, admin_user_id):
         query = """
             WITH AdminDept AS (
                 SELECT dept
@@ -1967,6 +1967,50 @@ class LmsHandler:
             SELECT * FROM EnrolledUsers;
         """
         params = {"group_id": group_id,"admin_user_id": admin_user_id}
+        return execute_query(query, params).fetchall()
+    
+######################################## Groups TAB Users Page(Instructor) #################################################
+
+    @classmethod
+    def get_enrollusers_of_group_for_inst_learner(cls, group_id, inst_user_id):
+        query = """
+            WITH LearnerDept AS (
+                SELECT dept
+                FROM users
+                WHERE id = %(inst_user_id)s
+            ),
+
+            FilteredUsers AS (
+                SELECT
+                    u.id AS user_id,
+                    u.full_name,
+                    u.role,
+                    NULL AS enrolled_on,
+                    NULL AS user_group_enrollment_id
+                FROM users u
+                JOIN LearnerDept ad ON u.dept = ad.dept
+                WHERE u.role IN ('Learner')
+                AND u.id != %(inst_user_id)s -- Exclude the inst_user_id
+            ),
+
+            EnrolledUsers AS (
+                SELECT
+                    u.id AS user_id,
+                    u.full_name,
+                    u.role,
+                    uge.created_at AS enrolled_on,
+                    uge.id AS user_group_enrollment_id
+                FROM user_group_enrollment uge
+                JOIN users u ON uge.user_id = u.id
+                JOIN LearnerDept ad ON u.dept = ad.dept
+                WHERE uge.group_id = %(group_id)s
+            )
+
+            SELECT * FROM FilteredUsers
+            UNION ALL
+            SELECT * FROM EnrolledUsers;
+        """
+        params = {"group_id": group_id,"inst_user_id": inst_user_id}
         return execute_query(query, params).fetchall()
     
 ######################################## Group TAB Course Page #################################################
