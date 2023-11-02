@@ -1523,8 +1523,8 @@ class LmsHandler:
                     NULL AS user_course_enrollment_id
                 FROM users u
                 JOIN AdminDept ad ON u.dept = ad.dept
-                WHERE u.role IN ('Instructor', 'Learner')
-                AND u.id != 2 -- Exclude the admin_user_id (replace 2 with the actual admin_user_id)
+                WHERE u.role IN ('Instructor')
+                AND u.id != %(admin_user_id)s -- Exclude the admin_user_id (replace 2 with the actual admin_user_id)
             ),
 
             EnrolledUsers AS (
