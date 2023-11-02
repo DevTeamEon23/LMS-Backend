@@ -1945,7 +1945,7 @@ class LmsHandler:
                     NULL AS user_group_enrollment_id
                 FROM users u
                 JOIN AdminDept ad ON u.dept = ad.dept
-                WHERE u.role IN ('Instructor', 'Learner')
+                WHERE u.role IN ('Instructor')
                 AND u.id != %(admin_user_id)s -- Exclude the admin_user_id
             ),
 
