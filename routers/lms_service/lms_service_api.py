@@ -2106,7 +2106,7 @@ async def upload_file_api(user_id: int, file: UploadFile, active: bool):
         return JSONResponse(status_code=200, content={"message": "File uploaded successfully"})
     except Exception as exc:
         logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail="Failed to upload file")
+        raise HTTPException(status_code=500, detail="Failed to upload file, Please check the same filename alreadly exists or not and try again")
 
 
 @service.put("/update_file/{file_id}/")
