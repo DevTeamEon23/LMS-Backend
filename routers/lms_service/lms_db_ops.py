@@ -1277,7 +1277,96 @@ class LmsHandler:
         params = {"user_id": user_id, "inst_user_id": inst_user_id}
         return execute_query(query, params).fetchall()
     
-############################# Courses Lists for for Admin,Instructor & Learner #############################################
+############################# Courses Lists for for Admin #############################################
+
+    @classmethod
+    def fetch_enrolled_and_admin_inst_created_course_details_for_admin(cls, user_id):
+        query = """
+            WITH AdminUser AS (
+                SELECT
+                    uce.course_id AS course_id,
+                    c.*,
+                    uce.id AS user_course_enrollment_id,
+                    uce.created_at AS enrolled_on,
+                    u.role AS user_role,
+                    uce.id AS data_user_course_enrollment_id
+                FROM user_course_enrollment uce
+                LEFT JOIN course c ON uce.course_id = c.id
+                LEFT JOIN users u ON uce.user_id = u.id
+                WHERE uce.user_id = %(user_id)s
+
+                UNION ALL
+
+                SELECT
+                    cu.id AS course_id,
+                    cu.*,
+                    NULL AS user_course_enrollment_id,
+                    NULL AS enrolled_on,
+                    NULL AS user_role,
+                    NULL AS data_user_course_enrollment_id
+                FROM course cu
+                WHERE cu.user_id = %(user_id)s
+            ),
+            AdminDept AS (
+                SELECT dept
+                FROM users
+                WHERE id = %(user_id)s
+            ),
+            Instructors AS (
+                SELECT id
+                FROM users
+                WHERE dept = (SELECT dept FROM AdminDept)
+                AND role = 'Instructor'
+            )
+
+            SELECT
+                AdminUser.course_id,
+                AdminUser.id,
+                AdminUser.user_id,
+                AdminUser.coursename,
+                AdminUser.file,
+                AdminUser.description,
+                AdminUser.coursecode,
+                AdminUser.price,
+                AdminUser.courselink,
+                AdminUser.coursevideo,
+                AdminUser.capacity,
+                AdminUser.startdate,
+                AdminUser.enddate,
+                AdminUser.timelimit,
+                AdminUser.certificate,
+                AdminUser.level,
+                AdminUser.category,
+                AdminUser.course_allowed,
+                AdminUser.auth_token,
+                AdminUser.request_token,
+                AdminUser.token,
+                AdminUser.isActive,
+                AdminUser.isHide,
+                AdminUser.created_at,
+                AdminUser.updated_at,
+                AdminUser.user_course_enrollment_id,
+                AdminUser.enrolled_on,
+                AdminUser.user_role,
+                AdminUser.data_user_course_enrollment_id
+            FROM AdminUser
+
+            UNION ALL
+
+            SELECT
+                cu_inst.id AS course_id,
+                cu_inst.*,
+                NULL AS user_course_enrollment_id,
+                NULL AS enrolled_on,
+                NULL AS user_role,
+                NULL AS data_user_course_enrollment_id
+            FROM course cu_inst
+            WHERE cu_inst.user_id IN (SELECT id FROM Instructors);
+            """
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
+    
+############################# Courses Lists for for Instructor & Learner #############################################
 
     @classmethod
     def fetch_enrolled_course_details(cls, user_id):
@@ -1294,7 +1383,7 @@ class LmsHandler:
             LEFT JOIN users u ON uce.user_id = u.id
             WHERE uce.user_id = %(user_id)s
 
-            UNION
+            UNION ALL
 
             SELECT
                 cu.id AS course_id,

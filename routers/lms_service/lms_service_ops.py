@@ -2738,7 +2738,29 @@ def fetch_course_to_enroll_to_inst_learner(user_id, inst_user_id):
             "message": "Failed to fetch enrolled courses data of instructor for learner enroll"
         })
     
-################################################################################################################
+########################################## Courses Lists for for Admin #########################################################################
+
+def fetch_enrolled_and_admin_inst_created_course_details_to_admin(user_id):
+    try:
+        # Query user IDs from the database for the specified course
+        course_ids = LmsHandler.fetch_enrolled_and_admin_inst_created_course_details_for_admin(user_id)
+
+        if not course_ids:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "course_ids": course_ids,
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled courses data of user"
+        })
+    
+######################################### Courses Lists for for Instructor & Learner ########################################################################
 
 def fetch_enrolled_courses_of_user(user_id):
     try:
