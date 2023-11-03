@@ -1511,7 +1511,7 @@ class LmsHandler:
                 SELECT
                     dept
                 FROM users
-                WHERE id = %(admin_user_id)s
+                WHERE id = %(admin_user_id)s -- Replace 2 with the actual admin_user_id
             ),
 
             FilteredUsers AS (
@@ -1519,11 +1519,11 @@ class LmsHandler:
                     u.id AS user_id,
                     u.full_name,
                     u.role,
-                    NULL AS enrolled_on, -- Add a placeholder for enrolled_on
+                    NULL AS enrolled_on,
                     NULL AS user_course_enrollment_id
                 FROM users u
                 JOIN AdminDept ad ON u.dept = ad.dept
-                WHERE u.role IN ('Instructor')
+                WHERE u.role = 'Instructor' -- Filter by role = 'Instructor'
                 AND u.id != %(admin_user_id)s -- Exclude the admin_user_id (replace 2 with the actual admin_user_id)
             ),
 
@@ -1533,7 +1533,7 @@ class LmsHandler:
                     u.full_name,
                     u.role,
                     uce.created_at AS enrolled_on,
-                    uce.id AS user_course_enrollment_id -- Include user_course_enrollment_id
+                    uce.id AS user_course_enrollment_id
                 FROM user_course_enrollment uce
                 JOIN users u ON uce.user_id = u.id
                 JOIN AdminDept ad ON u.dept = ad.dept
@@ -1542,8 +1542,10 @@ class LmsHandler:
 
             SELECT * FROM FilteredUsers
             UNION ALL
-            SELECT * FROM EnrolledUsers;
+            SELECT * FROM EnrolledUsers
+            WHERE role != 'Learner';
         """
+
         params = {"course_id": course_id, "admin_user_id": admin_user_id}
         return execute_query(query, params).fetchall()
     
@@ -1945,7 +1947,7 @@ class LmsHandler:
                     NULL AS user_group_enrollment_id
                 FROM users u
                 JOIN AdminDept ad ON u.dept = ad.dept
-                WHERE u.role IN ('Instructor')
+                WHERE u.role = 'Instructor' -- Filter by role = 'Instructor'
                 AND u.id != %(admin_user_id)s -- Exclude the admin_user_id
             ),
 
@@ -1964,7 +1966,8 @@ class LmsHandler:
 
             SELECT * FROM FilteredUsers
             UNION ALL
-            SELECT * FROM EnrolledUsers;
+            SELECT * FROM EnrolledUsers
+            WHERE role != 'Learner';
         """
         params = {"group_id": group_id,"admin_user_id": admin_user_id}
         return execute_query(query, params).fetchall()
@@ -1989,7 +1992,7 @@ class LmsHandler:
                     NULL AS user_group_enrollment_id
                 FROM users u
                 JOIN LearnerDept ad ON u.dept = ad.dept
-                WHERE u.role IN ('Learner')
+                WHERE u.role = 'Learner' -- Filter by role = 'Learner'
                 AND u.id != %(inst_user_id)s -- Exclude the inst_user_id
             ),
 
@@ -2008,7 +2011,8 @@ class LmsHandler:
 
             SELECT * FROM FilteredUsers
             UNION ALL
-            SELECT * FROM EnrolledUsers;
+            SELECT * FROM EnrolledUsers
+            WHERE role != 'Admin';
         """
         params = {"group_id": group_id,"inst_user_id": inst_user_id}
         return execute_query(query, params).fetchall()
