@@ -1299,7 +1299,30 @@ class LmsHandler:
 
                 SELECT
                     cu.id AS course_id,
-                    cu.*,
+                    cu.id AS id,  -- Add this line with alias
+                    cu.user_id,  -- Add this line
+                    cu.coursename,
+                    cu.file,
+                    cu.description,
+                    cu.coursecode,
+                    cu.price,
+                    cu.courselink,
+                    cu.coursevideo,
+                    cu.capacity,
+                    cu.startdate,
+                    cu.enddate,
+                    cu.timelimit,
+                    cu.certificate,
+                    cu.level,
+                    cu.category,
+                    cu.course_allowed,
+                    cu.auth_token,
+                    cu.request_token,
+                    cu.token,
+                    cu.isActive,
+                    cu.isHide,
+                    cu.created_at,
+                    cu.updated_at,
                     NULL AS user_course_enrollment_id,
                     NULL AS enrolled_on,
                     NULL AS user_role,
@@ -1347,26 +1370,52 @@ class LmsHandler:
                 AdminUser.updated_at,
                 AdminUser.user_course_enrollment_id,
                 AdminUser.enrolled_on,
-                AdminUser.user_role,
+                CASE
+                    WHEN AdminUser.user_id = %(user_id)s THEN 'Admin'
+                    ELSE 'Instructor'
+                END AS user_role,
                 AdminUser.data_user_course_enrollment_id
             FROM AdminUser
 
             UNION ALL
 
             SELECT
-                cu_inst.id AS course_id,
-                cu_inst.*,
+                cu.id AS course_id,  -- Change cu_inst to cu
+                cu.id,
+                cu.user_id,
+                cu.coursename,
+                cu.file,
+                cu.description,
+                cu.coursecode,
+                cu.price,
+                cu.courselink,
+                cu.coursevideo,
+                cu.capacity,
+                cu.startdate,
+                cu.enddate,
+                cu.timelimit,
+                cu.certificate,
+                cu.level,
+                cu.category,
+                cu.course_allowed,
+                cu.auth_token,
+                cu.request_token,
+                cu.token,
+                cu.isActive,
+                cu.isHide,
+                cu.created_at,
+                cu.updated_at,
                 NULL AS user_course_enrollment_id,
                 NULL AS enrolled_on,
-                NULL AS user_role,
+                'Instructor' AS user_role,
                 NULL AS data_user_course_enrollment_id
-            FROM course cu_inst
-            WHERE cu_inst.user_id IN (SELECT id FROM Instructors);
+            FROM course cu
+            WHERE cu.user_id IN (SELECT id FROM Instructors);
             """
         params = {"user_id": user_id}
         return execute_query(query, params).fetchall()
     
-############################# Courses Lists for for Instructor & Learner #############################################
+############################# Courses Lists for Instructor & Learner #############################################
 
     @classmethod
     def fetch_enrolled_course_details(cls, user_id):
@@ -1506,7 +1555,92 @@ class LmsHandler:
         params = {"user_id": user_id, "inst_user_id": inst_user_id}
         return execute_query(query, params).fetchall()
     
-############################# Groups Lists for Admin,Instructor & Learner #############################################
+############################# Groups Lists for Admin #############################################
+
+    @classmethod
+    def fetch_enrolled_group_details_for_admin(cls, user_id):
+        query = """ 
+            WITH UserGroups AS (
+                SELECT
+                    uge.group_id AS group_id,
+                    lg.*,
+                    uge.id AS user_group_enrollment_id,
+                    uge.id AS data_user_group_enrollment_id,
+                    u.role AS user_role
+                FROM user_group_enrollment uge
+                LEFT JOIN lmsgroup lg ON uge.group_id = lg.id
+                LEFT JOIN users u ON lg.user_id = u.id
+                WHERE uge.user_id = %(user_id)s
+
+                UNION
+
+                SELECT
+                    lu.id AS group_id,
+                    lu.*,
+                    NULL AS user_group_enrollment_id,
+                    NULL AS data_user_group_enrollment_id,
+                    u.role AS user_role
+                FROM lmsgroup lu
+                LEFT JOIN users u ON lu.user_id = u.id
+                WHERE lu.user_id = %(user_id)s
+            ),
+            UserDept AS (
+                SELECT dept
+                FROM users
+                WHERE id = %(user_id)s
+            ),
+            InstructorGroups AS (
+                SELECT id
+                FROM users
+                WHERE dept = (SELECT dept FROM UserDept)
+                AND role = 'Instructor'
+            )
+
+            SELECT
+                UserGroups.group_id,
+                UserGroups.user_id,
+                UserGroups.groupname,
+                UserGroups.groupdesc,
+                UserGroups.groupkey,
+                UserGroups.group_allowed,
+                UserGroups.auth_token,
+                UserGroups.request_token,
+                UserGroups.token,
+                UserGroups.created_at,
+                UserGroups.updated_at,
+                UserGroups.isActive,
+                UserGroups.isHide,
+                UserGroups.user_group_enrollment_id,
+                UserGroups.data_user_group_enrollment_id,
+                UserGroups.user_role AS created_by_role
+            FROM UserGroups
+
+            UNION
+
+            SELECT
+                ig.id AS group_id,
+                ig.user_id,
+                ig.groupname,
+                ig.groupdesc,
+                ig.groupkey,
+                ig.group_allowed,
+                ig.auth_token,
+                ig.request_token,
+                ig.token,
+                ig.created_at,
+                ig.updated_at,
+                ig.isActive,
+                ig.isHide,
+                NULL AS user_group_enrollment_id,
+                NULL AS data_user_group_enrollment_id,
+                'Instructor' AS created_by_role
+            FROM lmsgroup ig
+            WHERE ig.user_id IN (SELECT id FROM InstructorGroups);
+            """
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
+    
+############################# Groups Lists for Instructor & Learner #############################################
 
     @classmethod
     def fetch_enrolled_group_details(cls, user_id):

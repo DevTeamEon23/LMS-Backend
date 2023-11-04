@@ -2859,8 +2859,31 @@ def fetch_group_to_enroll_to_inst_learner(user_id, inst_user_id):
             "status": "failure",
             "message": "Failed to fetch enrolled groups data of instructor for learner"
         })
-    
-############################# Groups Lists for Admin,Instructor & Learner #############################################
+
+############################# Groups Lists for Admin #############################################
+
+def fetch_added_groups_of_admin(user_id):
+    try:
+        # Query user IDs from the database for the specified group
+        group_ids = LmsHandler.fetch_enrolled_group_details_for_admin(user_id)
+
+        if not group_ids:
+            # Handle the case when no user is found for the specified group
+            return None
+
+        return {
+            "group_ids": group_ids,
+            # Include other group attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled groups data of admin"
+        })
+ 
+############################# Groups Lists for Instructor & Learner #############################################
 
 def fetch_added_groups_of_user(user_id):
     try:
