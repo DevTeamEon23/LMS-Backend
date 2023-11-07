@@ -281,7 +281,8 @@ class LmsHandler:
             level = %(level)s,
             category = %(category)s,
             isActive = %(isActive)s,
-            isHide = %(isHide)s
+            isHide = %(isHide)s,
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = %(id)s;
         """
         params = {

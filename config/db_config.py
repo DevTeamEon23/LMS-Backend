@@ -427,16 +427,6 @@ course_content_table = Table(
     # #Scorm File
     # Column('scorm_unitname', String(150), nullable=True),
     # Column('scorm_file', LONGBLOB, nullable=False),
-    # #Assignment 
-    # Column('assignment_name', String(150), nullable=True),
-    # Column('assignment_file', LONGBLOB, nullable=False),
-    # Column('topic', String(600), nullable=True),
-    # Column('instructor_led_name', String(150), nullable=True),
-    
-    # # Submission related fields (for assignments)
-    # Column('submission_status', String(20), nullable=True),  # 'Pass', 'Not Passed', 'Pending'
-    # Column('grade', Integer, nullable=True),  # 1-100
-    # Column('comments', String(600), nullable=True),
 
     Column('course_content_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
@@ -484,6 +474,18 @@ rating_feedback_files_table = Table(
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Index(f'idx_{n_table_user_rating_feedback}_token', 'token'),
 )
+
+
+    # #Assignment 
+    # Column('assignment_name', String(150), nullable=True),
+    # Column('assignment_file', LONGBLOB, nullable=False),
+    # Column('topic', String(600), nullable=True),
+    # Column('instructor_led_name', String(150), nullable=True),
+    
+    # # Submission related fields (for assignments)
+    # Column('submission_status', String(20), nullable=True),  # 'Pass', 'Not Passed', 'Pending'
+    # Column('grade', Integer, nullable=True),  # 1-100
+    # Column('comments', String(600), nullable=True),
 
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')
 metadata.create_all(meta_engine, checkfirst=True)
