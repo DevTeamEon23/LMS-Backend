@@ -1071,7 +1071,7 @@ async def update_courses(
             shutil.copyfileobj(coursevideo.file, buffer)
         coursevideo_path = "coursevideo/" + coursevideo.filename
 
-    if coursevideo is None:
+    if coursevideo_path is None:
         coursevideo_path = 'null'
         
     try:

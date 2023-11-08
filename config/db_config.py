@@ -424,7 +424,7 @@ course_content_table = Table(
     # #PPT/Documents
     # Column('ppt_unitname', String(150), nullable=True),
     # Column('ppt_file', LONGBLOB, nullable=False),
-    # # #Scorm File
+    # #Scorm File
     # Column('scorm_unitname', String(150), nullable=True),
     # Column('scorm_file', LONGBLOB, nullable=False),
 
