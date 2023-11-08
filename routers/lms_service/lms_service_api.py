@@ -1071,6 +1071,9 @@ async def update_courses(
             shutil.copyfileobj(coursevideo.file, buffer)
         coursevideo_path = "coursevideo/" + coursevideo.filename
 
+    if coursevideo is None:
+        coursevideo_path = 'null'
+        
     try:
         if change_course_details_new(id, user_id, coursename, file_path, description, coursecode, price, courselink, coursevideo_path, capacity, startdate, enddate, timelimit, certificate, level, category, isActive, isHide):
             return JSONResponse(status_code=status.HTTP_200_OK, content={
