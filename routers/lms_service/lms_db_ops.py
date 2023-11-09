@@ -1641,7 +1641,7 @@ class LmsHandler:
         params = {"user_id": user_id}
         return execute_query(query, params).fetchall()
     
-############################# Groups Lists for Instructor & Learner #############################################
+############################# Groups Lists for Instructor #############################################
 
     @classmethod
     def fetch_enrolled_group_details(cls, user_id):
@@ -1672,6 +1672,20 @@ class LmsHandler:
     def remove_groups_from_enrolled_user(cls, data_user_group_enrollment_id):
         query = f""" DELETE FROM user_group_enrollment WHERE id = {data_user_group_enrollment_id}; """
         return execute_query(query)
+    
+############################# Groups Lists for Learner #############################################
+
+    @classmethod
+    def fetch_enrolled_group_of_learner(cls, user_id):
+        query = """
+            SELECT DISTINCT lg.*
+                FROM lmsgroup lg
+                JOIN course_group_enrollment cge ON lg.id = cge.group_id
+                JOIN user_course_enrollment uce ON cge.course_id = uce.course_id
+                WHERE uce.user_id = %(user_id)s;
+            """
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
     
 ######################################## Users TAB Group Page #################################################
 
