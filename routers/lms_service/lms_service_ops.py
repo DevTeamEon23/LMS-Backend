@@ -515,6 +515,7 @@ def add_new(email: str,file: bytes,generate_tokens: bool = False, auth_token="",
         if is_existing:
             # Check password
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "status": "failure",
                 "message": "User Already Exists"
             })
 
@@ -1131,6 +1132,33 @@ def check_existing_course_content(video_unitname):
     else:
         return True
         
+def check_existing_course_content_ppt(ppt_unitname):
+
+    query = f"""
+    select * from {n_table_course_content} where ppt_unitname=%(ppt_unitname)s;
+    """
+    response = execute_query(query, params={'ppt_unitname': ppt_unitname})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+def check_existing_course_content_scorm(scorm_unitname):
+
+    query = f"""
+    select * from {n_table_course_content} where scorm_unitname=%(scorm_unitname)s;
+    """
+    response = execute_query(query, params={'scorm_unitname': scorm_unitname})
+    data = response.fetchone()
+
+    if data is None:
+        return False
+    else:
+        return True
+    
+
 def check_existing_course_content_by_id(id):
 
     query = f"""
@@ -1144,39 +1172,115 @@ def check_existing_course_content_by_id(id):
     else:
         return True
     
-def add_course_content(video_unitname: str,generate_tokens: bool = False, auth_token="", inputs={},skip_new_category=False):
+# def add_course_content(video_unitname: str,generate_tokens: bool = False, auth_token="", inputs={},skip_new_category=False):
+#     try:
+
+#         # Check course_content existence and status
+#         is_existing = check_existing_course_content(video_unitname)
+
+#         # If course_content Already Exists
+#         if is_existing:
+#             # Check course_content
+#             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#                 "message": "Course Video Already Exists"
+#             })
+
+#         elif not is_existing and skip_new_category == False:
+
+#             course_id = inputs.get('course_id')
+#             video_unitname = inputs.get('video_unitname')
+#             video_file = inputs.get('video_file')
+#             ppt_unitname = inputs.get('ppt_unitname', '')
+#             ppt_file = inputs.get('ppt_file', '')
+#             scorm_unitname = inputs.get('scorm_unitname', '')
+#             scorm_file = inputs.get('scorm_file', '')
+
+#             # Token Generation
+#             token = create_course_content_token(video_unitname)
+
+#             request_token = ''
+            
+#             # Add New Conference to the list of Conferences
+#             data = {'course_id': course_id,'video_unitname': video_unitname, 'video_file': video_file, 'ppt_unitname': ppt_unitname,
+#                 'ppt_file': ppt_file, 'scorm_unitname': scorm_unitname, 'scorm_file': scorm_file, 
+#                 'course_content_allowed': inputs.get('course_content_allowed', ''), 'auth_token': auth_token,
+#                 'request_token': request_token, 'token': token}
+
+#             resp = LmsHandler.add_course_content(data)
+#             # # If token not required,
+#             if not generate_tokens and len(auth_token) == 0:
+#                 token = None
+
+#     except ValueError as exc:
+#         logger.error(traceback.format_exc())
+#         message = exc.args[0]
+#         logger.error(message)
+
+#     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course Content added successfully'))
+    
+def add_course_contents(video_unitname: str, generate_tokens: bool = False, auth_token="", inputs={}, skip_new_category=False):
     try:
+        # Check video content existence and status
+        is_video_existing = check_existing_course_content(video_unitname)
 
-        # Check course_content existence and status
-        is_existing = check_existing_course_content(video_unitname)
+        # Check ppt content existence and status
+        ppt_unitname = inputs.get('ppt_unitname', '')
+        is_ppt_existing = check_existing_course_content_ppt(ppt_unitname)
 
-        # If course_content Already Exists
-        if is_existing:
-            # Check course_content
+        # Check scorm content existence and status
+        scorm_unitname = inputs.get('scorm_unitname', '')
+        is_scorm_existing = check_existing_course_content_scorm(scorm_unitname)
+
+        # If video content already exists
+        if is_video_existing:
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
                 "message": "Course Video Already Exists"
             })
 
-        elif not is_existing and skip_new_category == False:
+        # If ppt content already exists
+        elif is_ppt_existing:
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "message": "Course PPT Already Exists"
+            })
 
+        # If scorm content already exists
+        elif is_scorm_existing:
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                "message": "Course Scorm Already Exists"
+            })
+
+        elif not is_video_existing and not is_ppt_existing and not is_scorm_existing and skip_new_category == False:
             course_id = inputs.get('course_id')
             video_unitname = inputs.get('video_unitname')
             video_file = inputs.get('video_file')
-            active = inputs.get('active')
-            deactive = inputs.get('deactive')
+            ppt_unitname = inputs.get('ppt_unitname', '')
+            ppt_file = inputs.get('ppt_file', '')
+            scorm_unitname = inputs.get('scorm_unitname', '')
+            scorm_file = inputs.get('scorm_file', '')
 
             # Token Generation
             token = create_course_content_token(video_unitname)
 
             request_token = ''
-            
+
             # Add New Conference to the list of Conferences
-            data = {'course_id': course_id,'video_unitname': video_unitname, 'video_file': video_file, 'active': active, 'deactive': deactive, 
-                    'course_content_allowed': inputs.get('course_content_allowed', ''), 'auth_token': auth_token,
-                    'request_token': request_token, 'token': token}
+            data = {
+                'course_id': course_id,
+                'video_unitname': video_unitname,
+                'video_file': video_file,
+                'ppt_unitname': ppt_unitname,
+                'ppt_file': ppt_file,
+                'scorm_unitname': scorm_unitname,
+                'scorm_file': scorm_file,
+                'course_content_allowed': inputs.get('course_content_allowed', ''),
+                'auth_token': auth_token,
+                'request_token': request_token,
+                'token': token
+            }
 
             resp = LmsHandler.add_course_content(data)
-            # # If token not required,
+
+            # If token not required,
             if not generate_tokens and len(auth_token) == 0:
                 token = None
 
@@ -1185,8 +1289,10 @@ def add_course_content(video_unitname: str,generate_tokens: bool = False, auth_t
         message = exc.args[0]
         logger.error(message)
 
-    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success',message='Course Video added successfully'))
-    
+    return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='Course Content added successfully'))
+
+
+
 #Get Virtual Training data by id for update fields Mapping
 def fetch_course_content_by_onlyid(course_id):
 
@@ -1209,8 +1315,6 @@ def fetch_course_content_by_onlyid(course_id):
                 "course_id": course_content.course_id,
                 "video_unitname": course_content.video_unitname,
                 "video_file": cdn_file_link,
-                "active": course_content.active,
-                "deactive": course_content.deactive,
                 "created_at": course_content.created_at,
                 "updated_at": course_content.updated_at,
             # Include other course_content attributes as needed
@@ -1224,14 +1328,14 @@ def fetch_course_content_by_onlyid(course_id):
             "message": "Failed to fetch course_content data"
         })
     
-def change_course_content_details(id, course_id, video_unitname, video_file, active, deactive):
+def change_course_content_details(id, course_id, video_unitname, video_file, ppt_unitname, ppt_file, scorm_unitname, scorm_file):
     is_existing = check_existing_course_content_by_id(id)
     if is_existing:
         # Update course_contents
-        LmsHandler.update_course_content_to_db(id, course_id, video_unitname, video_file, active, deactive)
+        LmsHandler.update_course_content_to_db(id, course_id, video_unitname, video_file, ppt_unitname, ppt_file, scorm_unitname, scorm_file)
         return True
     else:
-        raise ValueError("Course Video does not exists")
+        raise ValueError("Course Content does not exists")
     
 def update_course_content(course_id, update_data):
     # This will get the course_content's current data from the course_content table
@@ -1245,10 +1349,6 @@ def update_course_content(course_id, update_data):
 
     if 'video_unitname' in update_data:
         update_params['video_unitname'] = update_data['video_unitname']
-    if 'active' in update_data:
-        update_params['active'] = update_data['active']
-    if 'deactive' in update_data:
-        update_params['deactive'] = update_data['deactive']
     # Check if 'file' is in update_data
     if 'video_file' in update_data:
         file = update_data['video_file']

@@ -29,7 +29,7 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_last_eid_data,fetch_last_id_data,fetch_all_dept_data,fetch_all_inst_learn_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,fetch_all_groups_data_excel,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_courses_touser,user_exists,fetch_users_data_export,fetch_courses_data_export,fetch_users_course_enrolled,enroll_coursegroup_massaction,fetch_enrolled_unenroll_courses_of_user,unenroll_courses_from_userby_id,enroll_groups_touser,fetch_added_unadded_groups_of_user,remove_group_from_userby_id,enroll_users_tocourse,fetch_enrolled_unenroll_users_of_course,unenrolled_users_from_courseby_id,enroll_groups_tocourse,fetch_enrolled_unenroll_groups_of_course,unenrolled_groups_from_courseby_id,enroll_users_togroup,fetch_added_unadded_users_of_group,remove_user_from_groupby_id,enroll_courses_togroup,fetch_added_unadded_courses_of_group,remove_course_from_groupby_id,remove_course_from_all_groups_by_course_id,fetch_enrolled_unenroll_instructors_of_course,fetch_enrolled_unenroll_learners_of_course,fetch_added_unadded_instructors_of_group,fetch_added_unadded_learners_of_group,remove_file_by_id,fetch_enrolled_and_admin_inst_created_course_details_to_admin,fetch_enrolled_courses_of_user,unenroll_courses_from_enrolleduserby_id,fetch_added_groups_of_admin,fetch_added_groups_of_learner,fetch_added_groups_of_user,remove_group_from_enrolleduserby_id,update_user,update_course,add_course_content, fetch_course_content_by_onlyid, change_course_content_details,update_course_content, delete_course_content_by_id,fetch_infographics_of_user,fetch_course_to_enroll_to_admin_inst,fetch_course_to_enroll_to_inst_learner,fetch_group_to_enroll_to_admin,fetch_group_to_enroll_to_inst_learner,fetch_users_enroll_to_admin,fetch_users_enroll_to_inst_learner,fetch_group_enroll_to_course_of_inst_learner,fetch_enrollusers_of_group_to_admin,fetch_enrollusers_of_group_to_inst_learner,fetch_course_enroll_to_group_of_inst_learner,change_course_details_new,fetch_overview_of_learner,add_ratings_feedback,fetch_all_data_counts_data,fetch_all_deptwise_users_counts,fetch_all_admin_data_counts_data,fetch_all_deptwise_users_counts_for_admin,get_user_points_by_user_for_admin,get_user_enrolledcourses_info,get_user_enrolledcourses_info_for_admin,fetch_all_instructor_data_counts_data,get_user_points_by_user_for_instructor,fetch_all_deptwise_users_counts_for_instructor,get_user_enrolledcourses_info_for_instructor,fetch_created_courses_of_user,fetch_all_training_data
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_last_eid_data,fetch_last_id_data,fetch_all_dept_data,fetch_all_inst_learn_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,fetch_all_groups_data_excel,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_courses_touser,user_exists,fetch_users_data_export,fetch_courses_data_export,fetch_users_course_enrolled,enroll_coursegroup_massaction,fetch_enrolled_unenroll_courses_of_user,unenroll_courses_from_userby_id,enroll_groups_touser,fetch_added_unadded_groups_of_user,remove_group_from_userby_id,enroll_users_tocourse,fetch_enrolled_unenroll_users_of_course,unenrolled_users_from_courseby_id,enroll_groups_tocourse,fetch_enrolled_unenroll_groups_of_course,unenrolled_groups_from_courseby_id,enroll_users_togroup,fetch_added_unadded_users_of_group,remove_user_from_groupby_id,enroll_courses_togroup,fetch_added_unadded_courses_of_group,remove_course_from_groupby_id,remove_course_from_all_groups_by_course_id,fetch_enrolled_unenroll_instructors_of_course,fetch_enrolled_unenroll_learners_of_course,fetch_added_unadded_instructors_of_group,fetch_added_unadded_learners_of_group,remove_file_by_id,fetch_enrolled_and_admin_inst_created_course_details_to_admin,fetch_enrolled_courses_of_user,unenroll_courses_from_enrolleduserby_id,fetch_added_groups_of_admin,fetch_added_groups_of_learner,fetch_added_groups_of_user,remove_group_from_enrolleduserby_id,update_user,update_course,add_course_contents, fetch_course_content_by_onlyid, change_course_content_details,update_course_content, delete_course_content_by_id,fetch_infographics_of_user,fetch_course_to_enroll_to_admin_inst,fetch_course_to_enroll_to_inst_learner,fetch_group_to_enroll_to_admin,fetch_group_to_enroll_to_inst_learner,fetch_users_enroll_to_admin,fetch_users_enroll_to_inst_learner,fetch_group_enroll_to_course_of_inst_learner,fetch_enrollusers_of_group_to_admin,fetch_enrollusers_of_group_to_inst_learner,fetch_course_enroll_to_group_of_inst_learner,change_course_details_new,fetch_overview_of_learner,add_ratings_feedback,fetch_all_data_counts_data,fetch_all_deptwise_users_counts,fetch_all_admin_data_counts_data,fetch_all_deptwise_users_counts_for_admin,get_user_points_by_user_for_admin,get_user_enrolledcourses_info,get_user_enrolledcourses_info_for_admin,fetch_all_instructor_data_counts_data,get_user_points_by_user_for_instructor,fetch_all_deptwise_users_counts_for_instructor,get_user_enrolledcourses_info_for_instructor,fetch_created_courses_of_user,fetch_all_training_data
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import (Email,CategorySchema, AddUser,User, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender,UnenrolledUsers_Course,UnenrolledUsers_Group,UnenrolledCourse_Group,UnenrolledUsers_Group,Remove_file, DeleteCourseContent)
 from utils import success_response
@@ -1113,15 +1113,51 @@ def delete_course(payload: DeleteCourse):
     
 ############################################################################################################################
 
+# @service.post('/addcourse_content')
+# async def create_course_content(course_id: str = Form(...),video_unitname: str = Form(...), video_file: UploadFile = File(...), ppt_unitname: str = Form(...), ppt_file: UploadFile = File(...), scorm_unitname: str = Form(...), scorm_file: UploadFile = File(...),generate_token: bool = Form(...)):
+#     with open("coursevideo/"+video_file.filename, "wb") as buffer:
+#         shutil.copyfileobj(video_file.file, buffer)
+#     url = str("coursevideo/"+video_file.filename)
+    
+#     with open("courseppt/" + ppt_file.filename, "wb") as buffer:
+#         shutil.copyfileobj(ppt_file.file, buffer)
+#     ppt_url = str("courseppt/" + ppt_file.filename)
+
+#     with open("coursescorm/" + scorm_file.filename, "wb") as buffer:
+#         shutil.copyfileobj(scorm_file.file, buffer)
+#     scorm_url = str("coursescorm/" + scorm_file.filename)
+
+#     try:
+#         return add_course_content(generate_token, auth_token="", inputs={
+#                 'course_id': course_id, 'video_unitname': video_unitname, 'video_file': url, 'ppt_unitname': ppt_unitname, 'ppt_file': ppt_url, 'scorm_unitname': scorm_unitname, 'scorm_file': scorm_url, 'course_content_allowed': '[]','picture': ""})
+#     except Exception as exc: 
+#         logger.error(traceback.format_exc())
+#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#             "status": "failure",
+#             "message": "Course Content registration failed Alreadly Exists"
+#         })
+    
 @service.post('/addcourse_content')
-async def create_course_content(course_id: str = Form(...),video_unitname: str = Form(...), video_file: UploadFile = File(...), active: bool = Form(...), deactive: bool = Form(...),generate_token: bool = Form(...)):
-    with open("coursevideo/"+video_file.filename, "wb") as buffer:
+async def create_course_content(course_id: str = Form(...), video_unitname: str = Form(...), video_file: UploadFile = File(...), ppt_unitname: str = Form(...), ppt_file: UploadFile = File(...), scorm_unitname: str = Form(...), scorm_file: UploadFile = File(...), generate_token: bool = Form(...)):
+    with open("coursevideo/" + video_file.filename, "wb") as buffer:
         shutil.copyfileobj(video_file.file, buffer)
-    url = str("coursevideo/"+video_file.filename)
+    url = str("coursevideo/" + video_file.filename)
+
+    with open("courseppt/" + ppt_file.filename, "wb") as buffer:
+        shutil.copyfileobj(ppt_file.file, buffer)
+    ppt_url = str("courseppt/" + ppt_file.filename)
+
+    with open("coursescorm/" + scorm_file.filename, "wb") as buffer:
+        shutil.copyfileobj(scorm_file.file, buffer)
+    scorm_url = str("coursescorm/" + scorm_file.filename)
+
     try:
-        return add_course_content(generate_token, auth_token="", inputs={
-                'course_id': course_id, 'video_unitname': video_unitname, 'video_file': url, 'active': active, 'deactive': deactive, 'course_content_allowed': '[]','picture': ""})
-    except Exception as exc: 
+        return add_course_contents(generate_token, auth_token="", inputs={
+            'course_id': course_id, 'video_unitname': video_unitname, 'video_file': url, 'ppt_unitname': ppt_unitname,
+            'ppt_file': ppt_url, 'scorm_unitname': scorm_unitname, 'scorm_file': scorm_url,
+            'course_content_allowed': '[]', 'picture': ""
+        })
+    except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
@@ -1172,8 +1208,6 @@ def fetch_all_course_content_data():
                 "video_unitname": course_content.video_unitname,
                 "video_file": video_url,  # Use the CDN URL
                 "video_duration": duration_formatted,  # Format duration
-                "active": course_content.active,
-                "deactive": course_content.deactive,
                 "created_at": course_content.created_at,
                 "updated_at": course_content.updated_at,
                 # Include other course_content attributes as needed
@@ -1218,12 +1252,20 @@ def fetch_course_contents_by_onlyid(course_id):
         }) 
 
 @service.post("/update_course_contents")
-def update_course_contents(id: int = Form(...),course_id: str = Form(...),video_unitname: str = Form(...), video_file: UploadFile = File(...), active: bool = Form(...), deactive: bool = Form(...)):
+def update_course_contents(id: int = Form(...),course_id: str = Form(...),video_unitname: str = Form(...), video_file: UploadFile = File(...), ppt_unitname: str = Form(...), ppt_file: UploadFile = File(...), scorm_unitname: str = Form(...), scorm_file: UploadFile = File(...)):
     with open("coursevideo/"+video_file.filename, "wb") as buffer:
         shutil.copyfileobj(video_file.file, buffer)
     video_file = str("coursevideo/"+video_file.filename)
+
+    with open("courseppt/" + ppt_file.filename, "wb") as buffer:
+        shutil.copyfileobj(ppt_file.file, buffer)
+    ppt_file_path = str("courseppt/" + ppt_file.filename)
+
+    with open("coursescorm/" + scorm_file.filename, "wb") as buffer:
+        shutil.copyfileobj(scorm_file.file, buffer)
+    scorm_file_path = str("coursescorm/" + scorm_file.filename)
     try:
-        if change_course_content_details(id, course_id, video_unitname, video_file, active, deactive):
+        if change_course_content_details(id, course_id, video_unitname, video_file, ppt_unitname, ppt_file_path, scorm_unitname, scorm_file_path):
             return JSONResponse(status_code=status.HTTP_200_OK, content={
                 "status": "success",
                 "message": "Updated Course Content successfully"

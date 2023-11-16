@@ -418,21 +418,42 @@ class LmsHandler:
     def insert_course_content(cls, params):
         query = """
             INSERT INTO {n_table_course_content} (
-                course_id, video_unitname, video_file, course_content_allowed, auth_token, request_token, token, active, deactive
+                course_id, video_unitname, video_file, course_content_allowed, auth_token, request_token, token
             )
-            VALUES (%(course_id)s, %(video_unitname)s, %(video_file)s, %(course_content_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s);
+            VALUES (%(course_id)s, %(video_unitname)s, %(video_file)s, %(course_content_allowed)s, %(auth_token)s, %(request_token)s, %(token)s);
         """
         return execute_query(query, params=params)
         
 #Add Course Content
+    # @classmethod
+    # def add_course_content(cls, params):
+    #     query = f"""
+    #         INSERT INTO {n_table_course_content} (
+    #             course_id, video_unitname, video_file, ppt_unitname, ppt_file, scorm_unitname, scorm_file, course_content_allowed, auth_token, request_token, token
+    #         )
+    #         VALUES (%(course_id)s, %(video_unitname)s, %(video_file)s, %(ppt_unitname)s, %(ppt_file)s, %(scorm_unitname)s, %(scorm_file)s, %(course_content_allowed)s, %(auth_token)s, %(request_token)s, %(token)s);
+    #                 """
+    #     return execute_query(query, params=params)
+
     @classmethod
     def add_course_content(cls, params):
         query = f"""
             INSERT INTO {n_table_course_content} (
-                course_id, video_unitname, video_file, course_content_allowed, auth_token, request_token, token, active, deactive
+                course_id, video_unitname, video_file, ppt_unitname, ppt_file, scorm_unitname, scorm_file, course_content_allowed, auth_token, request_token, token
             )
-            VALUES (%(course_id)s, %(video_unitname)s, %(video_file)s, %(course_content_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s, %(deactive)s);
-                    """
+            VALUES (%(course_id)s, %(video_unitname)s, %(video_file)s, %(ppt_unitname)s, %(ppt_file)s, %(scorm_unitname)s, %(scorm_file)s, %(course_content_allowed)s, %(auth_token)s, %(request_token)s, %(token)s)
+            ON DUPLICATE KEY UPDATE
+                video_unitname = IF(VALUES(video_unitname) != '', VALUES(video_unitname), video_unitname),
+                video_file = IF(VALUES(video_file) != '', VALUES(video_file), video_file),
+                ppt_unitname = IF(VALUES(ppt_unitname) != '', VALUES(ppt_unitname), ppt_unitname),
+                ppt_file = IF(VALUES(ppt_file) != '', VALUES(ppt_file), ppt_file),
+                scorm_unitname = IF(VALUES(scorm_unitname) != '', VALUES(scorm_unitname), scorm_unitname),
+                scorm_file = IF(VALUES(scorm_file) != '', VALUES(scorm_file), scorm_file),
+                course_content_allowed = IF(VALUES(course_content_allowed) != '', VALUES(course_content_allowed), course_content_allowed),
+                auth_token = IF(VALUES(auth_token) != '', VALUES(auth_token), auth_token),
+                request_token = IF(VALUES(request_token) != '', VALUES(request_token), request_token),
+                token = IF(VALUES(token) != '', VALUES(token), token);
+        """
         return execute_query(query, params=params)
 
 #Fetch Course Content
@@ -455,14 +476,16 @@ class LmsHandler:
         
 #Update Course Content
     @classmethod
-    def update_course_content_to_db(cls, id, course_id, video_unitname, video_file, active, deactive):
+    def update_course_content_to_db(cls, id, course_id, video_unitname, video_file, ppt_unitname, ppt_file, scorm_unitname, scorm_file):
         query = f"""   
         UPDATE course_content SET
         course_id = %(course_id)s,
         video_unitname = %(video_unitname)s,
         video_file = %(video_file)s,
-        active = %(active)s,
-        deactive = %(deactive)s
+        ppt_unitname = %(ppt_unitname)s,
+        ppt_file = %(ppt_file)s,
+        scorm_unitname = %(scorm_unitname)s,
+        scorm_file = %(scorm_file)s
         WHERE id = %(id)s;
         """
         params = {
@@ -470,8 +493,10 @@ class LmsHandler:
         "course_id": course_id,
         "video_unitname": video_unitname,
         "video_file": video_file,
-        "active": active,
-        "deactive": deactive
+        "ppt_unitname": ppt_unitname,
+        "ppt_file": ppt_file,
+        "scorm_unitname": scorm_unitname,
+        "scorm_file": scorm_file
     }
         return execute_query(query, params=params)
     

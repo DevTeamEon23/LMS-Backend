@@ -418,22 +418,18 @@ course_content_table = Table(
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('course_id', Integer, nullable=False),
     
-    # Additional fields based on content type
     Column('video_unitname', String(150), nullable=True),
     Column('video_file', LONGBLOB, nullable=False),
-    # #PPT/Documents
-    # Column('ppt_unitname', String(150), nullable=True),
-    # Column('ppt_file', LONGBLOB, nullable=False),
-    # #Scorm File
-    # Column('scorm_unitname', String(150), nullable=True),
-    # Column('scorm_file', LONGBLOB, nullable=False),
+    # # Additional fields based on content type
+    Column('ppt_unitname', String(150), nullable=True),
+    Column('ppt_file', LONGBLOB, nullable=False),
+    Column('scorm_unitname', String(150), nullable=True),
+    Column('scorm_file', LONGBLOB, nullable=False),
 
     Column('course_content_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
     Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('active', BOOLEAN, default=True, nullable=False),
-    Column('deactive', BOOLEAN, default=False, nullable=True),
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
 )
