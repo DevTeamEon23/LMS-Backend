@@ -3012,6 +3012,27 @@ def unenroll_courses_from_enrolleduserby_id(data_user_course_enrollment_id):
             "message": "Failed to Unenrolled course from user"
         })
     
+######################################### Courses Lists for Learner ####################################################################
+
+def fetch_enrolled_courses_of_learner(user_id):
+    try:
+        # Query user IDs from the database for the specified course
+        course_ids = LmsHandler.fetch_enrolled_course_of_learner(user_id)
+
+        if not course_ids:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "course_ids": course_ids,
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch enrolled courses data of Learner"
+        })
 ############################################### Users > Group(Admin) #################################################################
     
 def fetch_group_to_enroll_to_admin(user_id, admin_user_id):

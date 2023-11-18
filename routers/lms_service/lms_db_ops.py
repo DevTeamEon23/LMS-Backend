@@ -1500,6 +1500,70 @@ class LmsHandler:
         query = f""" DELETE FROM user_course_enrollment WHERE id = {data_user_course_enrollment_id}; """
         return execute_query(query)
     
+############################# Courses Lists for Learner #############################################
+
+    @classmethod
+    def fetch_enrolled_course_of_learner(cls, user_id):
+        query = """
+            SELECT DISTINCT
+                c.id AS course_id,
+                c.coursename,
+                c.description,
+                c.coursecode,
+                c.price,
+                c.courselink,
+                c.startdate,
+                c.enddate,
+                c.timelimit,
+                c.certificate,
+                c.level,
+                c.category,
+                c.course_allowed,
+                c.auth_token AS course_auth_token,
+                c.request_token AS course_request_token,
+                c.token AS course_token,
+                c.isActive AS course_isActive,
+                c.isHide AS course_isHide,
+                c.created_at AS enrolled_on,
+                c.updated_at AS course_updated_at
+            FROM user_group_enrollment uge
+            JOIN course_group_enrollment cge ON uge.group_id = cge.group_id
+            JOIN course c ON cge.course_id = c.id
+            WHERE uge.user_id = %(user_id)s
+
+            UNION
+
+            SELECT DISTINCT
+                uce.course_id AS course_id,
+                c.coursename,
+                NULL AS description,
+                c.coursecode,
+                c.price,
+                c.courselink,
+                c.startdate,
+                c.enddate,
+                c.timelimit,
+                c.certificate,
+                c.level,
+                c.category,
+                c.course_allowed,
+                c.auth_token AS course_auth_token,
+                c.request_token AS course_request_token,
+                c.token AS course_token,
+                c.isActive AS course_isActive,
+                c.isHide AS course_isHide,
+                uce.created_at AS enrolled_on, -- Include created_at from user_course_enrollment
+                NULL AS course_updated_at
+            FROM user_course_enrollment uce
+            LEFT JOIN course c ON uce.course_id = c.id
+            LEFT JOIN users u ON uce.user_id = u.id
+            WHERE 
+                u.role = 'learner' -- Only retrieve learner role data
+                AND uce.user_id = %(user_id)s;
+            """
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
+    
 ######################################## Users TAB Groups Page(Admin) #################################################
 
     @classmethod
