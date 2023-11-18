@@ -1706,11 +1706,48 @@ class LmsHandler:
     @classmethod
     def fetch_enrolled_group_of_learner(cls, user_id):
         query = """
-            SELECT DISTINCT lg.*
+            SELECT
+                unique_groups.group_id,
+                MAX(lg.id) AS id,
+                MAX(lg.user_id) AS user_id,
+                MAX(lg.groupname) AS groupname,
+                MAX(lg.groupdesc) AS groupdesc,
+                MAX(lg.groupkey) AS groupkey,
+                MAX(lg.group_allowed) AS group_allowed,
+                MAX(lg.auth_token) AS auth_token,
+                MAX(lg.request_token) AS request_token,
+                MAX(lg.token) AS token,
+                MAX(lg.created_at) AS created_at,
+                MAX(lg.updated_at) AS updated_at,
+                MAX(lg.isActive) AS isActive,
+                MAX(lg.isHide) AS isHide,
+                MAX(uge.id) AS user_group_enrollment_id,
+                MAX(uge.id) AS data_user_group_enrollment_id
+            FROM (
+                SELECT DISTINCT
+                    uge.group_id
+                FROM user_group_enrollment uge
+                WHERE uge.user_id = %(user_id)s
+
+                UNION
+
+                SELECT DISTINCT
+                    lu.id AS group_id
+                FROM lmsgroup lu
+                WHERE lu.user_id = %(user_id)s
+
+                UNION
+
+                SELECT DISTINCT
+                    lg.id AS group_id
                 FROM lmsgroup lg
                 JOIN course_group_enrollment cge ON lg.id = cge.group_id
                 JOIN user_course_enrollment uce ON cge.course_id = uce.course_id
-                WHERE uce.user_id = %(user_id)s;
+                WHERE uce.user_id = %(user_id)s
+            ) AS unique_groups
+            LEFT JOIN user_group_enrollment uge ON unique_groups.group_id = uge.group_id
+            LEFT JOIN lmsgroup lg ON unique_groups.group_id = lg.id
+            GROUP BY unique_groups.group_id;
             """
         params = {"user_id": user_id}
         return execute_query(query, params).fetchall()
