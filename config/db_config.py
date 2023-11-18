@@ -434,24 +434,22 @@ course_content_table = Table(
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
 )
 
-n_table_combined = 'combined'
-combined_table = Table(
-    n_table_combined, metadata,
+n_table_test = 'test'
+test_table = Table(
+    n_table_test, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('course_id', Integer, nullable=False),
-    ForeignKeyConstraint(['course_id'], ['course.id'], name='fk_course_combined_id'),
-    Column('question_text', VARCHAR(1000), nullable=True),
+    Column('question', VARCHAR(1000), nullable=True),
     Column('option_a', VARCHAR(1000), nullable=True),
     Column('option_b', VARCHAR(1000), nullable=True),
     Column('option_c', VARCHAR(1000), nullable=True),
     Column('option_d', VARCHAR(1000), nullable=True),
-    Column('correct_option', String(1), nullable=True),
+    Column('correct_answer', String(1), nullable=True),
     Column('marks', Integer, nullable=True),
     Column('test_name', VARCHAR(100), nullable=True),
     Column('active', BOOLEAN, default=True, nullable=False),
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    CheckConstraint('correct_option IN (\'A\', \'B\', \'C\', \'D\')', name='ck_correct_option')
 )
 
 n_table_user_rating_feedback = 'rating_feedback'
