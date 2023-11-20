@@ -454,6 +454,7 @@ test_table = Table(
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
 )
 
+
 n_table_user_rating_feedback = 'rating_feedback'
 rating_feedback_files_table = Table(
     n_table_user_rating_feedback, metadata,
@@ -471,17 +472,36 @@ rating_feedback_files_table = Table(
     Index(f'idx_{n_table_user_rating_feedback}_token', 'token'),
 )
 
+n_table_assignment = 'assignment'
+assignment_table = Table(
+    n_table_assignment, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('course_id', Integer, nullable=False),
+    Column('user_id', Integer, nullable=False),
+    Column('assignment_topic', VARCHAR(100), nullable=False),
+    Column('complete_by_instructor', BOOLEAN, default=False, nullable=False),
+    Column('complete_on_submission', BOOLEAN, default=False, nullable=False),
+    Column('assignment_answer', VARCHAR(655), nullable=True),
+    Column('file', LONGBLOB, nullable=True),
+    Column('active', BOOLEAN, default=True, nullable=False),
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp())
+)
 
-    # #Assignment 
-    # Column('assignment_name', String(150), nullable=True),
-    # Column('assignment_file', LONGBLOB, nullable=False),
-    # Column('topic', String(600), nullable=True),
-    # Column('instructor_led_name', String(150), nullable=True),
-    
-    # # Submission related fields (for assignments)
-    # Column('submission_status', String(20), nullable=True),  # 'Pass', 'Not Passed', 'Pending'
-    # Column('grade', Integer, nullable=True),  # 1-100
-    # Column('comments', String(600), nullable=True),
+# Submission Table
+n_table_submission = 'submission'
+submission_table = Table(
+    n_table_submission, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('course_id', Integer, nullable=False),
+    Column('user_id', Integer, nullable=False),
+    Column('submission_status', VARCHAR(20), nullable=False),  # 'Pass', 'Not Passed', 'Pending'
+    Column('grade', Integer, nullable=True),  # 1-100
+    Column('comment', VARCHAR(655), nullable=True),
+    Column('active', BOOLEAN, default=True, nullable=False),
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp())
+)
 
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')
 metadata.create_all(meta_engine, checkfirst=True)
