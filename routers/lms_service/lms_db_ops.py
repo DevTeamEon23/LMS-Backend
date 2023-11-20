@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from datetime import datetime
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_user_rating_feedback
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_user_rating_feedback,n_table_test
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -2947,3 +2947,13 @@ class LmsHandler:
                 u.role IN ('Learner');
         """
         return execute_query(query).fetchall()
+    
+############################################ Test Questions & Answers #######################################################
+
+    @classmethod
+    def add_test_question(cls, params):
+        query = f"""   INSERT into {n_table_test}(course_id, user_id, question, option_a, option_b, option_c, option_d, correct_answer, marks, test_name, user_selected_answer, active) VALUES 
+                            (%(course_id)s, %(user_id)s, %(question)s, %(option_a)s, %(option_b)s, %(option_c)s, %(option_d)s,%(correct_answer)s, %(marks)s, %(test_name)s, %(user_selected_answer)s, %(active)s)
+                            ; 
+                        """
+        return execute_query(query, params=params)

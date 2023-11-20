@@ -189,7 +189,7 @@ s_table_lmsgroup = Table(
     Index(f'idx_{table_lmsgroup}_token', 'token'),
 )
 
-# lmsevent table
+# lmsevent table (NOTIFICATIONS)
 table_lmsevent = 'lmsevent'
 s_table_lmsevent = Table(
     table_lmsevent, metadata,
@@ -305,7 +305,7 @@ s_table_discussion = Table(
     Index(f'idx_{table_discussion}_token', 'token'),
 )
 
-# calender table
+# calender table (Events)
 table_calender = 'calender'
 s_table_calender = Table(
     table_calender, metadata,
@@ -439,6 +439,7 @@ test_table = Table(
     n_table_test, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('course_id', Integer, nullable=False),
+    Column('user_id', Integer, nullable=False),
     Column('question', VARCHAR(1000), nullable=True),
     Column('option_a', VARCHAR(1000), nullable=True),
     Column('option_b', VARCHAR(1000), nullable=True),
@@ -447,6 +448,7 @@ test_table = Table(
     Column('correct_answer', String(1), nullable=True),
     Column('marks', Integer, nullable=True),
     Column('test_name', VARCHAR(100), nullable=True),
+    Column('user_selected_answer', String(1), nullable=True),
     Column('active', BOOLEAN, default=True, nullable=False),
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),

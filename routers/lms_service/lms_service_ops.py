@@ -571,8 +571,11 @@ def add_new(email: str,file: bytes,generate_tokens: bool = False, auth_token="",
         logger.error(traceback.format_exc())
         message = exc.args[0]
         logger.error(message)
-        
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"message": "User is not registered"})
+
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={
+            "status": "failure",
+            "message": message
+        })
 
 def user_exists(email):
     query = f"SELECT COUNT(*) FROM {n_table_user} WHERE email = %s LIMIT 1;"

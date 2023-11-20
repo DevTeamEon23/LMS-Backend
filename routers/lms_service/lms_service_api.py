@@ -210,10 +210,14 @@ async def create_user(
                 "message": "User registered successfully"
             })
 
-        return {
-            "status": "success",
-            "data": result
-        }
+        # return {
+        #     "status": "success",
+        #     "data": result
+        # }
+
+
+    except HTTPException as exc:
+        return JSONResponse(status_code=exc.status_code, content=exc.detail)
 
     except Exception as exc:
         logger.error(traceback.format_exc())
