@@ -1524,6 +1524,9 @@ class LmsHandler:
                 c.token AS course_token,
                 c.isActive AS course_isActive,
                 c.isHide AS course_isHide,
+                c.file, -- Include file column
+                c.coursevideo, -- Include coursevideo column
+                c.capacity, -- Include capacity column
                 c.created_at AS enrolled_on,
                 c.updated_at AS course_updated_at
             FROM user_group_enrollment uge
@@ -1552,7 +1555,10 @@ class LmsHandler:
                 c.token AS course_token,
                 c.isActive AS course_isActive,
                 c.isHide AS course_isHide,
-                uce.created_at AS enrolled_on, -- Include created_at from user_course_enrollment
+                c.file, -- Include file column
+                c.coursevideo, -- Include coursevideo column
+                c.capacity, -- Include capacity column
+                uce.created_at AS enrolled_on,
                 NULL AS course_updated_at
             FROM user_course_enrollment uce
             LEFT JOIN course c ON uce.course_id = c.id
