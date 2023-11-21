@@ -2597,6 +2597,7 @@ class LmsHandler:
             c.coursename,
             up.points,
             up.user_level,
+            up.badge_name,
             uc.total_course_count,
             u.file,
             u.bio,
@@ -2954,6 +2955,69 @@ class LmsHandler:
         """
         return execute_query(query).fetchall()
     
+################################################    ##########################################################
+
+    @classmethod
+    def learner_course_ratings(cls, user_id):
+        query = """
+            SELECT
+                rf.id,
+                rf.user_id,
+                rf.course_id,
+                rf.rating,
+                rf.feedback,
+                rf.rating_allowed,
+                rf.auth_token,
+                rf.request_token,
+                rf.token,
+                rf.created_at,
+                rf.updated_at,
+                c.coursename,
+                c.file
+            FROM (
+                SELECT
+                    MAX(id) AS id,
+                    user_id,
+                    course_id,
+                    MAX(rating) AS rating,
+                    MAX(feedback) AS feedback,
+                    MAX(rating_allowed) AS rating_allowed,
+                    MAX(auth_token) AS auth_token,
+                    MAX(request_token) AS request_token,
+                    MAX(token) AS token,
+                    MAX(created_at) AS created_at,
+                    MAX(updated_at) AS updated_at
+                FROM rating_feedback
+                WHERE user_id = %(user_id)s
+                GROUP BY user_id, course_id
+            ) rf
+            JOIN course c ON rf.course_id = c.id;
+            """
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
+    
+    @classmethod
+    def get_learner_enroll_course_info_by_user_id(cls, user_id):
+        query = """ 
+            SELECT
+                e.course_id,
+                c.coursename,
+                u.id AS user_id,
+                u.full_name,
+                u.role AS user_role,
+                DATE_FORMAT(CONVERT_TZ(e.created_at, 'UTC', 'Asia/Kolkata'), '%d %b %Y') AS enrollment_date
+            FROM
+                user_course_enrollment e
+            JOIN
+                users u ON e.user_id = u.id
+            JOIN
+                course c ON e.course_id = c.id
+            WHERE
+                u.id = %(user_id)s;
+        """
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
+
 ############################################ Test Questions & Answers #######################################################
 
     @classmethod

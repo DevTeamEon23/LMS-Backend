@@ -3989,6 +3989,7 @@ def fetch_overview_of_learner(user_id):
             "full_name": user_info["full_name"],
             "points": user_info["points"],
             "user_level": user_info["user_level"],
+            "badge_name": user_info["badge_name"],
             "total_course_count": user_info["total_course_count"],
             "bio": user_info["bio"],
             "created_at": user_info["created_at"],
@@ -4348,4 +4349,70 @@ def get_user_enrolledcourses_info_for_instructor():
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
             "message": "Failed to fetch user enrolled course data for instructor"
+        })
+
+###########################################################################################
+
+def fetch_ratings_of_learners(user_id):
+    try:
+        # Query user data from the database
+        user_ratings = LmsHandler.learner_course_ratings(user_id)
+
+        if not user_ratings:
+            return None
+        
+        # Include other course attributes as needed
+        main_data = {
+            "user_ratings": [],
+        }
+
+        # Iterate through each course entry and modify the "file" attribute
+        for user_info in user_ratings:
+            course_data = {
+                key: value for key, value in user_info.items()
+                if key != "file"  # Exclude the "file" attribute for now
+            }
+
+            # Check if the course entry contains a "file" link
+            if "file" in user_info and user_info["file"] is not None:
+                backend_base_url = "https://v1.eonlearning.tech"
+                cdn_file_link = backend_base_url + '/' + user_info["file"].decode('utf-8').replace("'", '')
+                course_data["file"] = cdn_file_link
+            else:
+                course_data["file"] = "File not available"
+
+            main_data["user_ratings"].append(course_data)
+
+        return main_data
+
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user_ratings"
+        })
+
+def get_user_enrolledcourses_info_by_id(user_id):
+    try:
+        # Query user IDs from the database for the specified course
+        enrolled_info = LmsHandler.get_learner_enroll_course_info_by_user_id(user_id)
+
+        if not enrolled_info:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        # Now enrolled_info is a list of user IDs enrolled in the course
+        # You can return this list or process it further as needed
+
+        return {
+            "enrolled_info": enrolled_info,
+            # Include other course attributes as needed
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch user enrolled course data for learner"
         })
