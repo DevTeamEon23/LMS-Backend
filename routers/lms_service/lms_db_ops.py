@@ -2786,7 +2786,6 @@ class LmsHandler:
                 u.role,
                 up.points,
                 up.user_level,
-                u.file,
                 DATE_FORMAT(u.updated_at, '%d %b %Y') AS login_date
             FROM user_points up
             JOIN users u ON u.id = up.user_id
