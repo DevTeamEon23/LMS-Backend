@@ -2826,7 +2826,7 @@ class LmsHandler:
                 DATE_FORMAT(u.updated_at, '%d %b %Y') AS login_date
             FROM user_points up
             JOIN users u ON u.id = up.user_id
-            WHERE u.role IN ('Admin', 'Instructor', 'Learner');
+            WHERE u.role IN ('Instructor', 'Learner');
         """
         return execute_query(query).fetchall()
 
@@ -3022,8 +3022,8 @@ class LmsHandler:
 
     @classmethod
     def add_test_question(cls, params):
-        query = f"""   INSERT into {n_table_test}(course_id, user_id, question, option_a, option_b, option_c, option_d, correct_answer, marks, test_name, user_selected_answer, active) VALUES 
-                            (%(course_id)s, %(user_id)s, %(question)s, %(option_a)s, %(option_b)s, %(option_c)s, %(option_d)s,%(correct_answer)s, %(marks)s, %(test_name)s, %(user_selected_answer)s, %(active)s)
+        query = f"""   INSERT into {n_table_test}(test_name,course_id, user_id, question, option_a, option_b, option_c, option_d, correct_answer, marks, user_selected_answer, active) VALUES 
+                            (%(test_name)s,%(course_id)s, %(user_id)s, %(question)s, %(option_a)s, %(option_b)s, %(option_c)s, %(option_d)s,%(correct_answer)s, %(marks)s, %(user_selected_answer)s, %(active)s)
                             ; 
                         """
         return execute_query(query, params=params)

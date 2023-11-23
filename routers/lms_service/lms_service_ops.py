@@ -4416,3 +4416,66 @@ def get_user_enrolledcourses_info_by_id(user_id):
             "status": "failure",
             "message": "Failed to fetch user enrolled course data for learner"
         })
+    
+######################################## Test Api Crud ########################################################
+
+# def add_test(user_id, inputs={}, skip_new_user=False):
+#     try:
+#         test_name = inputs.get('test_name')
+#         course_id = inputs.get('course_id')
+#         question = inputs.get('question')
+#         option_a = inputs.get('option_a')
+#         option_b = inputs.get('option_b')
+#         option_c = inputs.get('option_c')
+#         option_d = inputs.get('option_d')
+#         correct_answer = inputs.get('correct_answer')
+#         marks = inputs.get('marks')
+#         user_selected_answer = inputs.get('user_selected_answer')
+#         active = inputs.get('active')
+#         created_at = datetime.now()
+#         updated_at = datetime.now()
+
+#         # Calculate the points
+#         # points = 5  # 5 points for each rating or feedback
+
+#         # Token Generation
+#         # token = create_token(feedback)
+#         # request_token = ''
+
+#         data = {
+#             'test_name': test_name,
+#             'course_id': course_id,
+#             'user_id': user_id,
+#             'question': question,
+#             'option_a': option_a,
+#             'option_b': option_b,
+#             'option_c': option_c,
+#             'option_d': option_d,
+#             'correct_answer': correct_answer,
+#             'marks': marks,
+#             'user_selected_answer': user_selected_answer,
+#             'active': active,
+#             'created_at': created_at,
+#             'updated_at': updated_at
+#         }
+
+#         resp = LmsHandler.add_test_question(data)
+
+#         # Update user points in the user_points table
+#         # update_user_points(user_id, points)
+
+#         # # If token not required,
+#         # if not generate_tokens and len(auth_token) == 0:
+#         #     token = None
+
+#     except Exception as exc:
+#         logger.error(traceback.format_exc())
+#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+#             "status": "failure",
+#             "message": "Something went wrong!"
+#         })
+
+#     return JSONResponse(status_code=status.HTTP_200_OK, content={
+#         "status": "success",
+#         "message": "Thanks For Your Feedback"
+#     })

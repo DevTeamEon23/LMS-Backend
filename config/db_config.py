@@ -438,6 +438,7 @@ n_table_test = 'test'
 test_table = Table(
     n_table_test, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('test_name', VARCHAR(100), nullable=True),
     Column('course_id', Integer, nullable=False),
     Column('user_id', Integer, nullable=False),
     Column('question', VARCHAR(1000), nullable=True),
@@ -447,7 +448,6 @@ test_table = Table(
     Column('option_d', VARCHAR(1000), nullable=True),
     Column('correct_answer', String(1), nullable=True),
     Column('marks', Integer, nullable=True),
-    Column('test_name', VARCHAR(100), nullable=True),
     Column('user_selected_answer', String(1), nullable=True),
     Column('active', BOOLEAN, default=True, nullable=False),
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
