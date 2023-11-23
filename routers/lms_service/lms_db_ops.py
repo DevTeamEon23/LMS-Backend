@@ -2926,6 +2926,7 @@ class LmsHandler:
             SELECT
                 rf.id,
                 rf.user_id,
+                u.full_name,
                 rf.course_id,
                 rf.rating,
                 rf.feedback,
@@ -2954,7 +2955,8 @@ class LmsHandler:
                 WHERE user_id = %(user_id)s
                 GROUP BY user_id, course_id
             ) rf
-            JOIN course c ON rf.course_id = c.id;
+            JOIN course c ON rf.course_id = c.id
+            JOIN users u ON rf.user_id = u.id;
             """
         params = {"user_id": user_id}
         return execute_query(query, params).fetchall()
