@@ -2704,7 +2704,8 @@ class LmsHandler:
 # Department Wise All Users Count Bar Graph:-(Admin, Instructor, Learner)   
     @classmethod
     def get_all_users_deptwise_counts(cls):
-        query = """ SELECT dept,
+        query = """ 
+        SELECT dept,
             SUM(CASE WHEN role = 'Admin' THEN 1 ELSE 0 END) AS admin_count,
             SUM(CASE WHEN role = 'Instructor' THEN 1 ELSE 0 END) AS instructor_count,
             SUM(CASE WHEN role = 'Learner' THEN 1 ELSE 0 END) AS learner_count
@@ -2737,78 +2738,41 @@ class LmsHandler:
 # 4 grids to show the count of:-
     @classmethod
     def get_all_admin_data_count(cls):
-        query = """ SELECT
-                subquery.dept,
-                'Instructor' AS role,
-                COUNT(DISTINCT subquery.course_id) AS total_enrolled_course_count,
+        query = """ 
+        SELECT
+            subquery.dept,
+            'Instructor' AS role,
+            COUNT(DISTINCT subquery.course_id) AS total_enrolled_course_count,
+            (
+                SELECT COUNT(DISTINCT uce2.course_id)
+                FROM user_course_enrollment uce2
+                WHERE uce2.user_id IN (SELECT id FROM users WHERE role = 'Instructor')
+            ) AS overall_enrolled_courses,
+            (
+                SELECT COUNT(*) -- This part counts all courses from the course table
+                FROM course
+            ) AS total_courses,
+            (
                 (
-                    SELECT COUNT(DISTINCT uce2.course_id)
+                    SELECT COUNT(*) -- This part counts all courses from the course table
+                    FROM course
+                ) - (
+                    SELECT COUNT(DISTinct uce2.course_id)
                     FROM user_course_enrollment uce2
                     WHERE uce2.user_id IN (SELECT id FROM users WHERE role = 'Instructor')
-                ) AS overall_enrolled_courses,
-                (
-                    SELECT COUNT(*) -- This part counts all courses from the course table
-                    FROM course
-                ) AS total_courses,
-                (
-                    (
-                        SELECT COUNT(*) -- This part counts all courses from the course table
-                        FROM course
-                    ) - (
-                        SELECT COUNT(DISTinct uce2.course_id)
-                        FROM user_course_enrollment uce2
-                        WHERE uce2.user_id IN (SELECT id FROM users WHERE role = 'Instructor')
-                    )
-                ) AS upcoming_courses
-            FROM (
-                SELECT
-                    u.dept,
-                    u.role,
-                    u.id AS admin_id,
-                    uce.course_id
-                FROM users u
-                LEFT JOIN user_course_enrollment uce ON u.id = uce.user_id
-                WHERE u.role = 'Instructor'
-            ) AS subquery
-            GROUP BY subquery.dept
-
-            UNION ALL
-
-            -- Query for Learners
+                )
+            ) AS upcoming_courses
+        FROM (
             SELECT
-                subquery.dept,
-                'Learner' AS role,
-                COUNT(DISTINCT subquery.course_id) AS total_enrolled_course_count,
-                (
-                    SELECT COUNT(DISTINCT uce2.course_id)
-                    FROM user_course_enrollment uce2
-                    WHERE uce2.user_id IN (SELECT id FROM users WHERE role = 'Learner')
-                ) AS overall_enrolled_courses,
-                (
-                    SELECT COUNT(*) -- This part counts all courses from the course table
-                    FROM course
-                ) AS total_courses,
-                (
-                    (
-                        SELECT COUNT(*) -- This part counts all courses from the course table
-                        FROM course
-                    ) - (
-                        SELECT COUNT(DISTINCT uce2.course_id)
-                        FROM user_course_enrollment uce2
-                        WHERE uce2.user_id IN (SELECT id FROM users WHERE role = 'Learner')
-                    )
-                ) AS upcoming_courses
-            FROM (
-                SELECT
-                    u.dept,
-                    u.role,
-                    u.id AS admin_id,
-                    uce.course_id
-                FROM users u
-                LEFT JOIN user_course_enrollment uce ON u.id = uce.user_id
-                WHERE u.role = 'Learner'
-            ) AS subquery
-            GROUP BY subquery.dept;
+                u.dept,
+                u.role,
+                u.id AS admin_id,
+                uce.course_id
+            FROM users u
+            LEFT JOIN user_course_enrollment uce ON u.id = uce.user_id
+            WHERE u.role = 'Instructor'
+        ) AS subquery
+        GROUP BY subquery.dept;
         """
         return execute_query(query).fetchall()
     
