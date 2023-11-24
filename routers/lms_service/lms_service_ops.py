@@ -43,7 +43,7 @@ course_file_path = "C:/Users/Admin/Desktop/TEST_projects/All_FastAPI_Projects/fa
 
 coursevideo_file_path = "C:/Users/Admin/Desktop/TEST_projects/All_FastAPI_Projects/fastapi/coursevideo/${item.file}"
 
-backendBaseUrl = "https://v1.eonlearning.tech"
+backendBaseUrl = "https://beta.eonlearning.tech"
 
 def sample_data(payload):
     logger.info(payload)
@@ -3999,7 +3999,7 @@ def fetch_overview_of_learner(user_id):
 
         # Include users.file as CDN link
         if user_info["file"] is not None:
-            backend_base_url = "https://v1.eonlearning.tech"
+            backend_base_url = "https://beta.eonlearning.tech"
             cdn_file_link = backend_base_url + '/' + user_info["file"].decode('utf-8').replace("'", '')
             main_data["file"] = cdn_file_link
         else:
@@ -4375,7 +4375,7 @@ def fetch_ratings_of_learners(user_id):
 
             # Check if the course entry contains a "file" link
             if "file" in user_info and user_info["file"] is not None:
-                backend_base_url = "https://v1.eonlearning.tech"
+                backend_base_url = "https://beta.eonlearning.tech"
                 cdn_file_link = backend_base_url + '/' + user_info["file"].decode('utf-8').replace("'", '')
                 course_data["file"] = cdn_file_link
             else:

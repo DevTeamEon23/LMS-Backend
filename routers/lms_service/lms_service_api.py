@@ -578,7 +578,7 @@ async def create_users_from_excel(file: UploadFile = File(...)):
 
 ####################################    Export Excel Api     ##################################
 
-CDN_DOMAIN = "https://v1.eonlearning.tech"
+CDN_DOMAIN = "https://beta.eonlearning.tech"
 
 
 def fetch_users_data():
@@ -1321,7 +1321,7 @@ def fetch_all_course_content():
             "message": "Failed to fetch course_content's data"
         })
 
-CDN_BASE_URL = "https://v1.eonlearning.tech/"
+CDN_BASE_URL = "https://beta.eonlearning.tech/"
 
 def fetch_all_course_content_data():
     try:
@@ -2445,7 +2445,7 @@ def fetch_user_enrollcourse_by_onlycourse_id():
             "message": "Failed to fetch enrolled courses' data"
         })
     
-backendBaseUrl = "https://v1.eonlearning.tech"
+backendBaseUrl = "https://beta.eonlearning.tech"
 
 @service.get("/fetch_files")
 def fetch_files_api():
