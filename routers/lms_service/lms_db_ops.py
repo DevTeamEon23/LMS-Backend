@@ -2927,6 +2927,7 @@ class LmsHandler:
                 rf.id,
                 rf.user_id,
                 u.full_name,
+                u.dept,
                 rf.course_id,
                 rf.rating,
                 rf.feedback,
@@ -2940,20 +2941,21 @@ class LmsHandler:
                 c.file
             FROM (
                 SELECT
-                    MAX(id) AS id,
-                    user_id,
-                    course_id,
-                    MAX(rating) AS rating,
-                    MAX(feedback) AS feedback,
-                    MAX(rating_allowed) AS rating_allowed,
-                    MAX(auth_token) AS auth_token,
-                    MAX(request_token) AS request_token,
-                    MAX(token) AS token,
-                    MAX(created_at) AS created_at,
-                    MAX(updated_at) AS updated_at
-                FROM rating_feedback
-                WHERE user_id = %(user_id)s
-                GROUP BY user_id, course_id
+                    MAX(rf.id) AS id,
+                    rf.user_id,
+                    rf.course_id,
+                    MAX(rf.rating) AS rating,
+                    MAX(rf.feedback) AS feedback,
+                    MAX(rf.rating_allowed) AS rating_allowed,
+                    MAX(rf.auth_token) AS auth_token,
+                    MAX(rf.request_token) AS request_token,
+                    MAX(rf.token) AS token,
+                    MAX(rf.created_at) AS created_at,
+                    MAX(rf.updated_at) AS updated_at
+                FROM rating_feedback rf
+                JOIN users u ON rf.user_id = u.id
+                WHERE u.dept = (SELECT dept FROM users WHERE id = %(user_id)s)
+                GROUP BY rf.user_id, rf.course_id
             ) rf
             JOIN course c ON rf.course_id = c.id
             JOIN users u ON rf.user_id = u.id;
@@ -2992,3 +2994,60 @@ class LmsHandler:
                             ; 
                         """
         return execute_query(query, params=params)
+    
+    @classmethod
+    def get_all_tests_by_course_id(cls, course_id):
+        query = """ 
+            SELECT DISTINCT
+                test_name
+            FROM
+                test
+            WHERE
+                course_id = %(course_id)s;
+            """
+        params = {"course_id": course_id}
+        return execute_query(query, params).fetchall()
+    
+    @classmethod
+    def get_all_questions_by_testname(cls, test_name):
+        query = """ 
+            SELECT
+                id,
+                test_name,
+                question,
+                option_a,
+                option_b,
+                option_c,
+                option_d,
+                correct_answer,
+                marks
+            FROM
+                test
+            WHERE
+                test_name = %(test_name)s
+                AND (user_selected_answer IS NULL OR user_selected_answer = '');
+            """
+        params = {"test_name": test_name}
+        return execute_query(query, params).fetchall()
+    
+    @classmethod
+    def check_answer(cls, inst_id,ler_id):
+        query = """ 
+            SELECT
+                l.user_id AS learner_user_id,
+                l.test_name,
+                l.question,
+                l.user_selected_answer,
+                l.correct_answer,
+                l.marks AS learner_marks
+            FROM
+                test l
+            JOIN
+                test i ON l.question = i.question
+            WHERE
+                l.user_id = %(ler_id)s  -- Learner's user_id
+                AND i.user_id = %(inst_id)s  -- Instructor's user_id
+                AND l.correct_answer = l.user_selected_answer;
+            """
+        params = {"inst_id": inst_id, "ler_id": ler_id}
+        return execute_query(query, params).fetchall()

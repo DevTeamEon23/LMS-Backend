@@ -4479,3 +4479,63 @@ def add_test_question(user_id, inputs={}, skip_new_user=False):
         "status": "success",
         "message": "Thanks For Your Feedback"
     })
+
+def get_tests_by_course_id(course_id):
+    try:
+        # Query user IDs from the database for the specified course
+        tests = LmsHandler.get_all_tests_by_course_id(course_id)
+
+        if not tests:
+            return None
+
+        return {
+            "tests": tests,
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch Tests of Course for Learner"
+        })
+    
+def get_question_by_test_names(test_name):
+    try:
+        # Query user IDs from the database for the specified course
+        test_questions = LmsHandler.get_all_questions_by_testname(test_name)
+
+        if not test_questions:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "test_questions": test_questions,
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch Test Questions of Course for Learner"
+        })
+    
+def get_correct_answer(inst_id, ler_id):
+    try:
+        # Query user IDs from the database for the specified course
+        correct_answer = LmsHandler.check_answer(inst_id, ler_id)
+
+        if not correct_answer:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "correct_answer": correct_answer,
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch correct answer of learner"
+        })
+
