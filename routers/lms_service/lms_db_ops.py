@@ -2924,41 +2924,40 @@ class LmsHandler:
     def learner_course_ratings(cls, user_id):
         query = """
             SELECT
-                rf.id,
-                rf.user_id,
+                u.id AS user_id,
                 u.full_name,
                 u.dept,
+                rf.id AS feedback_id,
                 rf.course_id,
-                rf.rating,
-                rf.feedback,
-                rf.rating_allowed,
-                rf.auth_token,
-                rf.request_token,
-                rf.token,
-                rf.created_at,
-                rf.updated_at,
                 c.coursename,
-                c.file
-            FROM (
-                SELECT
-                    MAX(rf.id) AS id,
-                    rf.user_id,
-                    rf.course_id,
-                    MAX(rf.rating) AS rating,
-                    MAX(rf.feedback) AS feedback,
-                    MAX(rf.rating_allowed) AS rating_allowed,
-                    MAX(rf.auth_token) AS auth_token,
-                    MAX(rf.request_token) AS request_token,
-                    MAX(rf.token) AS token,
-                    MAX(rf.created_at) AS created_at,
-                    MAX(rf.updated_at) AS updated_at
-                FROM rating_feedback rf
-                JOIN users u ON rf.user_id = u.id
-                WHERE u.dept = (SELECT dept FROM users WHERE id = %(user_id)s)
-                GROUP BY rf.user_id, rf.course_id
-            ) rf
+                c.file,
+                rf.rating,
+                rf.feedback
+            FROM users u
+            JOIN rating_feedback rf ON u.id = rf.user_id
             JOIN course c ON rf.course_id = c.id
-            JOIN users u ON rf.user_id = u.id;
+            WHERE rf.course_id IN (
+                SELECT course_id
+                FROM rating_feedback
+                WHERE user_id = %(user_id)s
+            )
+            AND u.dept = (
+                SELECT dept
+                FROM users
+                WHERE id = %(user_id)s
+            )
+            AND (u.id, rf.course_id, rf.id) IN (
+                SELECT u.id, rf.course_id, MAX(rf.id) AS max_id
+                FROM users u
+                JOIN rating_feedback rf ON u.id = rf.user_id
+                WHERE u.dept = (
+                    SELECT dept
+                    FROM users
+                    WHERE id = %(user_id)s
+                )
+                GROUP BY u.id, rf.course_id
+            )
+            ORDER BY u.id, rf.course_id, rf.id DESC;
             """
         params = {"user_id": user_id}
         return execute_query(query, params).fetchall()
