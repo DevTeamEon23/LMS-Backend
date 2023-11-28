@@ -3784,37 +3784,6 @@ def fetch_course_enroll_to_group_of_inst_learner(group_id):
             "message": "Failed to fetch enrolled groups data of courses of inst & learner"
         })
 ######################################## Mass Action to enroll course_id to all groups ##################################################
-# def enroll_coursegroup_massaction(id=int, generate_tokens: bool = False, auth_token="", inputs={}, skip_new_crgroupenroll=False):
-#     try:
-#         course_id = inputs.get('course_id')
-#                 # Query all group IDs from the lmsgroup table
-#         group_ids_query = "SELECT id FROM lmsgroup"
-#         group_ids_result = execute_query(group_ids_query)
-#         group_ids = [row['id'] for row in group_ids_result]  # Use () instead of []
-
-#         # Generate the token here
-#         token = create_groups_tocourseenroll_token(course_id)
-
-#         request_token = ''
-
-#         for group_id in group_ids:
-#             # Add the course to each group
-#             data = {'course_id': course_id, 'group_id': group_id,
-#                     'c_g_enrollment_allowed': inputs.get('c_g_enrollment_allowed', ''), 'auth_token': auth_token,
-#                     'request_token': request_token, 'token': token}
-#             resp = LmsHandler.add_course_group_enrollment(data)
-
-#         # If token not required,
-#         if not generate_tokens and len(auth_token) == 0:
-#             token = None
-
-#     except ValueError as exc:
-#         logger.error(traceback.format_exc())
-#         message = exc.args[0]
-#         logger.error(message)
-
-#     return JSONResponse(status_code=status.HTTP_200_OK, content=dict(status='success', message='course has been enrolled to groups successfully'))
-
 # Operation code for enrolling course_id to groups
 def enroll_coursegroup_massaction(course_id: int, generate_tokens: bool = False, auth_token="", inputs={}, skip_new_crgroupenroll=False):
     try:
@@ -3887,14 +3856,11 @@ def check_existing_files(user_id):
 def fetch_active_files():
 
     try:
-        # Query Calender from the database for the specified id
         files = LmsHandler.fetch_active_files()
 
         if not files:
-            # Handle the case when no Calender is found for the specified id
             return None
 
-        # Transform the Calender object into a dictionary
         files_data = {
                 "id": files.id,
                 "user_id": files.user_id,
@@ -3907,7 +3873,6 @@ def fetch_active_files():
                 "deactive": files.deactive,
                 "created_at": files.created_at,
                 "updated_at": files.updated_at,
-            # Include other files attributes as needed
         }
 
         return files_data
@@ -3957,11 +3922,11 @@ def remove_file_by_id(id):
 
 def fetch_infographics_of_user(user_id):
     try:
-        # Query user IDs from the database for the specified course
+        # Query user IDs from the database
         user_infographics = LmsHandler.user_wise_infographics(user_id)
 
         if not user_infographics:
-            # Handle the case when no user is found for the specified course
+            # Handle the case when no user is found
             return None
 
         return {
@@ -4026,49 +3991,6 @@ def fetch_overview_of_learner(user_id):
         })
 
 ######################################### Rating & Feedback #####################################################
-
-# def add_ratings_feedback(user_id, generate_tokens=False, auth_token="", inputs={}, skip_new_user=False):
-#     try:
-#         course_id = inputs.get('course_id')
-#         rating = inputs.get('rating')
-#         feedback = inputs.get('feedback')
-#         created_at = datetime.now()
-#         updated_at = datetime.now()
- 
-#         # Token Generation
-#         token = create_token(feedback)
-#         request_token = ''
-
-#         data = {
-#             'user_id': user_id,
-#             'course_id': course_id,
-#             'rating': rating,
-#             'feedback': feedback,
-#             'rating_allowed': inputs.get('rating_allowed', ''),
-#             'auth_token': auth_token,
-#             'request_token': request_token,
-#             'token': token,
-#             'created_at': created_at,
-#             'updated_at': updated_at
-#         }
-
-#         resp = LmsHandler.give_ratings_and_feedback(data)
-
-#         # If token not required,
-#         if not generate_tokens and len(auth_token) == 0:
-#             token = None
-
-#     except Exception as exc:
-#         logger.error(traceback.format_exc())
-#         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-#             "status": "failure",
-#             "message": "Something went wrong!"
-#         })
-
-#     return JSONResponse(status_code=status.HTTP_200_OK, content={
-#         "status": "success",
-#         "message": "Thanks For Your Feedback"
-#     })
 
 def add_ratings_feedback(user_id, generate_tokens=False, auth_token="", inputs={}, skip_new_user=False):
     try:
@@ -4138,14 +4060,30 @@ def fetch_all_data_counts_data():
             "status": "failure",
             "message": "Failed to fetch data_counts"
         })
+    
+def get_user_points_by_superadmin():
+    try:
+        user_ids = LmsHandler.get_user_points_for_superadmin()
 
+        if not user_ids:
+            return None
+
+        return {
+            "user_ids": user_ids,
+        }
+    except Exception as exc:
+        logger = logging.getLogger(__name__)
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch Superadmin data"
+        })
+    
 def fetch_all_deptwise_users_counts():
     try:
-        # Query all users from the database
         dept_counts = LmsHandler.get_all_users_deptwise_counts()
 
         if not dept_counts:
-            # Handle the case when no user is found for the specified course
             return None
 
         return {
@@ -4160,19 +4098,13 @@ def fetch_all_deptwise_users_counts():
     
 def get_user_enrolledcourses_info():
     try:
-        # Query user IDs from the database for the specified course
         enrolled_info = LmsHandler.get_user_enroll_course_info()
 
         if not enrolled_info:
-            # Handle the case when no user is found for the specified course
             return None
-
-        # Now enrolled_info is a list of user IDs enrolled in the course
-        # You can return this list or process it further as needed
 
         return {
             "enrolled_info": enrolled_info,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -4185,11 +4117,9 @@ def get_user_enrolledcourses_info():
 
 def fetch_all_admin_data_counts_data():
     try:
-        # Query all users from the database
         data_counts = LmsHandler.get_all_admin_data_count()
 
         if not data_counts:
-            # Handle the case when no user is found for the specified course
             return None
 
         return {
@@ -4204,16 +4134,13 @@ def fetch_all_admin_data_counts_data():
 
 def get_user_points_by_user_for_admin():
     try:
-        # Query user IDs from the database for the specified course
         user_ids = LmsHandler.get_user_points_for_admin()
 
         if not user_ids:
-            # Handle the case when no user is found for the specified course
             return None
 
         return {
             "user_ids": user_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -4225,11 +4152,9 @@ def get_user_points_by_user_for_admin():
     
 def fetch_all_deptwise_users_counts_for_admin():
     try:
-        # Query all users from the database
         dept_counts = LmsHandler.get_all_users_deptwise_counts_for_admin()
 
         if not dept_counts:
-            # Handle the case when no user is found for the specified course
             return None
 
         return {
@@ -4244,11 +4169,9 @@ def fetch_all_deptwise_users_counts_for_admin():
 
 def get_user_enrolledcourses_info_for_admin():
     try:
-        # Query user IDs from the database for the specified course
         enrolled_info = LmsHandler.get_user_enroll_course_info_admin()
 
         if not enrolled_info:
-            # Handle the case when no user is found for the specified course
             return None
 
         # Now enrolled_info is a list of user IDs enrolled in the course
@@ -4270,11 +4193,9 @@ def get_user_enrolledcourses_info_for_admin():
 
 def fetch_all_instructor_data_counts_data():
     try:
-        # Query all users from the database
         data_counts = LmsHandler.get_all_instructor_data_count()
 
         if not data_counts:
-            # Handle the case when no user is found for the specified course
             return None
 
         return {
@@ -4289,16 +4210,13 @@ def fetch_all_instructor_data_counts_data():
 
 def get_user_points_by_user_for_instructor():
     try:
-        # Query user IDs from the database for the specified course
         user_ids = LmsHandler.get_user_points_for_instructor()
 
         if not user_ids:
-            # Handle the case when no user is found for the specified course
             return None
 
         return {
             "user_ids": user_ids,
-            # Include other course attributes as needed
         }
     except Exception as exc:
         logger = logging.getLogger(__name__)
@@ -4310,11 +4228,9 @@ def get_user_points_by_user_for_instructor():
     
 def fetch_all_deptwise_users_counts_for_instructor():
     try:
-        # Query all users from the database
         dept_counts = LmsHandler.get_all_users_deptwise_counts_for_instructor()
 
         if not dept_counts:
-            # Handle the case when no user is found for the specified course
             return None
 
         return {
@@ -4329,7 +4245,6 @@ def fetch_all_deptwise_users_counts_for_instructor():
 
 def get_user_enrolledcourses_info_for_instructor():
     try:
-        # Query user IDs from the database for the specified course
         enrolled_info = LmsHandler.get_user_enroll_course_info_instructor()
 
         if not enrolled_info:
@@ -4355,13 +4270,11 @@ def get_user_enrolledcourses_info_for_instructor():
 
 def fetch_ratings_of_learners(user_id):
     try:
-        # Query user data from the database
         user_ratings = LmsHandler.learner_course_ratings(user_id)
 
         if not user_ratings:
             return None
         
-        # Include other course attributes as needed
         main_data = {
             "user_ratings": [],
         }
@@ -4435,13 +4348,6 @@ def add_test_question(user_id, inputs={}, skip_new_user=False):
         created_at = datetime.now()
         updated_at = datetime.now()
 
-        # Calculate the points
-        # points = 5  # 5 points for each rating or feedback
-
-        # Token Generation
-        # token = create_token(feedback)
-        # request_token = ''
-
         data = {
             'test_name': test_name,
             'course_id': course_id,
@@ -4461,13 +4367,6 @@ def add_test_question(user_id, inputs={}, skip_new_user=False):
 
         resp = LmsHandler.add_test_question(data)
 
-        # Update user points in the user_points table
-        # update_user_points(user_id, points)
-
-        # # If token not required,
-        # if not generate_tokens and len(auth_token) == 0:
-        #     token = None
-
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -4482,7 +4381,6 @@ def add_test_question(user_id, inputs={}, skip_new_user=False):
 
 def get_tests_by_course_id(course_id):
     try:
-        # Query user IDs from the database for the specified course
         tests = LmsHandler.get_all_tests_by_course_id(course_id)
 
         if not tests:
@@ -4501,11 +4399,9 @@ def get_tests_by_course_id(course_id):
     
 def get_question_by_test_names(test_name):
     try:
-        # Query user IDs from the database for the specified course
         test_questions = LmsHandler.get_all_questions_by_testname(test_name)
 
         if not test_questions:
-            # Handle the case when no user is found for the specified course
             return None
 
         return {
@@ -4521,11 +4417,9 @@ def get_question_by_test_names(test_name):
     
 def get_correct_answer(inst_id, ler_id):
     try:
-        # Query user IDs from the database for the specified course
         correct_answer = LmsHandler.check_answer(inst_id, ler_id)
 
         if not correct_answer:
-            # Handle the case when no user is found for the specified course
             return None
 
         return {
@@ -4539,3 +4433,45 @@ def get_correct_answer(inst_id, ler_id):
             "message": "Failed to fetch correct answer of learner"
         })
 
+####################################### Assignment Api's Crud Operational Code ###############################################
+
+def add_assignment_data(user_id, inputs={}, skip_new_assignment=False):
+    try:
+        assignment_name = inputs.get('assignment_name')
+        course_id = inputs.get('course_id')
+        assignment_topic = inputs.get('assignment_topic')
+        complete_by_instructor = inputs.get('complete_by_instructor')
+        complete_on_submission = inputs.get('complete_on_submission')
+        assignment_answer = inputs.get('assignment_answer')
+        file = inputs.get('file')
+        active = inputs.get('active')
+        created_at = datetime.now()
+        updated_at = datetime.now()
+
+        data = {
+            'assignment_name': assignment_name,
+            'course_id': course_id,
+            'user_id': user_id,
+            'assignment_topic': assignment_topic,
+            'complete_by_instructor': complete_by_instructor,
+            'complete_on_submission': complete_on_submission,
+            'assignment_answer': assignment_answer,
+            'file': file,
+            'active': active,
+            'created_at': created_at,
+            'updated_at': updated_at
+        }
+
+        resp = LmsHandler.add_assignment(data)
+
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Something went wrong!"
+        })
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content={
+        "status": "success",
+        "message": "Assignment has been added successfully"
+    })

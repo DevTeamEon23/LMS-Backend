@@ -58,6 +58,7 @@ class UserDBHandler:
     # def get_user_points(cls):
     #     query = """ SELECT u.full_name, u.role, up.points, up.user_level, u.file FROM users u JOIN user_points up ON u.id = up.user_id; """
     #     return execute_query(query).fetchall()
+    # @ Harshala using this for Learner to show the badges and points with level
     @classmethod
     def get_user_points(cls):
         query = """ 
@@ -67,6 +68,8 @@ class UserDBHandler:
                 u.role,
                 up.points,
                 up.user_level,
+                up.badge_name,
+                u.file,
                 DATE_FORMAT(u.updated_at, '%d %b %Y') AS login_date
             FROM user_points up
             JOIN users u ON u.id = up.user_id

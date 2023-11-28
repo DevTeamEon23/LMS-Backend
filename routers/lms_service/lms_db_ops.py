@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from datetime import datetime
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_user_rating_feedback,n_table_test
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_user_rating_feedback,n_table_test,n_table_assignment
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -2701,6 +2701,21 @@ class LmsHandler:
         """
         return execute_query(query).fetchall()
     
+    @classmethod
+    def get_user_points_for_superadmin(cls):
+        query = """ 
+            SELECT
+                u.id as user_id,
+                u.full_name,
+                u.role,
+                up.points,
+                up.user_level,
+                DATE_FORMAT(u.updated_at, '%d %b %Y') AS login_date
+            FROM user_points up
+            JOIN users u ON u.id = up.user_id;
+        """
+        return execute_query(query).fetchall()
+    
 # Department Wise All Users Count Bar Graph:-(Admin, Instructor, Learner)   
     @classmethod
     def get_all_users_deptwise_counts(cls):
@@ -2878,7 +2893,6 @@ class LmsHandler:
                 u.role,
                 up.points,
                 up.user_level,
-                u.file,
                 DATE_FORMAT(u.updated_at, '%d %b %Y') AS login_date
             FROM user_points up
             JOIN users u ON u.id = up.user_id
@@ -3050,3 +3064,12 @@ class LmsHandler:
             """
         params = {"inst_id": inst_id, "ler_id": ler_id}
         return execute_query(query, params).fetchall()
+
+############################################ Assignment api's #########################################################
+
+    @classmethod
+    def add_assignment(cls, params):
+        query = f""" INSERT into {n_table_assignment}(course_id, user_id, assignment_name, assignment_topic, complete_by_instructor, complete_on_submission, assignment_answer, file, active) VALUES 
+                    (%(course_id)s, %(user_id)s, %(assignment_name)s, %(assignment_topic)s, %(complete_by_instructor)s, %(complete_on_submission)s, %(assignment_answer)s, %(file)s, %(active)s);
+                    """
+        return execute_query(query, params=params)
