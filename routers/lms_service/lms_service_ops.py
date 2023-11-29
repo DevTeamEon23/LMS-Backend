@@ -18,7 +18,7 @@ from fastapi.responses import FileResponse
 from fastapi_mail import FastMail, MessageSchema,ConnectionConfig
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content
+from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_assignment
 from ..auth.auth_service_ops import update_user_points
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
@@ -4115,9 +4115,9 @@ def get_user_enrolledcourses_info():
         })
 ########################################### Admin Dashboard #########################################################
 
-def fetch_all_admin_data_counts_data():
+def fetch_all_admin_data_counts_data(user_id):
     try:
-        data_counts = LmsHandler.get_all_admin_data_count()
+        data_counts = LmsHandler.get_all_admin_data_count(user_id)
 
         if not data_counts:
             return None
@@ -4132,9 +4132,9 @@ def fetch_all_admin_data_counts_data():
             "message": "Failed to fetch data_counts"
         })
 
-def get_user_points_by_user_for_admin():
+def get_user_points_by_user_for_admin(user_id):
     try:
-        user_ids = LmsHandler.get_user_points_for_admin()
+        user_ids = LmsHandler.get_user_points_for_admin(user_id)
 
         if not user_ids:
             return None
@@ -4167,9 +4167,9 @@ def fetch_all_deptwise_users_counts_for_admin():
             "message": "Failed to fetch dept_counts data"
         })
 
-def get_user_enrolledcourses_info_for_admin():
+def get_user_enrolledcourses_info_for_admin(user_id):
     try:
-        enrolled_info = LmsHandler.get_user_enroll_course_info_admin()
+        enrolled_info = LmsHandler.get_user_enroll_course_info_admin(user_id)
 
         if not enrolled_info:
             return None
@@ -4191,9 +4191,9 @@ def get_user_enrolledcourses_info_for_admin():
     
 ########################################### Instructor Dashboard #########################################################
 
-def fetch_all_instructor_data_counts_data():
+def fetch_all_instructor_data_counts_data(user_id):
     try:
-        data_counts = LmsHandler.get_all_instructor_data_count()
+        data_counts = LmsHandler.get_all_instructor_data_count(user_id)
 
         if not data_counts:
             return None
@@ -4208,9 +4208,9 @@ def fetch_all_instructor_data_counts_data():
             "message": "Failed to fetch data_counts for instructor"
         })
 
-def get_user_points_by_user_for_instructor():
+def get_user_points_by_user_for_instructor(user_id):
     try:
-        user_ids = LmsHandler.get_user_points_for_instructor()
+        user_ids = LmsHandler.get_user_points_for_instructor(user_id)
 
         if not user_ids:
             return None
@@ -4243,9 +4243,9 @@ def fetch_all_deptwise_users_counts_for_instructor():
             "message": "Failed to fetch dept_counts data for instructor"
         })
 
-def get_user_enrolledcourses_info_for_instructor():
+def get_user_enrolledcourses_info_for_instructor(user_id):
     try:
-        enrolled_info = LmsHandler.get_user_enroll_course_info_instructor()
+        enrolled_info = LmsHandler.get_user_enroll_course_info_instructor(user_id)
 
         if not enrolled_info:
             # Handle the case when no user is found for the specified course
@@ -4475,3 +4475,46 @@ def add_assignment_data(user_id, inputs={}, skip_new_assignment=False):
         "status": "success",
         "message": "Assignment has been added successfully"
     })
+
+def check_existing_assignment_name(assignment_name):
+
+    query = f"""
+    select * from {n_table_assignment} where assignment_name=%(assignment_name)s;
+    """
+    response = execute_query(query, params={'assignment_name': assignment_name})
+    data = response.fetchone()
+
+    if data is None:
+        return False, False
+    else:
+        active = data['active']
+        return True, active
+    
+def change_assignment_details(id, course_id, user_id, assignment_name, assignment_topic, complete_by_instructor, complete_on_submission, assignment_answer, file, active):
+    is_existing, _ = check_existing_assignment_name(assignment_name)
+    if is_existing:
+
+        LmsHandler.update_assignment(id, course_id, user_id, assignment_name, assignment_topic, complete_by_instructor, complete_on_submission, assignment_answer, file, active)
+        return True
+    else:
+        raise ValueError("Assignment does not exists")
+    
+def fetch_all_assignment_data():
+    try:
+        # Query all users from the database
+        assignments = LmsHandler.get_all_assignment()
+
+        if not assignments:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "assignments_data": assignments,
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch assignment's data"
+        })
+    

@@ -2716,11 +2716,12 @@ class LmsHandler:
         """
         return execute_query(query).fetchall()
     
-# Department Wise All Users Count Bar Graph:-(Admin, Instructor, Learner)   
+# Department Wise All Users Count Bar Graph:-(Superadmin, Admin, Instructor, Learner)   
     @classmethod
     def get_all_users_deptwise_counts(cls):
         query = """ 
         SELECT dept,
+            SUM(CASE WHEN role = 'Superadmin' THEN 1 ELSE 0 END) AS superadmin_count,
             SUM(CASE WHEN role = 'Admin' THEN 1 ELSE 0 END) AS admin_count,
             SUM(CASE WHEN role = 'Instructor' THEN 1 ELSE 0 END) AS instructor_count,
             SUM(CASE WHEN role = 'Learner' THEN 1 ELSE 0 END) AS learner_count
@@ -2752,48 +2753,52 @@ class LmsHandler:
 ############################################ Admin Dashboard #########################################################
 # 4 grids to show the count of:-
     @classmethod
-    def get_all_admin_data_count(cls):
+    def get_all_admin_data_count(cls, user_id):
         query = """ 
-        SELECT
-            subquery.dept,
-            'Instructor' AS role,
-            COUNT(DISTINCT subquery.course_id) AS total_enrolled_course_count,
-            (
-                SELECT COUNT(DISTINCT uce2.course_id)
-                FROM user_course_enrollment uce2
-                WHERE uce2.user_id IN (SELECT id FROM users WHERE role = 'Instructor')
-            ) AS overall_enrolled_courses,
-            (
-                SELECT COUNT(*) -- This part counts all courses from the course table
-                FROM course
-            ) AS total_courses,
-            (
-                (
-                    SELECT COUNT(*) -- This part counts all courses from the course table
-                    FROM course
-                ) - (
-                    SELECT COUNT(DISTinct uce2.course_id)
-                    FROM user_course_enrollment uce2
-                    WHERE uce2.user_id IN (SELECT id FROM users WHERE role = 'Instructor')
-                )
-            ) AS upcoming_courses
-        FROM (
             SELECT
-                u.dept,
-                u.role,
-                u.id AS admin_id,
-                uce.course_id
-            FROM users u
-            LEFT JOIN user_course_enrollment uce ON u.id = uce.user_id
-            WHERE u.role = 'Instructor'
-        ) AS subquery
-        GROUP BY subquery.dept;
+                subquery.dept,
+                subquery.role AS role,
+                COUNT(DISTINCT subquery.course_id) AS total_enrolled_course_count,
+                (
+                    SELECT COUNT(DISTINCT uce2.course_id)
+                    FROM user_course_enrollment uce2
+                    WHERE uce2.user_id = subquery.admin_id
+                    AND uce2.course_id IN (SELECT id FROM course WHERE category = subquery.dept)
+                ) AS overall_enrolled_courses,
+                (
+                    SELECT COUNT(*)
+                    FROM course
+                    WHERE category = subquery.dept
+                ) AS total_courses,
+                (
+                    CASE
+                        WHEN (
+                            SELECT COUNT(*)
+                            FROM course
+                            WHERE category = subquery.dept
+                        ) = COUNT(DISTINCT subquery.course_id) THEN 0
+                        ELSE COUNT(DISTINCT subquery.course_id)
+                    END
+                ) AS upcoming_courses
+            FROM (
+                SELECT
+                    u.dept,
+                    u.role,
+                    u.id AS admin_id,
+                    uce.course_id
+                FROM users u
+                LEFT JOIN user_course_enrollment uce ON u.id = uce.user_id
+                WHERE u.id = %(user_id)s -- Specify the admin user_id here
+                OR u.dept IN (SELECT dept FROM users WHERE id = %(user_id)s) -- Retrieve instructors in the same department as the admin
+            ) AS subquery
+            GROUP BY subquery.dept, subquery.role;
         """
-        return execute_query(query).fetchall()
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
     
 # Learning Activity Chart:-   
     @classmethod
-    def get_user_points_for_admin(cls):
+    def get_user_points_for_admin(cls, user_id):
         query = """ 
             SELECT
                 u.id as user_id,
@@ -2804,9 +2809,11 @@ class LmsHandler:
                 DATE_FORMAT(u.updated_at, '%d %b %Y') AS login_date
             FROM user_points up
             JOIN users u ON u.id = up.user_id
-            WHERE u.role IN ('Instructor', 'Learner');
+            WHERE u.role IN ('Admin', 'Instructor', 'Learner')
+            AND u.dept = (SELECT dept FROM users WHERE id = %(user_id)s);
         """
-        return execute_query(query).fetchall()
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
 
 # Department Wise All Users Count Bar Graph:-(Instructor, Learner)   
     @classmethod
@@ -2821,7 +2828,7 @@ class LmsHandler:
     
 # Course Activity Chart:- 
     @classmethod
-    def get_user_enroll_course_info_admin(cls):
+    def get_user_enroll_course_info_admin(cls, user_id):
         query = """ 
             SELECT
                 e.course_id,
@@ -2837,55 +2844,65 @@ class LmsHandler:
             JOIN
                 course c ON e.course_id = c.id
             WHERE
-                u.role IN ('Instructor', 'Learner');
+                u.role IN ('Admin', 'Instructor', 'Learner')
+            AND
+                u.dept = (SELECT dept FROM users WHERE id = %(user_id)s); -- Specify the user_id here
+
         """
-        return execute_query(query).fetchall()
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
     
 
 ############################################ Instructor Dashboard #########################################################
 # 4 grids to show the count of:-
     @classmethod
-    def get_all_instructor_data_count(cls):
-        query = """ SELECT
+    def get_all_instructor_data_count(cls, user_id):
+        query = """ 
+            SELECT
                 subquery.dept,
-                'Learner' AS role,
+                subquery.role AS role,
                 COUNT(DISTINCT subquery.course_id) AS total_enrolled_course_count,
                 (
                     SELECT COUNT(DISTINCT uce2.course_id)
                     FROM user_course_enrollment uce2
-                    WHERE uce2.user_id IN (SELECT id FROM users WHERE role = 'Learner')
+                    WHERE uce2.user_id = subquery.inst_id
+                    AND uce2.course_id IN (SELECT id FROM course WHERE category = subquery.dept)
                 ) AS overall_enrolled_courses,
                 (
-                    SELECT COUNT(*) -- This part counts all courses from the course table
+                    SELECT COUNT(*)
                     FROM course
+                    WHERE category = subquery.dept
                 ) AS total_courses,
                 (
-                    (
-                        SELECT COUNT(*) -- This part counts all courses from the course table
-                        FROM course
-                    ) - (
-                        SELECT COUNT(DISTinct uce2.course_id)
-                        FROM user_course_enrollment uce2
-                        WHERE uce2.user_id IN (SELECT id FROM users WHERE role = 'Learner')
-                    )
+                    CASE
+                        WHEN (
+                            SELECT COUNT(*)
+                            FROM course
+                            WHERE category = subquery.dept
+                        ) = COUNT(DISTINCT subquery.course_id) THEN 0
+                        ELSE COUNT(DISTINCT subquery.course_id)
+                    END
                 ) AS upcoming_courses
             FROM (
                 SELECT
                     u.dept,
                     u.role,
-                    u.id AS admin_id,
+                    u.id AS inst_id,
                     uce.course_id
                 FROM users u
                 LEFT JOIN user_course_enrollment uce ON u.id = uce.user_id
-                WHERE u.role = 'Learner'
+                WHERE u.id = %(user_id)s -- Specify the instructor user_id here
+                OR u.dept IN (SELECT dept FROM users WHERE id = %(user_id)s) -- Retrieve learners in the same department as the instructor
             ) AS subquery
-            GROUP BY subquery.dept;
+            GROUP BY subquery.dept, subquery.role;
+
         """
-        return execute_query(query).fetchall()
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
     
 # Learning Activity Chart:-   
     @classmethod
-    def get_user_points_for_instructor(cls):
+    def get_user_points_for_instructor(cls, user_id):
         query = """ 
             SELECT
                 u.id as user_id,
@@ -2896,9 +2913,11 @@ class LmsHandler:
                 DATE_FORMAT(u.updated_at, '%d %b %Y') AS login_date
             FROM user_points up
             JOIN users u ON u.id = up.user_id
-            WHERE u.role IN ('Instructor', 'Learner');
+            WHERE u.role IN ('Instructor', 'Learner')
+            AND u.dept = (SELECT dept FROM users WHERE id = %(user_id)s);
         """
-        return execute_query(query).fetchall()
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
 
 # Department Wise All Users Count Bar Graph:-(Instructor, Learner)   
     @classmethod
@@ -2912,7 +2931,7 @@ class LmsHandler:
     
 # Course Activity Chart:- 
     @classmethod
-    def get_user_enroll_course_info_instructor(cls):
+    def get_user_enroll_course_info_instructor(cls, user_id):
         query = """ 
             SELECT
                 e.course_id,
@@ -2928,9 +2947,12 @@ class LmsHandler:
             JOIN
                 course c ON e.course_id = c.id
             WHERE
-                u.role IN ('Learner');
+                u.role IN ('Instructor', 'Learner')
+            AND
+                u.dept = (SELECT dept FROM users WHERE id = %(user_id)s);
         """
-        return execute_query(query).fetchall()
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()
     
 ################################################    ##########################################################
 
@@ -3073,3 +3095,38 @@ class LmsHandler:
                     (%(course_id)s, %(user_id)s, %(assignment_name)s, %(assignment_topic)s, %(complete_by_instructor)s, %(complete_on_submission)s, %(assignment_answer)s, %(file)s, %(active)s);
                     """
         return execute_query(query, params=params)
+    
+    @classmethod
+    def update_assignment(cls,id, course_id, user_id, assignment_name, assignment_topic, complete_by_instructor, complete_on_submission, assignment_answer, file, active):
+        query = f"""   
+        UPDATE assignment SET
+            course_id = %(course_id)s,
+            user_id = %(user_id)s,
+            assignment_name = %(assignment_name)s,
+            assignment_topic = %(assignment_topic)s,
+            complete_by_instructor = %(complete_by_instructor)s,
+            complete_on_submission = %(complete_on_submission)s,
+            assignment_answer = %(assignment_answer)s,
+            file = %(file)s,
+            active = %(active)s
+        WHERE id = %(id)s;
+        """
+        params = {
+        "id":id,
+        "course_id": course_id,
+        "user_id": user_id,
+        "assignment_name": assignment_name,
+        "assignment_topic": assignment_topic,
+        "complete_by_instructor": complete_by_instructor,
+        "complete_on_submission": complete_on_submission,
+        "assignment_answer": assignment_answer,
+        "file": file,
+        "active": active,
+    }
+        return execute_query(query, params=params)
+    
+    @classmethod
+    def get_all_assignment(cls):
+        query = """ SELECT * FROM assignment; """
+        return execute_query(query).fetchall()
+    

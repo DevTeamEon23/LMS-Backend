@@ -29,7 +29,7 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_last_eid_data,fetch_last_id_data,fetch_all_dept_data,fetch_all_inst_learn_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,fetch_all_groups_data_excel,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_courses_touser,user_exists,fetch_users_data_export,fetch_courses_data_export,fetch_users_course_enrolled,enroll_coursegroup_massaction,fetch_enrolled_unenroll_courses_of_user,unenroll_courses_from_userby_id,enroll_groups_touser,fetch_added_unadded_groups_of_user,remove_group_from_userby_id,enroll_users_tocourse,fetch_enrolled_unenroll_users_of_course,unenrolled_users_from_courseby_id,enroll_groups_tocourse,fetch_enrolled_unenroll_groups_of_course,unenrolled_groups_from_courseby_id,enroll_users_togroup,fetch_added_unadded_users_of_group,remove_user_from_groupby_id,enroll_courses_togroup,fetch_added_unadded_courses_of_group,remove_course_from_groupby_id,remove_course_from_all_groups_by_course_id,fetch_enrolled_unenroll_instructors_of_course,fetch_enrolled_unenroll_learners_of_course,fetch_added_unadded_instructors_of_group,fetch_added_unadded_learners_of_group,remove_file_by_id,fetch_enrolled_and_admin_inst_created_course_details_to_admin,fetch_enrolled_courses_of_user,unenroll_courses_from_enrolleduserby_id,fetch_enrolled_courses_of_learner,fetch_added_groups_of_admin,fetch_added_groups_of_learner,fetch_added_groups_of_user,remove_group_from_enrolleduserby_id,update_user,update_course, add_course_content, fetch_course_content_by_onlyid,change_course_content_video, change_course_content_details,change_course_content_scorm,update_course_content, delete_course_content_by_id,fetch_infographics_of_user,fetch_course_to_enroll_to_admin_inst,fetch_course_to_enroll_to_inst_learner,fetch_group_to_enroll_to_admin,fetch_group_to_enroll_to_inst_learner,fetch_users_enroll_to_admin,fetch_users_enroll_to_inst_learner,fetch_group_enroll_to_course_of_inst_learner,fetch_enrollusers_of_group_to_admin,fetch_enrollusers_of_group_to_inst_learner,fetch_course_enroll_to_group_of_inst_learner,change_course_details_new,fetch_overview_of_learner,add_ratings_feedback,fetch_all_data_counts_data,get_user_points_by_superadmin,fetch_all_deptwise_users_counts,fetch_all_admin_data_counts_data,fetch_all_deptwise_users_counts_for_admin,get_user_points_by_user_for_admin,get_user_enrolledcourses_info,get_user_enrolledcourses_info_for_admin,fetch_all_instructor_data_counts_data,get_user_points_by_user_for_instructor,fetch_all_deptwise_users_counts_for_instructor,get_user_enrolledcourses_info_for_instructor,fetch_created_courses_of_user,fetch_all_training_data,fetch_ratings_of_learners,get_user_enrolledcourses_info_by_id,add_test_question,get_tests_by_course_id,get_question_by_test_names,get_correct_answer, add_assignment_data
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_last_eid_data,fetch_last_id_data,fetch_all_dept_data,fetch_all_inst_learn_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,fetch_all_groups_data_excel,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_courses_touser,user_exists,fetch_users_data_export,fetch_courses_data_export,fetch_users_course_enrolled,enroll_coursegroup_massaction,fetch_enrolled_unenroll_courses_of_user,unenroll_courses_from_userby_id,enroll_groups_touser,fetch_added_unadded_groups_of_user,remove_group_from_userby_id,enroll_users_tocourse,fetch_enrolled_unenroll_users_of_course,unenrolled_users_from_courseby_id,enroll_groups_tocourse,fetch_enrolled_unenroll_groups_of_course,unenrolled_groups_from_courseby_id,enroll_users_togroup,fetch_added_unadded_users_of_group,remove_user_from_groupby_id,enroll_courses_togroup,fetch_added_unadded_courses_of_group,remove_course_from_groupby_id,remove_course_from_all_groups_by_course_id,fetch_enrolled_unenroll_instructors_of_course,fetch_enrolled_unenroll_learners_of_course,fetch_added_unadded_instructors_of_group,fetch_added_unadded_learners_of_group,remove_file_by_id,fetch_enrolled_and_admin_inst_created_course_details_to_admin,fetch_enrolled_courses_of_user,unenroll_courses_from_enrolleduserby_id,fetch_enrolled_courses_of_learner,fetch_added_groups_of_admin,fetch_added_groups_of_learner,fetch_added_groups_of_user,remove_group_from_enrolleduserby_id,update_user,update_course, add_course_content, fetch_course_content_by_onlyid,change_course_content_video, change_course_content_details,change_course_content_scorm,update_course_content, delete_course_content_by_id,fetch_infographics_of_user,fetch_course_to_enroll_to_admin_inst,fetch_course_to_enroll_to_inst_learner,fetch_group_to_enroll_to_admin,fetch_group_to_enroll_to_inst_learner,fetch_users_enroll_to_admin,fetch_users_enroll_to_inst_learner,fetch_group_enroll_to_course_of_inst_learner,fetch_enrollusers_of_group_to_admin,fetch_enrollusers_of_group_to_inst_learner,fetch_course_enroll_to_group_of_inst_learner,change_course_details_new,fetch_overview_of_learner,add_ratings_feedback,fetch_all_data_counts_data,get_user_points_by_superadmin,fetch_all_deptwise_users_counts,fetch_all_admin_data_counts_data,fetch_all_deptwise_users_counts_for_admin,get_user_points_by_user_for_admin,get_user_enrolledcourses_info,get_user_enrolledcourses_info_for_admin,fetch_all_instructor_data_counts_data,get_user_points_by_user_for_instructor,fetch_all_deptwise_users_counts_for_instructor,get_user_enrolledcourses_info_for_instructor,fetch_created_courses_of_user,fetch_all_training_data,fetch_ratings_of_learners,get_user_enrolledcourses_info_by_id,add_test_question,get_tests_by_course_id,get_question_by_test_names,get_correct_answer, add_assignment_data,change_assignment_details,fetch_all_assignment_data
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import (Email,CategorySchema, AddUser,User, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender,UnenrolledUsers_Course,UnenrolledUsers_Group,UnenrolledCourse_Group,UnenrolledUsers_Group,Remove_file, DeleteCourseContent)
 from utils import success_response
@@ -3573,10 +3573,10 @@ def fetch_users_course_info_for_Dashboard():
 ############################################### Admin Dashboard ################################################################
 
 @service.get("/data_counts_for_admin")
-def fetch_all_counts_of_data_for_admin():
+def fetch_all_counts_of_data_for_admin(user_id):
     try:
         # Fetch all courses data here
-        data_counts = fetch_all_admin_data_counts_data()
+        data_counts = fetch_all_admin_data_counts_data(user_id)
 
         return {
             "status": "success",
@@ -3590,10 +3590,10 @@ def fetch_all_counts_of_data_for_admin():
         })
     
 @service.get("/fetch_userpoints_by_userid_for_admin")
-def fetch_userpoints_for_admin():
+def fetch_userpoints_for_admin(user_id):
     try:
         # Fetch all point's data of users here
-        points = get_user_points_by_user_for_admin()
+        points = get_user_points_by_user_for_admin(user_id)
 
         return {
             "status": "success",
@@ -3624,10 +3624,10 @@ def fetch_all_users_counts_by_dept_for_admin():
         })
     
 @service.get("/fetch_user_enrolled_course_data_for_admin")
-def fetch_users_course_info_for_Admin_Dashboard():
+def fetch_users_course_info_for_Admin_Dashboard(user_id):
     try:
         # Fetch all point's data of users here
-        data = get_user_enrolledcourses_info_for_admin()
+        data = get_user_enrolledcourses_info_for_admin(user_id)
 
         return {
             "status": "success",
@@ -3643,10 +3643,10 @@ def fetch_users_course_info_for_Admin_Dashboard():
 ############################################### Instructor Dashboard ################################################################
 
 @service.get("/data_counts_for_instructor")
-def fetch_all_counts_of_data_for_instructor():
+def fetch_all_counts_of_data_for_instructor(user_id):
     try:
         # Fetch all courses data here
-        data_counts = fetch_all_instructor_data_counts_data()
+        data_counts = fetch_all_instructor_data_counts_data(user_id)
 
         return {
             "status": "success",
@@ -3660,10 +3660,10 @@ def fetch_all_counts_of_data_for_instructor():
         })
     
 @service.get("/fetch_userpoints_by_userid_for_instructor")
-def fetch_userpoints_for_instructor():
+def fetch_userpoints_for_instructor(user_id):
     try:
         # Fetch all point's data of users here
-        points = get_user_points_by_user_for_instructor()
+        points = get_user_points_by_user_for_instructor(user_id)
 
         return {
             "status": "success",
@@ -3694,10 +3694,10 @@ def fetch_all_users_counts_by_dept_for_instructor():
         })
     
 @service.get("/fetch_user_enrolled_course_data_for_instructor")
-def fetch_users_course_info_for_Instructor_Dashboard():
+def fetch_users_course_info_for_Instructor_Dashboard(user_id):
     try:
         # Fetch all point's data of users here
-        data = get_user_enrolledcourses_info_for_instructor()
+        data = get_user_enrolledcourses_info_for_instructor(user_id)
 
         return {
             "status": "success",
@@ -3826,11 +3826,18 @@ def fetch_correct_answer(inst_id: int, ler_id: int):
 ########################################## Assignment Api's ###########################################
 
 @service.post("/add_assignment")
-def add_assignment(assignment_name: str = Form(None), course_id: int = Form(None), user_id: int = Form(None), assignment_topic: str = Form(None), complete_by_instructor: str = Form(None), complete_on_submission: str = Form(None), assignment_answer: str = Form(None), file: Optional[UploadFile] = File(default=None), active: bool = Form(None)):
-    with open("files/"+file.filename, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    url = str("files/"+file.filename)
+def add_assignment(assignment_name: str = Form(None), course_id: int = Form(None), user_id: int = Form(None), assignment_topic: str = Form(None), complete_by_instructor: bool = Form(None), complete_on_submission: bool = Form(None), assignment_answer: str = Form(None), file: UploadFile = File(None), active: bool = Form(None)):
+    # with open("files/"+file.filename, "wb") as buffer:
+    #     shutil.copyfileobj(file.file, buffer)
+    # url = str("files/"+file.filename)
     try:
+        url = None  # Initialize url to None
+
+        if file:
+            # Process the file only if it is provided
+            with open("files/" + file.filename, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            url = str("files/" + file.filename)
         inputs = {
             'assignment_name': assignment_name,
             'course_id': course_id,
@@ -3855,3 +3862,55 @@ def add_assignment(assignment_name: str = Form(None), course_id: int = Form(None
             "message": exc.args[0]
         })
     
+# Update assignment
+@service.post("/update_assignment")
+def update_assignments(
+    id: int = Form(...),
+    course_id: int = Form(...),
+    user_id: int = Form(...),
+    assignment_name: str = Form(...),
+    assignment_topic: str = Form(...),
+    complete_by_instructor: bool = Form(...),
+    complete_on_submission: bool = Form(...),
+    assignment_answer: str = Form(None),
+    active: bool = Form(...),
+    file: UploadFile = File(None)  # Make file parameter optional
+):
+    try:
+        url = None  # Initialize url to None
+
+        if file:
+            # Process the file only if it is provided
+            with open("files/" + file.filename, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            url = str("files/" + file.filename)
+
+        if change_assignment_details(id, course_id, user_id, assignment_name, assignment_topic, complete_by_instructor, complete_on_submission, assignment_answer, active, url):
+            return JSONResponse(status_code=status.HTTP_200_OK, content={
+                "status": "success",
+                "message": "Updated Assignment successfully"
+            })
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
+            "status": "failure",
+            "message": exc.args[0]
+        })
+
+@service.get("/assignments")
+def fetch_all_assignments():
+    try:
+        # Fetch all assignments' data here
+        assignment = fetch_all_assignment_data()
+
+        return {
+            "status": "success",
+            "data": assignment
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch assignments' data"
+        })
