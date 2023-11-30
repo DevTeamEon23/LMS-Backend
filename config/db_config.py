@@ -107,6 +107,10 @@ class Audience(PythonEnum):
     Audience2 = 'Audience2'
     Audience3 = 'Audience3'
 
+class Sub_Status(PythonEnum):
+    Pending = 'Pending'
+    Passed = 'Passed'
+    Not_Passed = 'Not Passed'
 
 #Tables Codes Go Here --*
 n_table_user = 'users'
@@ -492,7 +496,7 @@ submission_table = Table(
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('course_id', Integer, nullable=False),
     Column('user_id', Integer, nullable=False),
-    Column('submission_status', VARCHAR(20), nullable=False),  # 'Pass', 'Not Passed', 'Pending'
+    Column('submission_status', Enum(Sub_Status), server_default='Pending', nullable=False),
     Column('grade', Integer, nullable=True),  # 1-100
     Column('comment', VARCHAR(655), nullable=True),
     Column('active', BOOLEAN, default=True, nullable=False),

@@ -6,7 +6,6 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 
 
-
 # Directory Definitions
 dt_fmt = '%Y_%m_%d'
 config_dir = os.path.dirname(os.path.abspath(__file__))

@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from datetime import datetime
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_user_rating_feedback,n_table_test,n_table_assignment
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_user_rating_feedback,n_table_test,n_table_assignment,n_table_submission
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -3130,3 +3130,14 @@ class LmsHandler:
         query = """ SELECT * FROM assignment; """
         return execute_query(query).fetchall()
     
+    @classmethod
+    def get_full_name_by_user_id(user_id):
+        query = """" SELECT full_name FROM users WHERE id=%(user_id)s;"""
+        return execute_query(query).fetchall()
+
+    @classmethod
+    def update_assignment_result(cls, params):
+        query = f""" INSERT into {n_table_submission}(course_id, user_id, submission_status, grade, comment, active) VALUES 
+                    (%(course_id)s, %(user_id)s, %(submission_status)s, %(grade)s, %(comment)s, %(active)s);
+                    """
+        return execute_query(query, params=params)

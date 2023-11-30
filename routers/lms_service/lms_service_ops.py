@@ -4518,3 +4518,39 @@ def fetch_all_assignment_data():
             "message": "Failed to fetch assignment's data"
         })
     
+def check_assignment(user_id, inputs={}, skip_new_assignment=False):
+    try:
+        course_id = inputs.get('course_id')
+        submission_status = inputs.get('submission_status')
+        grade = inputs.get('grade')
+        comment = inputs.get('comment')
+        active = inputs.get('active')
+        created_at = datetime.now()
+        updated_at = datetime.now()
+
+        data = {
+            'course_id': course_id,
+            'user_id': user_id,
+            'submission_status': submission_status,
+            'grade': grade,
+            'comment': comment,
+            'active': active,
+            'created_at': created_at,
+            'updated_at': updated_at
+        }
+
+        resp = LmsHandler.update_assignment_result(data)
+
+        # user_id = LmsHandler.get_full_name_by_user_id(user_id)
+
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Something went wrong!"
+        })
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content={
+        "status": "success",
+        "message": "Assignment checked and Grade has been given to Learner successfully"
+    })
