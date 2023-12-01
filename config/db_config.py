@@ -110,7 +110,7 @@ class Audience(PythonEnum):
 class Sub_Status(PythonEnum):
     Pending = 'Pending'
     Passed = 'Passed'
-    Not_Passed = 'Not Passed'
+    NotPassed = 'Not Passed'
 
 #Tables Codes Go Here --*
 n_table_user = 'users'

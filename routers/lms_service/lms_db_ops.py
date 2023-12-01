@@ -2776,8 +2776,14 @@ class LmsHandler:
                             SELECT COUNT(*)
                             FROM course
                             WHERE category = subquery.dept
+                            AND id NOT IN (SELECT course_id FROM user_course_enrollment WHERE user_id = subquery.admin_id)
                         ) = COUNT(DISTINCT subquery.course_id) THEN 0
-                        ELSE COUNT(DISTINCT subquery.course_id)
+                        ELSE (
+                            SELECT COUNT(*)
+                            FROM course
+                            WHERE category = subquery.dept
+                            AND id NOT IN (SELECT course_id FROM user_course_enrollment WHERE user_id = subquery.admin_id)
+                        )
                     END
                 ) AS upcoming_courses
             FROM (
@@ -2874,14 +2880,15 @@ class LmsHandler:
                     WHERE category = subquery.dept
                 ) AS total_courses,
                 (
-                    CASE
-                        WHEN (
-                            SELECT COUNT(*)
-                            FROM course
-                            WHERE category = subquery.dept
-                        ) = COUNT(DISTINCT subquery.course_id) THEN 0
-                        ELSE COUNT(DISTINCT subquery.course_id)
-                    END
+                    SELECT
+                        COUNT(*)
+                    FROM course
+                    WHERE category = subquery.dept
+                        AND id NOT IN (
+                            SELECT course_id
+                            FROM user_course_enrollment
+                            WHERE user_id = subquery.inst_id
+                        )
                 ) AS upcoming_courses
             FROM (
                 SELECT
@@ -3097,7 +3104,13 @@ class LmsHandler:
         return execute_query(query, params=params)
     
     @classmethod
-    def update_assignment(cls,id, course_id, user_id, assignment_name, assignment_topic, complete_by_instructor, complete_on_submission, assignment_answer, file, active):
+    def update_assignment(cls, id, course_id, user_id, assignment_name, assignment_topic, complete_by_instructor, complete_on_submission, assignment_answer, file, active):
+        # Adjust the SQL query based on whether the file is provided or not
+        if file is None:
+            file_update = "file = NULL,"
+        else:
+            file_update = "file = %(file)s,"
+
         query = f"""   
         UPDATE assignment SET
             course_id = %(course_id)s,
@@ -3107,37 +3120,87 @@ class LmsHandler:
             complete_by_instructor = %(complete_by_instructor)s,
             complete_on_submission = %(complete_on_submission)s,
             assignment_answer = %(assignment_answer)s,
-            file = %(file)s,
+            {file_update}  # Include the file update conditionally
             active = %(active)s
         WHERE id = %(id)s;
         """
         params = {
-        "id":id,
-        "course_id": course_id,
-        "user_id": user_id,
-        "assignment_name": assignment_name,
-        "assignment_topic": assignment_topic,
-        "complete_by_instructor": complete_by_instructor,
-        "complete_on_submission": complete_on_submission,
-        "assignment_answer": assignment_answer,
-        "file": file,
-        "active": active,
-    }
+            "id": id,
+            "course_id": course_id,
+            "user_id": user_id,
+            "assignment_name": assignment_name,
+            "assignment_topic": assignment_topic,
+            "complete_by_instructor": complete_by_instructor,
+            "complete_on_submission": complete_on_submission,
+            "assignment_answer": assignment_answer,
+            "file": file,
+            "active": active,
+        }
+
         return execute_query(query, params=params)
     
     @classmethod
     def get_all_assignment(cls):
         query = """ SELECT * FROM assignment; """
         return execute_query(query).fetchall()
-    
-    @classmethod
-    def get_full_name_by_user_id(user_id):
-        query = """" SELECT full_name FROM users WHERE id=%(user_id)s;"""
-        return execute_query(query).fetchall()
 
+######################################## Submission related #############################################
     @classmethod
     def update_assignment_result(cls, params):
         query = f""" INSERT into {n_table_submission}(course_id, user_id, submission_status, grade, comment, active) VALUES 
                     (%(course_id)s, %(user_id)s, %(submission_status)s, %(grade)s, %(comment)s, %(active)s);
                     """
         return execute_query(query, params=params)
+    
+    @classmethod
+    def update_submission_result(cls, id, course_id, user_id, submission_status, grade, comment, active):
+        query = f"""
+            UPDATE {n_table_submission}
+            SET
+                submission_status = %(submission_status)s,
+                grade = %(grade)s,
+                comment = %(comment)s,
+                active = %(active)s
+            WHERE
+                course_id = %(course_id)s
+                AND user_id = %(user_id)s;
+        """
+        params = {
+            "id": id,
+            "course_id": course_id,
+            "user_id": user_id,
+            "submission_status": submission_status,
+            "grade": grade,
+            "comment": comment,
+            "active": active,
+        }
+
+        return execute_query(query, params=params)
+    
+#############################################################################################################
+
+    #Fetch To Make Course Assignment available for all Learners
+    @classmethod
+    def fetch_assignment_by_course_id(cls, course_id):
+        query = """ SELECT * FROM assignment
+                WHERE course_id = %(course_id)s AND assignment_answer IS NULL AND file IS NULL; """
+        params = {"course_id": course_id}
+        return execute_query(query, params).fetchall()
+    
+    #for checking assignment submited by learners
+    @classmethod
+    def fetch_assignment_completed_by_learners(cls, user_id):
+        query = """ SELECT a.*, u.full_name
+                FROM assignment a
+                JOIN users u ON a.user_id = u.id
+                WHERE a.user_id != %(user_id)s; 
+                """
+        params = {"user_id": user_id}
+        return execute_query(query, params).fetchall()  
+    
+########################################## Instructor Lead Training #########################################
+
+    # @classmethod
+    # def add_ilt(cls):
+    #     query = """"""
+

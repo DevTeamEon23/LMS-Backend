@@ -18,7 +18,7 @@ from fastapi.responses import FileResponse
 from fastapi_mail import FastMail, MessageSchema,ConnectionConfig
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_assignment
+from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_assignment,n_table_submission
 from ..auth.auth_service_ops import update_user_points
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
@@ -4434,7 +4434,7 @@ def get_correct_answer(inst_id, ler_id):
         })
 
 ####################################### Assignment Api's Crud Operational Code ###############################################
-
+#Add Assignment
 def add_assignment_data(user_id, inputs={}, skip_new_assignment=False):
     try:
         assignment_name = inputs.get('assignment_name')
@@ -4476,6 +4476,7 @@ def add_assignment_data(user_id, inputs={}, skip_new_assignment=False):
         "message": "Assignment has been added successfully"
     })
 
+#Edit Assignment
 def check_existing_assignment_name(assignment_name):
 
     query = f"""
@@ -4490,6 +4491,7 @@ def check_existing_assignment_name(assignment_name):
         active = data['active']
         return True, active
     
+#Edit Assignment
 def change_assignment_details(id, course_id, user_id, assignment_name, assignment_topic, complete_by_instructor, complete_on_submission, assignment_answer, file, active):
     is_existing, _ = check_existing_assignment_name(assignment_name)
     if is_existing:
@@ -4499,6 +4501,7 @@ def change_assignment_details(id, course_id, user_id, assignment_name, assignmen
     else:
         raise ValueError("Assignment does not exists")
     
+
 def fetch_all_assignment_data():
     try:
         # Query all users from the database
@@ -4518,6 +4521,7 @@ def fetch_all_assignment_data():
             "message": "Failed to fetch assignment's data"
         })
     
+#Add Submission    
 def check_assignment(user_id, inputs={}, skip_new_assignment=False):
     try:
         course_id = inputs.get('course_id')
@@ -4541,8 +4545,6 @@ def check_assignment(user_id, inputs={}, skip_new_assignment=False):
 
         resp = LmsHandler.update_assignment_result(data)
 
-        # user_id = LmsHandler.get_full_name_by_user_id(user_id)
-
     except Exception as exc:
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
@@ -4554,3 +4556,68 @@ def check_assignment(user_id, inputs={}, skip_new_assignment=False):
         "status": "success",
         "message": "Assignment checked and Grade has been given to Learner successfully"
     })
+
+#Edit Submission   
+def check_existing_submission_by_user_course_id(course_id,user_id):
+
+    query = f"""
+    select * from {n_table_submission} where course_id=%(course_id)s and user_id=%(user_id)s;
+    """
+    response = execute_query(query, params={'course_id': course_id, 'user_id': user_id})
+    data = response.fetchone()
+
+    if data is None:
+        return False, False
+    else:
+        active = data['active']
+        return True, active
+    
+#Edit Submission   
+def change_submission_details(id, course_id, user_id, submission_status, grade, comment, active):
+    is_existing, _ = check_existing_submission_by_user_course_id(course_id,user_id)
+    if is_existing:
+
+        LmsHandler.update_submission_result(id, course_id, user_id, submission_status, grade, comment, active)
+        return True
+    else:
+        raise ValueError("Assignment does not exists")
+    
+#Fetch To Make Course Assignment available for all Learners in course_content
+def fetch_assignment_for_learner(course_id):
+    try:
+        # Query all users from the database
+        assignments = LmsHandler.fetch_assignment_by_course_id(course_id)
+
+        if not assignments:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "assignments_data": assignments,
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch assignment's data"
+        })
+
+#to show the submission of learners in table
+def fetch_assignments_done_from_learner(user_id):
+    try:
+        # Query all users from the database
+        given_assignments = LmsHandler.fetch_assignment_completed_by_learners(user_id)
+
+        if not given_assignments:
+            # Handle the case when no user is found for the specified course
+            return None
+
+        return {
+            "assignments_data": given_assignments,
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch completed assignment's data of learners for Checking"
+        })
