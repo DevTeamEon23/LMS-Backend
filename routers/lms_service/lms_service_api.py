@@ -2141,7 +2141,7 @@ async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str =
 
     #Create unique folder for uploading Scorm zip
     mode = 0o666
-    parent_dir = "C:/Users/Admin/Desktop/NEW_LIVE/LMS-Backend"
+    parent_dir = "/home/ubuntu/server/LMS-Backend/"
     file_dir = str(int(time.time()))
     path = os.path.join(parent_dir, file_dir)
     os.mkdir(path, mode)
@@ -2163,7 +2163,7 @@ async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str =
 
     # Create unique folder for uploading SCORM zip
     mode = 0o666
-    parent_dir = "C:/Users/Admin/Desktop/NEW_LIVE/LMS-Backend"
+    parent_dir = "/home/ubuntu/server/LMS-Backend/"
     file_dir = str(int(time.time()))
     path = os.path.join(parent_dir, file_dir)
     os.mkdir(path, mode)
