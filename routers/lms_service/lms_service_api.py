@@ -2140,17 +2140,18 @@ def delete_calenders(payload: DeleteCalender):
 async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str = Form(...)):
 
     #Create unique folder for uploading Scorm zip
-    mode = 0o666
-    parent_dir = "/home/ubuntu/server/LMS-Backend/scorm/"
+    # mode = 0o666
+    parent_dir = "/home/ubuntu/server/LMS-Backend/scorm"
     file_dir = str(int(time.time()))
     path = os.path.join(parent_dir, file_dir)
-    os.mkdir(path, mode)
-
+    os.mkdir(path)
+ 
     #MOve uploaded file to created unique folder
-    with open(file_dir + "/" + file.filename, "wb") as buffer:
+    file_path = os.path.join(path, file.filename)
+    with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     # Extract zip file in that unique folder
-    with ZipFile(file_dir + "/" + file.filename, 'r') as zObject:
+    with ZipFile(file_path, 'r') as zObject:
         zObject.extractall(
             path=file_dir + "/")
 
@@ -2161,21 +2162,22 @@ async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str =
 @service.post("/scorm_zip_upload/")
 async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str = Form(...)):
 
-    # Create unique folder for uploading SCORM zip
-    mode = 0o666
-    parent_dir = "/home/ubuntu/server/LMS-Backend/scorm/"
+    # uploading Scorm zip
+    #mode = 0o666
+    parent_dir = "/home/ubuntu/server/LMS-Backend/scorm"
     file_dir = str(int(time.time()))
     path = os.path.join(parent_dir, file_dir)
-    os.mkdir(path, mode)
-
-    # Move uploaded file to the created unique folder
-    with open(os.path.join(path, file.filename), "wb") as buffer:
+    os.mkdir(path)
+ 
+    #MOve uploaded file to created unique folder
+    file_path = os.path.join(path, file.filename)
+    with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    
-    # Extract zip file in the unique folder
-    with ZipFile(os.path.join(path, file.filename), 'r') as zObject:
-        zObject.extractall(path=path)
-
+    # Extract zip file in that unique folder
+    with ZipFile(file_path, 'r') as zObject:
+        zObject.extractall(
+            path=file_dir + "/")
+        
     # Update the latest extracted folder
     global latest_extracted_folder
     latest_extracted_folder = path
