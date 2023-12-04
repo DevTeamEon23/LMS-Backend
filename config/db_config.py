@@ -342,7 +342,7 @@ u_c_table_enrollment = Table(
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{table_calender}_token', 'token'),
+    Index(f'idx_{users_courses_enrollment}_token', 'token'),
 )
 
 #  Enroll Users to Group & Enroll Groups to User (user_group_enrollment)table
@@ -358,7 +358,7 @@ u_g_table_enrollment = Table(
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{table_calender}_token', 'token'),
+    Index(f'idx_{users_groups_enrollment}_token', 'token'),
 )
 
 # Enroll Courses to Group & Enroll Groups to Courses (course_group_enrollment)table
@@ -374,7 +374,7 @@ cg_table_enrollment = Table(
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{table_calender}_token', 'token'),
+    Index(f'idx_{courses_groups_enrollment}_token', 'token'),
 )
 
 # Each Login gives 25 Points to users
@@ -502,6 +502,23 @@ submission_table = Table(
     Column('active', BOOLEAN, default=True, nullable=False),
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp())
+)
+
+# Instructor-Led-Training
+table_ilt = 'inst_led_training'
+s_table_ilt = Table(
+    table_ilt, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('session_name', VARCHAR(45)),
+    Column('date', VARCHAR(20)),
+    Column('starttime', VARCHAR(20)),
+    Column('capacity', VARCHAR(20)),
+    Column('instructor', VARCHAR(20)),
+    Column('session_type', VARCHAR(655)),
+    Column('duration', VARCHAR(20)),
+    Column('description', VARCHAR(655)),
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
 )
 
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')

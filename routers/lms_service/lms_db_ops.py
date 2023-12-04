@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from datetime import datetime
-from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_user_rating_feedback,n_table_test,n_table_assignment,n_table_submission
+from config.db_config import n_table_user,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_user_rating_feedback,n_table_test,n_table_assignment,n_table_submission,table_ilt
 from ..db_ops import execute_query
 
 class LmsHandler:
@@ -3200,7 +3200,55 @@ class LmsHandler:
     
 ########################################## Instructor Lead Training #########################################
 
-    # @classmethod
-    # def add_ilt(cls):
-    #     query = """"""
+    @classmethod
+    def add_ilt(cls, params):
+        query = f""" INSERT into {table_ilt}(session_name, date, starttime, capacity, instructor, session_type, duration, description) VALUES 
+                    (%(session_name)s, %(date)s, %(starttime)s, %(capacity)s, %(instructor)s, %(session_type)s, %(duration)s, %(description)s);
+                """
+        return execute_query(query, params=params)
+    
+    @classmethod
+    def update_ilt(cls, id, session_name, date, starttime, capacity, instructor, session_type, duration, description):
 
+        query = f"""   
+        UPDATE inst_led_training SET
+            session_name = %(session_name)s,
+            date = %(date)s,
+            starttime = %(starttime)s,
+            capacity = %(capacity)s,
+            instructor = %(instructor)s,
+            session_type = %(session_type)s,
+            duration = %(duration)s,
+            description = %(description)s
+        WHERE id = %(id)s;
+        """
+        params = {
+            "id": id,
+            "session_name": session_name,
+            "date": date,
+            "starttime": starttime,
+            "capacity": capacity,
+            "instructor": instructor,
+            "session_type": session_type,
+            "duration": duration,
+            "description": description,
+        }
+
+        return execute_query(query, params=params)
+    
+    @classmethod
+    def fetch_inst_led_training_by_session_name(cls, session_name):
+        query = """ 
+            SELECT
+                * from inst_led_training
+            WHERE
+                session_name = %(session_name)s;
+            """
+        params = {"session_name": session_name}
+        return execute_query(query, params).fetchall()
+    
+    @classmethod
+    def delete_inst_led_training(cls, id):
+        query = f"""DELETE FROM {table_ilt} WHERE id = %(id)s;"""
+        params = {'id': id}
+        return execute_query(query, params=params)

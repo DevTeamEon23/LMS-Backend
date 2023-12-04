@@ -18,7 +18,7 @@ from fastapi.responses import FileResponse
 from fastapi_mail import FastMail, MessageSchema,ConnectionConfig
 from routers.db_ops import execute_query
 from passlib.context import CryptContext
-from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_assignment,n_table_submission
+from config.db_config import n_table_user,Base,table_course,table_lmsgroup,table_category,table_lmsevent,table_classroom,table_conference,table_virtualtraining,table_discussion,table_calender,users_courses_enrollment,users_groups_enrollment,courses_groups_enrollment,n_table_user_files,n_table_course_content,n_table_assignment,n_table_submission,table_ilt
 from ..auth.auth_service_ops import update_user_points
 from config.logconfig import logger
 from routers.lms_service.lms_db_ops import LmsHandler
@@ -4620,4 +4620,107 @@ def fetch_assignments_done_from_learner(user_id):
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
             "status": "failure",
             "message": "Failed to fetch completed assignment's data of learners for Checking"
+        })
+    
+####################################### Instructor-Led-Training ####################################################
+
+#Add Instructor-Led-Training
+def add_inst_led_training(instructor, inputs={}, skip_new_assignment=False):
+    try:
+        session_name = inputs.get('session_name')
+        date = inputs.get('date')
+        starttime = inputs.get('starttime')
+        capacity = inputs.get('capacity')
+        session_type = inputs.get('session_type')
+        duration = inputs.get('duration')
+        description = inputs.get('description')
+        created_at = datetime.now()
+        updated_at = datetime.now()
+
+        data = {
+            'session_name': session_name,
+            'date': date,
+            'starttime': starttime,
+            'capacity': capacity,
+            'instructor': instructor,
+            'session_type': session_type,
+            'duration': duration,
+            'description': description,
+            'created_at': created_at,
+            'updated_at': updated_at
+        }
+
+        resp = LmsHandler.add_ilt(data)
+
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Something went wrong!"
+        })
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content={
+        "status": "success",
+        "message": "Instructor-Led-Training has been added successfully"
+    })
+
+#Edit Instructor-Led-Training
+# def check_existing_ilt_name(session_name):
+
+#     query = f"""
+#     select * from {table_ilt} where session_name=%(session_name)s;
+#     """
+#     response = execute_query(query, params={'session_name': session_name})
+#     data = response.fetchone()
+
+#     if data is None:
+#         return False
+#     else:
+#         return True
+    
+#Edit Instructor-Led-Training
+def change_instructor_led_details(id, session_name, date, starttime, capacity, instructor, session_type, duration, description):
+    try:
+        LmsHandler.update_ilt(id, session_name, date, starttime, capacity, instructor, session_type, duration, description)
+
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Something went wrong!"
+        })
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content={
+        "status": "success",
+        "message": "Instructor-Led-Training has been updated successfully"
+    })
+
+#Fetch Instructor-Led-Training
+def fetch_inst_led_by_session_name(session_name):
+    try:
+        inst_led_trainings = LmsHandler.fetch_inst_led_training_by_session_name(session_name)
+
+        if not inst_led_trainings:
+            return None
+
+        return {
+            "inst_led_training_data": inst_led_trainings,
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to fetch inst_led_training's data"
+        })
+
+def delete_instructor_led_by_id(id):
+    try:
+        # Delete the inst_led_training by id
+        result = LmsHandler.delete_inst_led_training(id)
+        return result
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+            "status": "failure",
+            "message": "Failed to delete this inst_led_training"
         })

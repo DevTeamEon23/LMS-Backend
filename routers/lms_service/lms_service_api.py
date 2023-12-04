@@ -29,7 +29,7 @@ from schemas.lms_service_schema import DeleteUser
 from routers.authenticators import verify_user
 from config.db_config import SessionLocal,n_table_user
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_last_eid_data,fetch_last_id_data,fetch_all_dept_data,fetch_all_inst_learn_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,fetch_all_groups_data_excel,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_courses_touser,user_exists,fetch_users_data_export,fetch_courses_data_export,fetch_users_course_enrolled,enroll_coursegroup_massaction,fetch_enrolled_unenroll_courses_of_user,unenroll_courses_from_userby_id,enroll_groups_touser,fetch_added_unadded_groups_of_user,remove_group_from_userby_id,enroll_users_tocourse,fetch_enrolled_unenroll_users_of_course,unenrolled_users_from_courseby_id,enroll_groups_tocourse,fetch_enrolled_unenroll_groups_of_course,unenrolled_groups_from_courseby_id,enroll_users_togroup,fetch_added_unadded_users_of_group,remove_user_from_groupby_id,enroll_courses_togroup,fetch_added_unadded_courses_of_group,remove_course_from_groupby_id,remove_course_from_all_groups_by_course_id,fetch_enrolled_unenroll_instructors_of_course,fetch_enrolled_unenroll_learners_of_course,fetch_added_unadded_instructors_of_group,fetch_added_unadded_learners_of_group,remove_file_by_id,fetch_enrolled_and_admin_inst_created_course_details_to_admin,fetch_enrolled_courses_of_user,unenroll_courses_from_enrolleduserby_id,fetch_enrolled_courses_of_learner,fetch_added_groups_of_admin,fetch_added_groups_of_learner,fetch_added_groups_of_user,remove_group_from_enrolleduserby_id,update_user,update_course, add_course_content, fetch_course_content_by_onlyid,change_course_content_video, change_course_content_details,change_course_content_scorm,update_course_content, delete_course_content_by_id,fetch_infographics_of_user,fetch_course_to_enroll_to_admin_inst,fetch_course_to_enroll_to_inst_learner,fetch_group_to_enroll_to_admin,fetch_group_to_enroll_to_inst_learner,fetch_users_enroll_to_admin,fetch_users_enroll_to_inst_learner,fetch_group_enroll_to_course_of_inst_learner,fetch_enrollusers_of_group_to_admin,fetch_enrollusers_of_group_to_inst_learner,fetch_course_enroll_to_group_of_inst_learner,change_course_details_new,fetch_overview_of_learner,add_ratings_feedback,fetch_all_data_counts_data,get_user_points_by_superadmin,fetch_all_deptwise_users_counts,fetch_all_admin_data_counts_data,fetch_all_deptwise_users_counts_for_admin,get_user_points_by_user_for_admin,get_user_enrolledcourses_info,get_user_enrolledcourses_info_for_admin,fetch_all_instructor_data_counts_data,get_user_points_by_user_for_instructor,fetch_all_deptwise_users_counts_for_instructor,get_user_enrolledcourses_info_for_instructor,fetch_created_courses_of_user,fetch_all_training_data,fetch_ratings_of_learners,get_user_enrolledcourses_info_by_id,add_test_question,get_tests_by_course_id,get_question_by_test_names,get_correct_answer, add_assignment_data,change_assignment_details,fetch_all_assignment_data,check_assignment,fetch_assignment_for_learner,fetch_assignments_done_from_learner,change_submission_details
+from routers.lms_service.lms_service_ops import sample_data, fetch_all_users_data,fetch_last_eid_data,fetch_last_id_data,fetch_all_dept_data,fetch_all_inst_learn_data,fetch_users_by_onlyid,delete_user_by_id,change_user_details,add_new,fetch_all_courses_data,fetch_active_courses_data,delete_course_by_id,add_course,add_group,fetch_all_groups_data,fetch_all_groups_data_excel,delete_group_by_id,change_course_details,change_group_details,add_category,fetch_all_categories_data,change_category_details,delete_category_by_id,add_event,fetch_all_events_data,change_event_details,delete_event_by_id,fetch_category_by_onlyid,fetch_course_by_onlyid,fetch_group_by_onlyid,fetch_event_by_onlyid,add_classroom,fetch_all_classroom_data,fetch_classroom_by_onlyid,change_classroom_details,delete_classroom_by_id,add_conference,fetch_all_conference_data,fetch_conference_by_onlyid,change_conference_details,delete_conference_by_id,add_virtualtraining,fetch_all_virtualtraining_data,fetch_virtualtraining_by_onlyid,change_virtualtraining_details,delete_virtualtraining_by_id,add_discussion,fetch_all_discussion_data,fetch_discussion_by_onlyid,change_discussion_details,delete_discussion_by_id,add_calender,fetch_all_calender_data,fetch_calender_by_onlyid,change_calender_details,delete_calender_by_id,add_new_excel,clone_course,enroll_courses_touser,user_exists,fetch_users_data_export,fetch_courses_data_export,fetch_users_course_enrolled,enroll_coursegroup_massaction,fetch_enrolled_unenroll_courses_of_user,unenroll_courses_from_userby_id,enroll_groups_touser,fetch_added_unadded_groups_of_user,remove_group_from_userby_id,enroll_users_tocourse,fetch_enrolled_unenroll_users_of_course,unenrolled_users_from_courseby_id,enroll_groups_tocourse,fetch_enrolled_unenroll_groups_of_course,unenrolled_groups_from_courseby_id,enroll_users_togroup,fetch_added_unadded_users_of_group,remove_user_from_groupby_id,enroll_courses_togroup,fetch_added_unadded_courses_of_group,remove_course_from_groupby_id,remove_course_from_all_groups_by_course_id,fetch_enrolled_unenroll_instructors_of_course,fetch_enrolled_unenroll_learners_of_course,fetch_added_unadded_instructors_of_group,fetch_added_unadded_learners_of_group,remove_file_by_id,fetch_enrolled_and_admin_inst_created_course_details_to_admin,fetch_enrolled_courses_of_user,unenroll_courses_from_enrolleduserby_id,fetch_enrolled_courses_of_learner,fetch_added_groups_of_admin,fetch_added_groups_of_learner,fetch_added_groups_of_user,remove_group_from_enrolleduserby_id,update_user,update_course, add_course_content, fetch_course_content_by_onlyid,change_course_content_video, change_course_content_details,change_course_content_scorm,update_course_content, delete_course_content_by_id,fetch_infographics_of_user,fetch_course_to_enroll_to_admin_inst,fetch_course_to_enroll_to_inst_learner,fetch_group_to_enroll_to_admin,fetch_group_to_enroll_to_inst_learner,fetch_users_enroll_to_admin,fetch_users_enroll_to_inst_learner,fetch_group_enroll_to_course_of_inst_learner,fetch_enrollusers_of_group_to_admin,fetch_enrollusers_of_group_to_inst_learner,fetch_course_enroll_to_group_of_inst_learner,change_course_details_new,fetch_overview_of_learner,add_ratings_feedback,fetch_all_data_counts_data,get_user_points_by_superadmin,fetch_all_deptwise_users_counts,fetch_all_admin_data_counts_data,fetch_all_deptwise_users_counts_for_admin,get_user_points_by_user_for_admin,get_user_enrolledcourses_info,get_user_enrolledcourses_info_for_admin,fetch_all_instructor_data_counts_data,get_user_points_by_user_for_instructor,fetch_all_deptwise_users_counts_for_instructor,get_user_enrolledcourses_info_for_instructor,fetch_created_courses_of_user,fetch_all_training_data,fetch_ratings_of_learners,get_user_enrolledcourses_info_by_id,add_test_question,get_tests_by_course_id,get_question_by_test_names,get_correct_answer, add_assignment_data,change_assignment_details,fetch_all_assignment_data,check_assignment,fetch_assignment_for_learner,fetch_assignments_done_from_learner,change_submission_details,add_inst_led_training,change_instructor_led_details,fetch_inst_led_by_session_name,delete_instructor_led_by_id
 from routers.lms_service.lms_db_ops import LmsHandler
 from schemas.lms_service_schema import (Email,CategorySchema, AddUser,User, UserDetail,DeleteCourse,DeleteGroup,DeleteCategory,DeleteEvent,DeleteClassroom,DeleteConference,DeleteVirtual,DeleteDiscussion,DeleteCalender,UnenrolledUsers_Course,UnenrolledUsers_Group,UnenrolledCourse_Group,UnenrolledUsers_Group,Remove_file, DeleteCourseContent)
 from utils import success_response
@@ -3997,4 +3997,91 @@ def fetch_assignment_done_by_learner(user_id):
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
             "status": "failure",
             "message": "Failed to fetch assignment's completed by Learner's"
+        })
+    
+############################################# Instructor-Led-Training ###########################################
+
+@service.post("/add_instructor-led_training")
+def add_instructor_led_training(session_name: str = Form(None), date: str = Form(None), starttime: str = Form(None), capacity: str = Form(None), instructor: str = Form(None), session_type: str = Form(None), duration: str = Form(None), description: str = File(None)):
+    try:
+        inputs = {
+            'session_name': session_name,
+            'date': date,
+            'starttime': starttime,
+            'capacity': capacity,
+            'instructor': instructor,
+            'session_type': session_type,
+            'duration': duration,
+            'description': description
+        }
+
+        if add_inst_led_training(instructor, inputs=inputs):
+            return JSONResponse(status_code=status.HTTP_200_OK, content={
+                "status": "success",
+                "message": "The Instructor-Led-Training has been added "
+            })
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
+            "status": "failure",
+            "message": exc.args[0]
+        })
+    
+# Update Instructor-Led-Training
+@service.post("/update_inst_led_training")
+def update_inst_led_training(
+    id: int = Form(...),
+    session_name: str = Form(...),
+    date: str = Form(...),
+    starttime: str = Form(...),
+    capacity: str = Form(...),
+    instructor: str = Form(...),
+    session_type: str = Form(...),
+    duration: str = Form(...),
+    description: str = Form(...)
+):
+    try:
+        if change_instructor_led_details(id, session_name, date, starttime, capacity, instructor, session_type, duration, description):
+            return JSONResponse(status_code=status.HTTP_200_OK, content={
+                "status": "success",
+                "message": "Updated Instructor-Led-Training successfully"
+            })
+
+    except ValueError as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={
+            "status": "failure",
+            "message": exc.args[0]
+        })
+    
+@service.get("/fetch_inst_led_training")
+def fetch_inst_led_training_by_session_name(session_name):
+    try:
+        inst_led_training = fetch_inst_led_by_session_name(session_name)
+
+        return {
+            "status": "success",
+            "data": inst_led_training
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to fetch inst_led_training's"
+        })
+    
+@service.delete('/delete_inst_led_training_byid')
+async def Delete_Inst_led_training(id: int = Form(...)):
+    try:
+        result = delete_instructor_led_by_id(id)
+        return {
+            "status": "success",
+            "message": "Instructor-Led-Training deleted successfully"
+        }
+    except Exception as exc:
+        logger.error(traceback.format_exc())
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "status": "failure",
+            "message": "Failed to delete Instructor-Led-Training"
         })
