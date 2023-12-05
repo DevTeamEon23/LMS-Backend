@@ -2664,40 +2664,34 @@ class LmsHandler:
 
     @classmethod
     def get_all_data_count(cls):
-        query = """ SELECT
-            subquery.dept,
-            'Admin' AS role,
-            COUNT(DISTINCT subquery.course_id) AS total_enrolled_course_count,
-            (
-                SELECT COUNT(DISTINCT uce2.course_id)
-                FROM user_course_enrollment uce2
-                WHERE uce2.user_id IN (SELECT id FROM users WHERE role = 'Admin')
-            ) AS overall_enrolled_courses,
-            (
-                SELECT COUNT(*) -- This part counts all courses from the course table
-                FROM course
-            ) AS total_courses,
-            (
-                (
-                    SELECT COUNT(*) -- This part counts all courses from the course table
-                    FROM course
-                ) - (
-                    SELECT COUNT(DISTINCT uce2.course_id)
-                    FROM user_course_enrollment uce2
-                    WHERE uce2.user_id IN (SELECT id FROM users WHERE role = 'Admin')
-                )
-            ) AS upcoming_courses
-        FROM (
+        query = """ 
             SELECT
-                u.dept,
-                u.role,
-                u.id AS admin_id,
-                uce.course_id
-            FROM users u
-            LEFT JOIN user_course_enrollment uce ON u.id = uce.user_id
-            WHERE u.role = 'Admin'
-        ) AS subquery
-        GROUP BY subquery.dept; 
+                subquery.dept,
+                'Admin' AS role,
+                COUNT(DISTINCT subquery.course_id) AS total_enrolled_course_count,
+                COUNT(DISTINCT CASE WHEN subquery.enrollment_status = 1 THEN subquery.course_id END) AS overall_enrolled_courses,
+                (
+                    SELECT COUNT(*)
+                    FROM course c
+                    WHERE c.category = subquery.dept
+                ) AS total_courses,
+                (
+                    SELECT COUNT(DISTINCT c.id)
+                    FROM course c
+                    WHERE c.category = subquery.dept
+                ) - COUNT(DISTINCT CASE WHEN subquery.enrollment_status = 1 THEN subquery.course_id END) AS upcoming_courses
+            FROM (
+                SELECT
+                    u.dept,
+                    u.role,
+                    u.id AS admin_id,
+                    uce.course_id,
+                    CASE WHEN uce.course_id IS NOT NULL THEN 1 ELSE 0 END AS enrollment_status
+                FROM users u
+                LEFT JOIN user_course_enrollment uce ON u.id = uce.user_id
+                WHERE u.role = 'Admin'
+            ) AS subquery
+            GROUP BY subquery.dept;
         """
         return execute_query(query).fetchall()
     
