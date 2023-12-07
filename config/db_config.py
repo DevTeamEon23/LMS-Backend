@@ -521,6 +521,16 @@ s_table_ilt = Table(
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
 )
 
+table_content_tracking = 'course_tracking'
+s_table_content_tracking = Table(
+    table_content_tracking, metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('course_id', Integer, nullable=False),
+    Column('user_id', Integer, nullable=False),
+    Column('completed_unitnames', VARCHAR(20)),
+    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+)
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')
 metadata.create_all(meta_engine, checkfirst=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=meta_engine)

@@ -3246,3 +3246,6 @@ class LmsHandler:
         query = f"""DELETE FROM {table_ilt} WHERE id = %(id)s;"""
         params = {'id': id}
         return execute_query(query, params=params)
+    
+
+    

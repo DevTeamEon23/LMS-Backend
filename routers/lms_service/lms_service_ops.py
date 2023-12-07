@@ -1407,7 +1407,19 @@ def fetch_course_content_by_onlyid(course_id):
             cdn_file_link = backendBaseUrl + '/' + course_content.video_file.decode('utf-8').replace("'", '')
         else:
             # Handle the case where user.file is None
-            cdn_file_link = "File not available"
+            cdn_file_link = "Video File not available"
+
+        if course_content.ppt_file is not None:
+            ppt_cdn_file_link = backendBaseUrl + '/' + course_content.ppt_file.decode('utf-8').replace("'", '')
+        else:
+            # Handle the case where user.file is None
+            ppt_cdn_file_link = "PPT File not available"
+
+        if course_content.scorm_file is not None:
+            scorm_cdn_file_link = backendBaseUrl + '/' + course_content.scorm_file.decode('utf-8').replace("'", '')
+        else:
+            # Handle the case where user.file is None
+            scorm_cdn_file_link = "Scorm File not available"
 
         # Transform the course_content object into a dictionary
         course_content_data = {
@@ -1415,6 +1427,10 @@ def fetch_course_content_by_onlyid(course_id):
                 "course_id": course_content.course_id,
                 "video_unitname": course_content.video_unitname,
                 "video_file": cdn_file_link,
+                "ppt_unitname": course_content.ppt_unitname,
+                "ppt_file": ppt_cdn_file_link,
+                "scorm_unitname": course_content.scorm_unitname,
+                "scorm_file": scorm_cdn_file_link,
                 "created_at": course_content.created_at,
                 "updated_at": course_content.updated_at,
             # Include other course_content attributes as needed
