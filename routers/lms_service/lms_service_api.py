@@ -2185,33 +2185,46 @@ async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str =
     # Return relevant data for iframe and database entry
     return {"filename": file.filename, "name": uname, "url": parent_dir+"/"+file_dir+"/story.html"}
 
-@service.get("/launch_course")
-async def launch_course():
+@service.get("/launch_course/{file_dir}")
+async def launch_course(file_dir: str):
     global latest_extracted_folder
 
     if latest_extracted_folder:
-        story_html_path = os.path.join(latest_extracted_folder, "story.html")
+        story_html_path = os.path.join(latest_extracted_folder, file_dir, "story.html")
         if os.path.exists(story_html_path):
-            # Here, you can generate the HTML page to launch the course automatically
-            # Construct the full CDN URL for the iframe source
-            iframe_url = f"{CDN_BASE_URL.rstrip('/')}/{story_html_path}"
-            # For simplicity, create html content
-            html_content = f"""
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Course Launcher</title>
-                </head>
-                <body>
-                    <iframe src="{iframe_url}" width="100%" height="750 px"></iframe>
-                </body>
-                </html>
-            """
-            return HTMLResponse(content=html_content, status_code=200)
+            return FileResponse(story_html_path, media_type="text/html")
         else:
             raise HTTPException(status_code=404, detail="story.html not found")
     else:
         raise HTTPException(status_code=404, detail="No course available")
+    
+# @service.get("/launch_course")
+# async def launch_course():
+#     global latest_extracted_folder
+
+#     if latest_extracted_folder:
+#         story_html_path = os.path.join(latest_extracted_folder, "story.html")
+#         if os.path.exists(story_html_path):
+#             # Here, you can generate the HTML page to launch the course automatically
+#             # Construct the full CDN URL for the iframe source
+#             iframe_url = f"{CDN_BASE_URL.rstrip('/')}/{story_html_path}"
+#             # For simplicity, create html content
+#             html_content = f"""
+#                 <!DOCTYPE html>
+#                 <html>
+#                 <head>
+#                     <title>Course Launcher</title>
+#                 </head>
+#                 <body>
+#                     <iframe src="{iframe_url}" width="100%" height="750 px"></iframe>
+#                 </body>
+#                 </html>
+#             """
+#             return HTMLResponse(content=html_content, status_code=200)
+#         else:
+#             raise HTTPException(status_code=404, detail="story.html not found")
+#     else:
+#         raise HTTPException(status_code=404, detail="No course available")
     
 # @service.get("/launch_course")
 # async def launch_course():
