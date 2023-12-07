@@ -2159,31 +2159,31 @@ async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str =
     return {"filename": file.filename, "name": uname, "url": parent_dir+"/"+file_dir+"/story.html"}
 
 
-# @service.post("/scorm_zip_upload/")
-# async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str = Form(...)):
+@service.post("/scorm_zip_upload/")
+async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str = Form(...)):
 
-#     # uploading Scorm zip
-#     #mode = 0o666
-#     parent_dir = "/home/ubuntu/server/LMS-Backend/"
-#     file_dir = str(int(time.time()))
-#     path = os.path.join(parent_dir, file_dir)
-#     os.mkdir(path)
+    # uploading Scorm zip
+    #mode = 0o666
+    parent_dir = "/home/ubuntu/server/LMS-Backend/"
+    file_dir = str(int(time.time()))
+    path = os.path.join(parent_dir, file_dir)
+    os.mkdir(path)
  
-#     #MOve uploaded file to created unique folder
-#     file_path = os.path.join(path, file.filename)
-#     with open(file_path, "wb") as buffer:
-#         shutil.copyfileobj(file.file, buffer)
-#     # Extract zip file in that unique folder
-#     with ZipFile(file_path, 'r') as zObject:
-#         zObject.extractall(
-#             path=file_dir + "/")
+    #MOve uploaded file to created unique folder
+    file_path = os.path.join(path, file.filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    # Extract zip file in that unique folder
+    with ZipFile(file_path, 'r') as zObject:
+        zObject.extractall(
+            path=file_dir + "/")
         
-#     # Update the latest extracted folder
-#     global latest_extracted_folder
-#     latest_extracted_folder = path
+    # Update the latest extracted folder
+    global latest_extracted_folder
+    latest_extracted_folder = path
 
-#     # Return relevant data for iframe and database entry
-#     return {"filename": file.filename, "name": uname, "url": parent_dir+"/"+file_dir+"/story.html"}
+    # Return relevant data for iframe and database entry
+    return {"filename": file.filename, "name": uname, "url": parent_dir+"/"+file_dir+"/story.html"}
 
 # @service.get("/launch_course")
 # async def launch_course():
@@ -2211,33 +2211,16 @@ async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str =
 #     else:
 #         raise HTTPException(status_code=404, detail="No course available")
     
-
-@service.post("/scorm_zip_upload/")
-async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str = Form(...)):
-    parent_dir = "/home/ubuntu/server/LMS-Backend/"
-    file_dir = str(int(time.time()))
-    path = os.path.join(parent_dir, file_dir)
-    os.mkdir(path)
-
-    file_path = os.path.join(path, file.filename)
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    with ZipFile(file_path, 'r') as zObject:
-        zObject.extractall(path=file_dir + "/")
-
-    global latest_extracted_folder
-    latest_extracted_folder = path
-
-    return {"filename": file.filename, "name": uname, "url": f"/launch_course/{file_dir}"}
-
-@service.get("/launch_course/{file_dir}")
-async def launch_course(file_dir: str):
+@service.get("/launch_course")
+async def launch_course(request: Request):
     global latest_extracted_folder
 
     if latest_extracted_folder:
-        story_html_path = os.path.join(latest_extracted_folder, file_dir, "story.html")
+        story_html_path = os.path.join(latest_extracted_folder, "story.html")
         if os.path.exists(story_html_path):
+            # Construct the full CDN URL for the iframe source
+            iframe_url = f"{CDN_BASE_URL.rstrip('/')}/{story_html_path}"
+
             html_content = f"""
                 <!DOCTYPE html>
                 <html>
@@ -2245,7 +2228,7 @@ async def launch_course(file_dir: str):
                     <title>Course Launcher</title>
                 </head>
                 <body>
-                    <iframe src="/static/{file_dir}/story.html" width="100%" height="750 px"></iframe>
+                    <iframe src="{iframe_url}" width="100%" height="750 px"></iframe>
                 </body>
                 </html>
             """
