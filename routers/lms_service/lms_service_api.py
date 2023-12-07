@@ -2243,7 +2243,7 @@ async def launch_course():
 
 @service.get("/images")
 def list_images():
-    imgpath = "/home/ubuntu/LMS-Backend/media/"
+    imgpath = "/home/ubuntu/server/LMS-Backend/media/"
     image_tags = []
     for filename in os.listdir(imgpath):
         image_tags.append(f'<img src="/images/{filename}" alt="{filename}">')
@@ -2252,7 +2252,7 @@ def list_images():
 
 @service.get("/images/{filename}")
 def get_image(filename: str):
-    imgpath = "/home/ubuntu/LMS-Backend/media/"
+    imgpath = "/home/ubuntu/server/LMS-Backend/media/"
     image_path = os.path.join(imgpath, filename)
     if os.path.isfile(image_path):
         return FileResponse(image_path, media_type="image/jpeg")
