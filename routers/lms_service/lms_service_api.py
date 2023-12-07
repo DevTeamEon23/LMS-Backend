@@ -2159,41 +2159,85 @@ async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str =
     return {"filename": file.filename, "name": uname, "url": parent_dir+"/"+file_dir+"/story.html"}
 
 
+# @service.post("/scorm_zip_upload/")
+# async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str = Form(...)):
+
+#     # uploading Scorm zip
+#     #mode = 0o666
+#     parent_dir = "/home/ubuntu/server/LMS-Backend/"
+#     file_dir = str(int(time.time()))
+#     path = os.path.join(parent_dir, file_dir)
+#     os.mkdir(path)
+ 
+#     #MOve uploaded file to created unique folder
+#     file_path = os.path.join(path, file.filename)
+#     with open(file_path, "wb") as buffer:
+#         shutil.copyfileobj(file.file, buffer)
+#     # Extract zip file in that unique folder
+#     with ZipFile(file_path, 'r') as zObject:
+#         zObject.extractall(
+#             path=file_dir + "/")
+        
+#     # Update the latest extracted folder
+#     global latest_extracted_folder
+#     latest_extracted_folder = path
+
+#     # Return relevant data for iframe and database entry
+#     return {"filename": file.filename, "name": uname, "url": parent_dir+"/"+file_dir+"/story.html"}
+
+# @service.get("/launch_course")
+# async def launch_course():
+#     global latest_extracted_folder
+
+#     if latest_extracted_folder:
+#         story_html_path = os.path.join(latest_extracted_folder, "story.html")
+#         if os.path.exists(story_html_path):
+#             # Here, you can generate the HTML page to launch the course automatically
+#             # For simplicity, create html content
+#             html_content = f"""
+#                 <!DOCTYPE html>
+#                 <html>
+#                 <head>
+#                     <title>Course Launcher</title>
+#                 </head>
+#                 <body>
+#                     <iframe src="{story_html_path}" width="100%" height="750 px"></iframe>
+#                 </body>
+#                 </html>
+#             """
+#             return HTMLResponse(content=html_content, status_code=200)
+#         else:
+#             raise HTTPException(status_code=404, detail="story.html not found")
+#     else:
+#         raise HTTPException(status_code=404, detail="No course available")
+    
+
 @service.post("/scorm_zip_upload/")
 async def upload_scorm_course_zipfile(file: UploadFile = File(...), uname: str = Form(...)):
-
-    # uploading Scorm zip
-    #mode = 0o666
     parent_dir = "/home/ubuntu/server/LMS-Backend/"
     file_dir = str(int(time.time()))
     path = os.path.join(parent_dir, file_dir)
     os.mkdir(path)
- 
-    #MOve uploaded file to created unique folder
+
     file_path = os.path.join(path, file.filename)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    # Extract zip file in that unique folder
+
     with ZipFile(file_path, 'r') as zObject:
-        zObject.extractall(
-            path=file_dir + "/")
-        
-    # Update the latest extracted folder
+        zObject.extractall(path=file_dir + "/")
+
     global latest_extracted_folder
     latest_extracted_folder = path
 
-    # Return relevant data for iframe and database entry
-    return {"filename": file.filename, "name": uname, "url": parent_dir+"/"+file_dir+"/story.html"}
+    return {"filename": file.filename, "name": uname, "url": f"/launch_course/{file_dir}"}
 
-@service.get("/launch_course")
-async def launch_course():
+@service.get("/launch_course/{file_dir}")
+async def launch_course(file_dir: str):
     global latest_extracted_folder
 
     if latest_extracted_folder:
-        story_html_path = os.path.join(latest_extracted_folder, "story.html")
+        story_html_path = os.path.join(latest_extracted_folder, file_dir, "story.html")
         if os.path.exists(story_html_path):
-            # Here, you can generate the HTML page to launch the course automatically
-            # For simplicity, create html content
             html_content = f"""
                 <!DOCTYPE html>
                 <html>
@@ -2201,7 +2245,7 @@ async def launch_course():
                     <title>Course Launcher</title>
                 </head>
                 <body>
-                    <iframe src="{story_html_path}" width="100%" height="750 px"></iframe>
+                    <iframe src="/static/{file_dir}/story.html" width="100%" height="750 px"></iframe>
                 </body>
                 </html>
             """
@@ -2211,6 +2255,7 @@ async def launch_course():
     else:
         raise HTTPException(status_code=404, detail="No course available")
     
+
 @service.get("/images")
 def list_images():
     imgpath = "/home/ubuntu/LMS-Backend/media/"
