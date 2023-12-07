@@ -2225,34 +2225,6 @@ async def launch_course():
             raise HTTPException(status_code=404, detail="story.html not found")
     else:
         raise HTTPException(status_code=404, detail="No course available")
-    
-# @service.get("/launch_course")
-# async def launch_course():
-#     global latest_extracted_folder
-
-#     if latest_extracted_folder:
-#         story_html_path = os.path.join(latest_extracted_folder, "story.html")
-#         if os.path.exists(story_html_path):
-#             # Construct the full CDN URL for the iframe source
-#             iframe_url = f"{CDN_BASE_URL.rstrip('/')}/{story_html_path}"
-
-#             html_content = f"""
-#                 <!DOCTYPE html>
-#                 <html>
-#                 <head>
-#                     <title>Course Launcher</title>
-#                 </head>
-#                 <body>
-#                     <iframe src="{iframe_url}" width="100%" height="750 px"></iframe>
-#                 </body>
-#                 </html>
-#             """
-#             return HTMLResponse(content=html_content, status_code=200)
-#         else:
-#             raise HTTPException(status_code=404, detail="story.html not found")
-#     else:
-#         raise HTTPException(status_code=404, detail="No course available")
-    
 
 @service.get("/images")
 def list_images():
