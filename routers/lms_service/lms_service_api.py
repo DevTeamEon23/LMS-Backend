@@ -2207,7 +2207,7 @@ async def launch_course():
         if os.path.exists(story_html_path):
             # Here, you can generate the HTML page to launch the course automatically
             # Construct the full CDN URL for the iframe source
-            iframe_url = f"{CDN_BASE_URL.rstrip('/')}/{story_html_path}"
+            iframe_url = f"{backendBaseUrl.rstrip('/')}/{story_html_path}"
             # For simplicity, create html content
             html_content = f"""
                 <!DOCTYPE html>
