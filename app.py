@@ -21,12 +21,7 @@ app = FastAPI(title="EonLearnings", debug=settings.DEBUG, docs_url=settings.DOCS
 
 # Set up Pre-configured Routes
 app.add_middleware(GZipMiddleware, minimum_size=500)
-# Define the path to the LMS-Backend directory
-lms_backend_path = "/home/ubuntu/server/LMS-Backend"
-# lms_backend_path = "C:/Users/Admin/Desktop/NEW_LIVE/LMS-Backend"
 
-# Mount the LMS-Backend directory as a static directory with root path "/"
-app.mount("/", StaticFiles(directory=lms_backend_path), name="static")
 app.mount("/media/", StaticFiles(directory="media/"), name="media")
 app.mount("/course/", StaticFiles(directory="course/"), name="course")
 app.mount("/coursevideo/", StaticFiles(directory="coursevideo/"), name="coursevideo")
