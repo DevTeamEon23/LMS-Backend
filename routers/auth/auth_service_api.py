@@ -1,19 +1,20 @@
 import traceback
 import json
 import random
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, status, Query, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi_mail import FastMail, MessageSchema,ConnectionConfig
 from passlib.context import CryptContext
 from starlette.requests import Request
 from routers.auth.auth_db_ops import UserDBHandler
 from ..authenticators import get_user_by_token,verify_email,get_user_by_email
-from .auth_service_ops import verify_token, admin_add_new_user,add_new_user, change_user_password, flush_tokens,fetch_user_id_from_db,get_user_points_by_user_id,update_user_points,get_user_points_by_user,get_dept_by_users_id,increment_login_count,get_login_count,award_badges
+from .auth_service_ops import verify_token, admin_add_new_user,add_new_user, change_user_password, flush_tokens,fetch_user_id_from_db,get_user_points_by_user
 from config.logconfig import logger
 from dotenv import load_dotenv
 from schemas.auth_service_schema import (Email, NewUser, User,EmailSchema, UserPassword)
 from routers.authenticators import verify_user
 import os
+import requests
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Authentication Urls
@@ -30,18 +31,17 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id, user_dept, user_points=0):
+def create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id):
     if token is None and request_token is None:
         return {"status": "failure", "message": message}
 
     if is_mfa_enabled:
         return {"status": "success", "message": message, "is_active": active, "is_mfa_enabled": is_mfa_enabled,
-                "request_token": request_token, "user_dept": user_dept, "user_points": user_points}
+                "request_token": request_token}
     else:
         user_detail = {
             "user": {
                 "role": details.get('role', ''),
-                "dept": details.get('dept', user_dept), 
                 "data": {
                     "displayName": details.get('displayName', ''),
                     "id": details.get('id', ''),
@@ -57,48 +57,11 @@ def create_login_response(message, active, is_mfa_enabled, request_token, token,
             "is_active": active,
             "is_mfa_enabled": is_mfa_enabled,
             "user_id": user_id,
-            "user_dept": user_dept,
-            "user_points": user_points,
             "token": token,
             "data": user_detail,
             "error": None
         }
     
-# @auth.post('/login')
-# def login(user: User):
-#     email = user.email
-#     password = user.password
-
-#     # Verify the email and password
-#     message, active, is_mfa_enabled, request_token, token, details = add_new_user(email, password=password, auth_token="",
-#                                                                                   inputs={
-#                                                                                       'full_name': user.fullname, 'role': 'user', 'dept': 'user',
-#                                                                                       'users_allowed': '[]', 'active': False,
-#                                                                                       'picture': ""}, skip_new_user=True)
-    
-#     # Fetch the user's ID based on the provided email
-#     user_id = fetch_user_id_from_db(email)
-    
-#     id = fetch_user_id_from_db(email)
-#     user_dept = get_dept_by_users_id(id)
-    
-#     # Award points to the user (e.g., 25 points for each login)
-#     if active:
-#         points = 25
-#         update_user_points(user_id, points)
-
-#     # Get the user's current points
-#     user_points = get_user_points_by_user_id(user_id)
-
-
-#     # Create a login response including the user ID and points
-#     login_response = create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id, user_dept, user_points)
-
-#     # # Add user points to the response
-#     # login_response["user_points"] = user_points
-
-#     return JSONResponse(content=login_response)
-
 @auth.post('/login')
 def login(user: User):
     email = user.email
@@ -107,40 +70,21 @@ def login(user: User):
     # Verify the email and password
     message, active, is_mfa_enabled, request_token, token, details = add_new_user(email, password=password, auth_token="",
                                                                                   inputs={
-                                                                                      'full_name': user.fullname, 'role': 'user', 'dept': 'user',
+                                                                                      'full_name': user.fullname, 'role': 'user',
                                                                                       'users_allowed': '[]', 'active': False,
                                                                                       'picture': ""}, skip_new_user=True)
     
     # Fetch the user's ID based on the provided email
     user_id = fetch_user_id_from_db(email)
     
-    # Increment the user's login count in the database
-    increment_login_count(user_id)
-    
-    # Get the user's current login count
-    login_count = get_login_count(user_id)
-    
     id = fetch_user_id_from_db(email)
-    user_dept = get_dept_by_users_id(id)
-    
-    # Award points to the user (e.g., 25 points for each login)
-    if active:
-        points = 25
-        update_user_points(user_id, points)
 
-    # Get the user's current points
-    user_points = get_user_points_by_user_id(user_id)
+    # Create a login response including the user ID and points
+    login_response = create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id)
 
-    # Award badges based on login count
-    award_badges(user_id, login_count)
-
-    # Create a login response including the user ID, points, and badges
-    login_response = create_login_response(message, active, is_mfa_enabled, request_token, token, details, user_id, user_dept, user_points)
-
-    # # Add user points to the response
-    # login_response["user_points"] = user_points
-    
     return JSONResponse(content=login_response)
+
+
 
 
 # Token Verification for Other apis
@@ -200,28 +144,28 @@ async def send_welcome_email(user: User):
         <html lang="en">
         <head>
             <meta charset="UTF-8">
-            <title>Welcome to EonLearning</title>
+            <title>Welcome to AnandRathi Shares & Stock Brokers LTD.</title>
         </head>
         <body>
             <div style="font-family: Helvetica, Arial, sans-serif; min-width: 1000px; overflow: auto; line-height: 2">
                 <div style="margin: 50px auto; width: 70%; padding: 20px 0">
                     <div style="border-bottom: 1px solid #eee">
-                        <a href="" style="font-size: 1.4em; color: #00466a; text-decoration: none; font-weight: 600">Welcome to EonLearning</a>
+                        <a href="" style="font-size: 1.4em; color: #00466a; text-decoration: none; font-weight: 600">Welcome to AnandRathi Shares & Stock Brokers LTD.</a>
                     </div>
                     <p style="font-size: 1.1em">Hi {fullname},</p>
-                    <p>Your EonLearning account has been successfully created.</p>
-                    <p>Get started with basic videos of EonLearning: <a href="https://youtu.be/ZPs3URGs0KQ?si=ebVSN9zGEkTIAhvC">https://youtu.be/ZPs3URGs0KQ?si=ebVSN9zGEkTIAhvC</a></p>
+                    <p>Your AnandRathi account has been successfully created.</p>
+                    <p>Get started with basic videos of AnandRathi: <a href="https://youtu.be/ZPs3URGs0KQ?si=ebVSN9zGEkTIAhvC">https://youtu.be/ZPs3URGs0KQ?si=ebVSN9zGEkTIAhvC</a></p>
                     <p>Feel free to contact our support team @ Aniruddha Durgule : +91 7021592861</p>
-                    <p>Or eonlearning123@gmail.com</p>
+                    <p>Or anirudhadurgule@rathi.com</p>
                     <p>Make sure you are part of our Whatsapp group for all the updates, alerts, and instant support.</p>
                     <p>WhatsApp Group Link: <a href="https://chat.whatsapp.com/Js8BpIMlhEg0BA47tcjf3E">https://chat.whatsapp.com/Js8BpIMlhEg0BA47tcjf3E</a></p>
-                    <p>This email was sent to {email} because you are using eonlearning.tech.</p>
-                    <p style="font-size: 0.9em;">Thanks & Regards,<br />The EonLearning Team</p>
+                    <p>This email was sent to {email} because you are using AnandRathi Algo App</p>
+                    <p style="font-size: 0.9em;">Thanks & Regards,<br />The AnandRathi Team</p>
                     <hr style="border: none; border-top: 1px solid #eee" />
                     <div style="float: right; padding: 8px 0; color: #aaa; font-size: 0.8em; line-height: 1; font-weight: 300">
-                        <p>EonLearnings Inc</p>
-                        <p>Dalal Street, CharniRoad(E)</p>
-                        <p>Mumbai - 400001</p>
+                        <p>Anand Rathi Share And Stock Brokers LTD</p>
+                        <p>Floor No. 2 & 3, Kamala Mill Compound, Trade Link B&C Block, E' Wing, Senapati Bapat Marg, Lower Parel West, Lower Parel,</p>
+                        <p>Mumbai, Maharashtra - 400013</p>
                     </div>
                 </div>
             </div>
@@ -232,7 +176,7 @@ async def send_welcome_email(user: User):
         template = template.replace("{email}", user.email)
 
         message = MessageSchema(
-            subject="Welcome to EonLearning App",
+            subject="Welcome to AnandRathi Strategy Trading App",
             recipients=[user.email],
             body=template,
             subtype="html"
@@ -352,24 +296,24 @@ async def send_mail(email: EmailSchema):
         <html lang="en">
         <head>
             <meta charset="UTF-8">
-            <title>EonLearning LMS</title>
+            <title>AnandRathi Algo App</title>
         </head>
         <body>
             <!-- partial:index.partial.html -->
             <div style="font-family: Helvetica,Arial,sans-serif;min-width:1000px;overflow:auto;line-height:2">
                 <div style="margin:50px auto;width:70%;padding:20px 0">
                     <div style="border-bottom:1px solid #eee">
-                        <a href="" style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">Reset your EonLearning LMS password</a>
+                        <a href="" style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">Reset your AnandRathi Algo App password</a>
                     </div>
                     <p style="font-size:1.1em">Hi,</p>
-                    <p>Thank you for choosing EonLearning LMS. Use the following OTP to complete your Password Recovery Procedure. OTP is valid for 5 minutes</p>
+                    <p>Thank you for choosing AnandRathi Algo. Use the following OTP to complete your Password Recovery Procedure. OTP is valid for 5 minutes</p>
                     <h2 style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">{otp}</h2>
-                    <p style="font-size:0.9em;">Thanks & Regards,<br />The EonLearning Team</p>
+                    <p style="font-size:0.9em;">Thanks & Regards,<br />The AnandRathi Team</p>
                     <hr style="border:none;border-top:1px solid #eee" />
                     <div style="float:right;padding:8px 0;color:#aaa;font-size:0.8em;line-height:1;font-weight:300">
-                        <p>EonLearning LMS Inc</p>
-                        <p>Dalal Street</p>
-                        <p>Mumbai-400001</p>
+                        <p>Anand Rathi Share And Stock Brokers LTD</p>
+                        <p>Floor No. 2 & 3, Kamala Mill Compound, Trade Link B&C Block, E' Wing, Senapati Bapat Marg, Lower Parel West, Lower Parel,</p>
+                        <p>Mumbai, Maharashtra - 400013</p>
                     </div>
                 </div>
             </div>
@@ -382,7 +326,7 @@ async def send_mail(email: EmailSchema):
     template = template.replace("{otp}", otp)
 
     message = MessageSchema(
-        subject="[EonLearning] OTP For Reset Password",
+        subject="[AnandRathi] OTP For Reset Password",
         recipients=email.email,
         body=template,
         subtype="html"

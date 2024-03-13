@@ -6,8 +6,11 @@ from sqlalchemy.dialects.mysql import LONGBLOB
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import declarative_base, configure_mappers
 from .settings import settings
+import urllib.parse
 from enum import Enum as PythonEnum
-engine_str = f'mysql+mysqlconnector://{settings.PG_USER}:{settings.PG_PASSWORD}@{settings.PG_HOST}:{settings.PG_PORT}/{settings.DBNAME}'
+password = urllib.parse.quote_plus(settings.PG_PASSWORD)
+
+engine_str = f'mysql+mysqlconnector://{settings.PG_USER}:{password}@{settings.PG_HOST}:{settings.PG_PORT}/{settings.DBNAME}'
 connection = sql.create_engine(engine_str)
 
 metadata = MetaData()
@@ -18,519 +21,57 @@ class Role(PythonEnum):
     Admin = 'Admin'
     Instructor = 'Instructor'
     Learner = 'Learner'
-
-class TimeZoneEnum(PythonEnum):
-    IST = 'IST'
-    NST = 'NST'
-    AST = 'AST'
-    ECT = 'ECT'
-    GMT = 'GMT'
-    ARABIC = 'ARABIC'
-
-class LanguageEnum(PythonEnum):
-    English = 'English'
-    Hindi = 'Hindi'
-    Marathi = 'Marathi'
-
-class Certificate(PythonEnum):
-    Certificate1 = 'Certificate1'
-    Certificate2 = 'Certificate2'
-    Certificate3 = 'Certificate3'
-    Certificate4 = 'Certificate4'
-
-class Level(PythonEnum):
-    level1 = 'level1'
-    level2 = 'level2'
-    level3 = 'level3'
-    level4 = 'level4'
-
-class ParentCategory(PythonEnum):
-    ParentCategory1 = 'ParentCategory1'
-    ParentCategory2 = 'ParentCategory2'
-    ParentCategory3 = 'ParentCategory3'
-    ParentCategory4 = 'ParentCategory4'
-
-class EventEnum(PythonEnum):
-    Selectevent = 'Selectevent'
-    Onusercreate = 'Onusercreate'
-    Onusersignup = 'Onusersignup'
-    Xhoursafterusersignup = 'Xhoursafterusersignup'
-    Xhoursafterusersignupandtheuserhasnotmadeapurchase = 'Xhoursafterusersignupandtheuserhasnotmadeapurchase'
-    Xhoursafterusercreation = 'Xhoursafterusercreation'
-    Xhoursafterusercreationandtheuserhasnotsignedin = ''
-    Xhoursafterusersignupandtheuserhasnotsignedin = ''
-    Xhourssinceuserlastsignedin = ''
-    Xhourssinceuserfirstsigninandtheuserhasnotcompletedanycourse = ''
-    Xhoursbeforeuserdeactivation = 'Xhoursbeforeuserdeactivation'
-    Oncourseassignment = 'Oncourseassignment'
-    Oncourseselfassignment = 'Oncourseselfassignment'
-    Xhoursaftercourseacquisition = 'Xhoursaftercourseacquisition'
-    Xhoursbeforecoursestart = 'Xhoursbeforecoursestart'
-    Oncoursecompletion = 'Oncoursecompletion'
-    Xhoursaftercoursecompletion = 'Xhoursaftercoursecompletion'
-    Oncoursefailure = 'Oncoursefailure'
-    Oncourseexpiration = 'Oncourseexpiration'
-    Xhoursbeforecourseexpiration = 'Xhoursbeforecourseexpiration'
-    Oncertificateacquisition = 'Oncertificateacquisition'
-    Oncertificateexpiration = 'Oncertificateexpiration'
-    Xhoursbeforecertificateexpiration = 'Xhoursbeforecertificateexpiration'
-    Ongroupassignment = 'Ongroupassignment'
-    Onbranchassignment = 'Onbranchassignment'
-    Onassignmentsubmission = 'Onassignmentsubmission'
-    Onassignmentgrading = 'Onassignmentgrading'
-    OnILTsessioncreate = 'OnILTsessioncreate'
-    OnILTsessionregistration = 'OnILTsessionregistration'
-    XhoursbeforeanILTsessionstarts = 'XhoursbeforeanILTsessionstarts'
-    OnILTgrading = 'OnILTgrading'
-    Onuserpayment = 'Onuserpayment'
-    OnlevelXreached = 'OnlevelXreached'
-
-class RecipientEnum(PythonEnum):
-    Selectrecipient = 'Selectrecipient'
-    Relateduser = 'Relateduser'
-    Accountowner = 'Accountowner'
-    SuperAdmins = 'SuperAdmins'
-    Branchadmins = 'Branchadmins'
-    Courseinstructors = 'Courseinstructors'
-    Courselearners = 'Courselearners'
-    Specificrecipients = 'Specificrecipients'
-
-#Discussion
-class Access(PythonEnum):
-    Access1 = 'Access1'
-    Access2 = 'Access2'
-    Access3 = 'Access3'
-
-#Calendar
-class Audience(PythonEnum):
-    Audience1 = 'Audience1'
-    Audience2 = 'Audience2'
-    Audience3 = 'Audience3'
-
-class Sub_Status(PythonEnum):
-    Pending = 'Pending'
-    Passed = 'Passed'
-    NotPassed = 'Not Passed'
+    
 
 #Tables Codes Go Here --*
 n_table_user = 'users'
 s_table_user = Table(
     n_table_user, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('eid', VARCHAR(100), unique=True),
-    Column('sid', VARCHAR(150), nullable=True),
     Column('full_name', VARCHAR(200), nullable=True),
     Column('email', VARCHAR(150), nullable=False),
-    Column('dept', VARCHAR(100), nullable=True),
-    Column('adhr', BigInteger, nullable=True),
     Column('username', VARCHAR(150), nullable=False),
     Column('password', VARCHAR(150), nullable=False),
-    Column('bio', VARCHAR(300), nullable=True),
-    Column('file', LONGBLOB, nullable=False),
     Column('role', Enum(Role), server_default='Learner', nullable=False),
-    Column('timezone', Enum(TimeZoneEnum), server_default='IST', nullable=True),
-    Column('langtype', Enum(LanguageEnum), server_default='Hindi', nullable=True),
     Column('users_allowed', VARCHAR(150), nullable=False),
     Column('auth_token', VARCHAR(2500), nullable=False),  # Google
     Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA
     Column('token', VARCHAR(100), nullable=False),  # For data endpoints
     Column('active', BOOLEAN, default=True, nullable=False),
     Column('deactive', BOOLEAN, default=False, nullable=True),
-    Column('exclude_from_email', BOOLEAN, default=False, nullable=True),
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     UniqueConstraint('email', name=f'uq_{n_table_user}_xref'),
-    UniqueConstraint('eid', name=f'uq_{n_table_user}_eid'),
     Index(f'idx_{n_table_user}_token', 'token'),
 )
 
-table_course = 'course'
-s_table_course = Table(
-    table_course, metadata,
+strategy_table = 'strategies'
+s_table_startegies = Table(
+    strategy_table, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('coursename',VARCHAR(30), nullable=False),
-    Column('file',LONGBLOB, nullable=False),
-    Column('description',VARCHAR(255), nullable=False),
-    Column('coursecode',VARCHAR(20), unique=True),
-    Column('price', Float(10, 2)),
-    Column('courselink', VARCHAR(255)),
-    Column('coursevideo',LONGBLOB),
-    Column('capacity', VARCHAR(20)),
-    Column('startdate', VARCHAR(20)),
-    Column('enddate', VARCHAR(20)),
-    Column('timelimit', VARCHAR(20)),
-    Column('certificate', Enum(Certificate), server_default='Certificate1', nullable=False),
-    Column('level', Enum(Level), server_default='level1', nullable=False),
-    Column('category', VARCHAR(50), unique=True),
-    Column('course_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('isActive', BOOLEAN, default=True),
-    Column('isHide', BOOLEAN, default=False),
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    UniqueConstraint('coursecode', name=f'uq_{table_course}_couref'),
-    UniqueConstraint('category', name=f'uq_{table_course}_categoryref'),
-    Index(f'idx_{table_course}_token', 'token'),
-)
-
-# lmsgroup table
-table_lmsgroup = 'lmsgroup'
-s_table_lmsgroup = Table(
-    table_lmsgroup, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('groupname', VARCHAR(45), nullable=False),
-    Column('groupdesc', VARCHAR(255), nullable=False),
-    Column('groupkey', VARCHAR(20)),
-    Column('group_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    UniqueConstraint('groupkey', name=f'uq_{table_lmsgroup}_grpref'),
-    Index(f'idx_{table_lmsgroup}_token', 'token'),
-)
-
-# lmsevent table (NOTIFICATIONS)
-table_lmsevent = 'lmsevent'
-s_table_lmsevent = Table(
-    table_lmsevent, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('ename', VARCHAR(20), nullable=False),
-    Column('eventtype', Enum(EventEnum), nullable=False),
-    Column('recipienttype', Enum(RecipientEnum), nullable=False),
-    Column('descp', VARCHAR(300)),
-    Column('isActive', BOOLEAN, default=True),
-    Column('event_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{table_lmsevent}_token', 'token'),
-)
-
-# virtualtraining table
-table_virtualtraining = 'virtualtraining'
-s_table_virtualtraining = Table(
-    table_virtualtraining, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('instname', VARCHAR(45)),
-    Column('virtualname', VARCHAR(20)),
-    Column('date', VARCHAR(20)),
-    Column('starttime', VARCHAR(20)),
-    Column('meetlink', VARCHAR(455)),
-    Column('messg', VARCHAR(655)),
-    Column('duration', VARCHAR(20)),
-    Column('virtualtraining_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{table_virtualtraining}_token', 'token'),
-)
-
-# category table
-table_category = 'category'
-s_table_category = Table(
-    table_category, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('name', VARCHAR(20)),
-    Column('price', Float(10, 2)),
-    Column('category_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{table_category}_token', 'token'),
-)
-
-# classroom table
-table_classroom = 'classroom'
-s_table_classroom = Table(
-    table_classroom, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('instname', VARCHAR(45)),
-    Column('classname', VARCHAR(20)),
-    Column('date', VARCHAR(20)),
-    Column('starttime', VARCHAR(20)),
-    Column('venue', VARCHAR(455)),
-    Column('messg', VARCHAR(655)),
-    Column('duration', VARCHAR(20)),
-    Column('classroom_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{table_classroom}_token', 'token'),
-)
-
-# conference table
-table_conference = 'conference'
-s_table_conference = Table(
-    table_conference, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('instname', VARCHAR(45)),
-    Column('confname', VARCHAR(20)),
-    Column('date', VARCHAR(20)),
-    Column('starttime', VARCHAR(20)),
-    Column('meetlink', VARCHAR(455)),
-    Column('messg', VARCHAR(655)),
-    Column('duration', VARCHAR(20)),
-    Column('conference_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{table_conference}_token', 'token'),
-)
-
-# Discussion table
-table_discussion = 'discussion'
-s_table_discussion = Table(
-    table_discussion, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('topic', VARCHAR(45), nullable=False),
-    Column('messg', VARCHAR(655)),
-    Column('file',LONGBLOB, nullable=False),
-    Column('access', Enum(Access), server_default='Access1', nullable=False),
-    Column('discussion_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{table_discussion}_token', 'token'),
-)
-
-# calender table (Events)
-table_calender = 'calender'
-s_table_calender = Table(
-    table_calender, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('cal_eventname', VARCHAR(45)),
-    Column('date', VARCHAR(20)),
-    Column('starttime', VARCHAR(20)),
-    Column('duration', VARCHAR(20)),
-    Column('audience', Enum(Audience), server_default='Audience1', nullable=True),
-    Column('messg', VARCHAR(655)),
-    Column('calender_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{table_calender}_token', 'token'),
-)
-
-# Enroll Users to Course & Enroll Courses to User (user_course_enrollment)table
-users_courses_enrollment = 'user_course_enrollment'
-u_c_table_enrollment = Table(
-    users_courses_enrollment, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('user_id', Integer, nullable=False),
-    Column('course_id', Integer, nullable=False),
-    Column('u_c_enrollment_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{users_courses_enrollment}_token', 'token'),
-)
-
-#  Enroll Users to Group & Enroll Groups to User (user_group_enrollment)table
-users_groups_enrollment = 'user_group_enrollment'
-u_g_table_enrollment = Table(
-    users_groups_enrollment, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('user_id', Integer, nullable=False),
-    Column('group_id', Integer, nullable=False),
-    Column('u_g_enrollment_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{users_groups_enrollment}_token', 'token'),
-)
-
-# Enroll Courses to Group & Enroll Groups to Courses (course_group_enrollment)table
-courses_groups_enrollment = 'course_group_enrollment'
-cg_table_enrollment = Table(
-    courses_groups_enrollment, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('course_id', Integer, nullable=False),
-    Column('group_id', Integer, nullable=False),
-    Column('c_g_enrollment_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{courses_groups_enrollment}_token', 'token'),
-)
-
-# Each Login gives 25 Points to users
-users_points = 'user_points'
-table_user_points = Table(
-    users_points, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('user_id', Integer, nullable=False),
-    Column('points', Integer, default=0),
-    Column('user_level', Integer, default=0),
-    Column('login_count', Integer, default=0),
-    Column('badge_name', VARCHAR(255), nullable=False),
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    UniqueConstraint('user_id', name='uq_user_points_user_id'),
-    Index('idx_user_points_points', 'points'),
-)
-
-#Documents of users 
-n_table_user_files = 'documents'
-user_files_table = Table(
-    n_table_user_files, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('user_id', Integer, nullable=False),  # Foreign key with a specific name
-    Column('filename', VARCHAR(150), nullable=False),
-    Column('files', LONGBLOB, nullable=False),
-    Column('files_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('active', BOOLEAN, default=True, nullable=False),
-    Column('deactive', BOOLEAN, default=False, nullable=True),
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{n_table_user_files}_token', 'token'),
-)
-
-n_table_course_content = 'course_content'
-course_content_table = Table(
-    n_table_course_content, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('course_id', Integer, nullable=False),
-    
-    Column('video_unitname', String(150), nullable=True),
-    Column('video_file', LONGBLOB, nullable=False),
-    # # Additional fields based on content type
-    Column('ppt_unitname', String(150), nullable=True),
-    Column('ppt_file', LONGBLOB, nullable=False),
-    Column('scorm_unitname', String(150), nullable=True),
-    Column('scorm_file', LONGBLOB, nullable=False),
-
-    Column('course_content_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
+    Column('client_id', VARCHAR(25), nullable=True),
+    Column('portfolio_name', VARCHAR(25), nullable=True),
+    Column('strategy_type', VARCHAR(25), nullable=True),
+    Column('strategy_mode', VARCHAR(25), nullable=True),
+    Column('leg1', VARCHAR(25), nullable=True),
+    Column('leg2', VARCHAR(25), nullable=True),
+    Column('leg3', VARCHAR(25), nullable=True),
+    Column('leg4', VARCHAR(25), nullable=True),
+    Column('opt_type', VARCHAR(25), nullable=True),
+    Column('symbol', VARCHAR(50), nullable=True),
+    Column('expiry1', VARCHAR(25), nullable=True),
+    Column('expiry2', VARCHAR(25), nullable=True),
+    Column('strike_price1', VARCHAR(25), nullable=True),
+    Column('strike_price2', VARCHAR(25), nullable=True),
+    Column('strike_price3', VARCHAR(25), nullable=True),
+    Column('strike_price4', VARCHAR(25), nullable=True),
+    Column('ratio1', Integer, nullable=True),
+    Column('ratio2', Integer, nullable=True),
+    Column('ratio3', Integer, nullable=True),
     Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
 )
 
-n_table_test = 'test'
-test_table = Table(
-    n_table_test, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('test_name', VARCHAR(100), nullable=True),
-    Column('course_id', Integer, nullable=False),
-    Column('user_id', Integer, nullable=False),
-    Column('question', VARCHAR(1000), nullable=True),
-    Column('option_a', VARCHAR(1000), nullable=True),
-    Column('option_b', VARCHAR(1000), nullable=True),
-    Column('option_c', VARCHAR(1000), nullable=True),
-    Column('option_d', VARCHAR(1000), nullable=True),
-    Column('correct_answer', String(1), nullable=True),
-    Column('marks', Integer, nullable=True),
-    Column('user_selected_answer', String(1), nullable=True),
-    Column('active', BOOLEAN, default=True, nullable=False),
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-)
-
-
-n_table_user_rating_feedback = 'rating_feedback'
-rating_feedback_files_table = Table(
-    n_table_user_rating_feedback, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('user_id', Integer, nullable=False),
-    Column('course_id', Integer, nullable=False),
-    Column('rating', Integer, nullable=False),
-    Column('feedback', VARCHAR(255), nullable=True),
-    Column('rating_allowed', VARCHAR(150), nullable=False),
-    Column('auth_token', VARCHAR(2500), nullable=False),  # Google
-    Column('request_token', VARCHAR(2500), nullable=False),  # After Sign-in for 2FA
-    Column('token', VARCHAR(100), nullable=False),  # For data endpoints
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Index(f'idx_{n_table_user_rating_feedback}_token', 'token'),
-)
-
-n_table_assignment = 'assignment'
-assignment_table = Table(
-    n_table_assignment, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('course_id', Integer, nullable=False),
-    Column('user_id', Integer, nullable=False),
-    Column('assignment_name', VARCHAR(255), nullable=False),
-    Column('assignment_topic', VARCHAR(255), nullable=False),
-    Column('complete_by_instructor', BOOLEAN, default=False, nullable=False),
-    Column('complete_on_submission', BOOLEAN, default=False, nullable=False),
-    Column('assignment_answer', VARCHAR(1255), nullable=True),
-    Column('file', LONGBLOB, nullable=True),
-    Column('active', BOOLEAN, default=True, nullable=False),
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp())
-)
-
-# Submission Table
-n_table_submission = 'submission'
-submission_table = Table(
-    n_table_submission, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('course_id', Integer, nullable=False),
-    Column('user_id', Integer, nullable=False),
-    Column('submission_status', Enum(Sub_Status), server_default='Pending', nullable=False),
-    Column('grade', Integer, nullable=True),  # 1-100
-    Column('comment', VARCHAR(655), nullable=True),
-    Column('active', BOOLEAN, default=True, nullable=False),
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp())
-)
-
-# Instructor-Led-Training
-table_ilt = 'inst_led_training'
-s_table_ilt = Table(
-    table_ilt, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('session_name', VARCHAR(45)),
-    Column('date', VARCHAR(20)),
-    Column('starttime', VARCHAR(20)),
-    Column('capacity', VARCHAR(20)),
-    Column('instructor', VARCHAR(20)),
-    Column('session_type', VARCHAR(655)),
-    Column('duration', VARCHAR(20)),
-    Column('description', VARCHAR(655)),
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-)
-
-table_content_tracking = 'course_tracking'
-s_table_content_tracking = Table(
-    table_content_tracking, metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('course_id', Integer, nullable=False),
-    Column('user_id', Integer, nullable=False),
-    Column('completed_unitnames', VARCHAR(20)),
-    Column('created_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column('updated_at', TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-)
 meta_engine = sql.create_engine(engine_str, isolation_level='AUTOCOMMIT')
 metadata.create_all(meta_engine, checkfirst=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=meta_engine)

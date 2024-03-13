@@ -10,7 +10,7 @@ from passlib.context import CryptContext
 from starlette import status
 from starlette.responses import JSONResponse
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
-from config.db_config import n_table_user,users_points
+from config.db_config import n_table_user
 from config import settings
 from config.logconfig import logger
 from routers.auth.auth_db_ops import UserDBHandler
@@ -235,28 +235,7 @@ def fetch_user_id_from_db(email: str) -> int:
     user_ids = [row['id'] for row in result]
     
     return user_ids[0] if user_ids else None
-
-def get_user_points_by_user_id(user_id):
-    query = f"SELECT points FROM user_points WHERE user_id = %(user_id)s"
-    params = {"user_id": user_id}
-    resp = execute_query(query=query, params=params)
-    data = resp.fetchone()
     
-    if data is None:
-        raise HTTPException(status_code=404, detail="User points not found")
-    else:
-        return {"points": data['points']}
-
-def get_dept_by_users_id(id):
-    query = f"SELECT dept FROM users WHERE id = %(id)s"
-    params = {"id": id}
-    resp = execute_query(query=query, params=params)
-    data = resp.fetchone()
-    
-    if data is None:
-        raise HTTPException(status_code=404, detail="department not found")
-    else:
-        return {"dept": data['dept']}
     
 def get_user_points_by_user():
     try:
@@ -282,79 +261,6 @@ def get_user_points_by_user():
             "message": "Failed to fetch users data"
         })
     
-# def update_user_points(user_id, points):
-#     # Fetch the user's points record or create one if it doesn't exist
-#     query = """
-#         INSERT INTO user_points (user_id, points)
-#         VALUES (%(user_id)s, %(points)s)
-#         ON DUPLICATE KEY UPDATE points = points + %(points)s;
-#     """
-#     params = {"user_id": user_id, "points": points}
-#     return execute_query(query, params=params)
-
-def update_user_points(user_id, points):
-    # Fetch the user's points record or create one if it doesn't exist
-
-    query = """
-        INSERT INTO user_points (user_id, points, user_level)
-        VALUES (%(user_id)s, %(points)s, 0)
-        ON DUPLICATE KEY UPDATE
-            points = points + %(points)s,
-            user_level = CASE
-                WHEN points + %(points)s >= 4000 THEN 4
-                WHEN points + %(points)s >= 3000 THEN 3
-                WHEN points + %(points)s >= 2000 THEN 2
-                WHEN points + %(points)s >= 1000 THEN 1
-                ELSE 0
-            END;
-            """
-    params = {"user_id": user_id, "points": points}
-    execute_query(query, params=params)
-
-def increment_login_count(user_id):
-    # Increment the login count in the user_points table
-    query = "UPDATE user_points SET login_count = login_count + 1 WHERE user_id = %s ;"
-    params = (user_id,)
-    execute_query(query, params=params)
-
-def award_badge_to_user(user_id, badge_name):
-    # Update the user_points table to include the badge information
-    query = "UPDATE user_points SET badge_name = %s WHERE user_id = %s ;"
-    params = (badge_name, user_id)
-    execute_query(query, params=params)
-    
-def award_badges(user_id, login_count):
-    if login_count is None:
-        login_count = 0
-
-    badges = {
-        "Activity Newbie": 4,
-        "Activity Grower": 8,
-        "Activity Adventurer": 16,
-        "Activity Explorer": 32,
-        "Activity Star": 64,
-        "Activity Superstar": 128,
-        "Activity Master": 256,
-        "Activity Grandmaster": 512,
-    }
-
-    for badge, count in badges.items():
-        if login_count >= count:
-            # Award the badge to the user
-            award_badge_to_user(user_id, badge)
-
-def get_login_count(user_id):
-    query = "SELECT login_count FROM user_points WHERE user_id = %s ;"
-    params = (user_id)
-    result = execute_query(query, params=params)
-
-    if result:
-        first_record = result.first()  # Get the first record
-        if first_record:
-            return first_record['login_count']
-    
-    return 0
-
 def add_new_user(email: str, generate_tokens: bool = False, auth_token="", inputs={}, password=None, skip_new_user=False):
     message, active, is_mfa_enabled, request_token, token, details = None, False, False, None, None, {}
     try:

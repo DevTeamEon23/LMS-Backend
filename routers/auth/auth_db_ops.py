@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from config.db_config import n_table_user, users_points
+from config.db_config import n_table_user
 from ..db_ops import execute_query
 
 
@@ -18,8 +18,8 @@ class UserDBHandler:
 
     @classmethod
     def add_user_to_db(cls, params):
-        query = f"""   INSERT into {n_table_user}(full_name, username, email,password, role, users_allowed, auth_token, request_token, token, active) VALUES 
-                        (%(full_name)s, %(username)s, %(email)s,%(password)s, %(role)s, %(users_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s)
+        query = f"""   INSERT into {n_table_user}(full_name, username, email,password,users_allowed, auth_token, request_token, token, active) VALUES 
+                        (%(full_name)s, %(username)s, %(email)s,%(password)s, %(users_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(active)s)
                         ; 
                     """
         return execute_query(query, params=params)
