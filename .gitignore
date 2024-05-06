@@ -3,6 +3,7 @@
 *.json
 .ipynb
 eon/
+lmsenv/
 backup_eon/
 media/
 course/
