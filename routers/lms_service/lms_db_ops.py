@@ -555,8 +555,8 @@ class LmsHandler:
 #Add Groups
     @classmethod
     def add_groups(cls, params):
-        query = f"""   INSERT into {table_lmsgroup} (user_id, groupname,groupdesc,groupkey, group_allowed, auth_token, request_token, token, isActive) VALUES 
-                        (%(user_id)s, %(groupname)s, %(groupdesc)s, %(groupkey)s, %(group_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(isActive)s)
+        query = f"""   INSERT into {table_lmsgroup} (id, user_id, groupname,groupdesc,groupkey, group_allowed, auth_token, request_token, token, isActive) VALUES 
+                        (%(id)s, %(user_id)s, %(groupname)s, %(groupdesc)s, %(groupkey)s, %(group_allowed)s, %(auth_token)s, %(request_token)s, %(token)s, %(isActive)s)
                         ; 
                     """
         return execute_query(query, params=params)

@@ -148,6 +148,7 @@ table_course = 'course'
 s_table_course = Table(
     table_course, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('user_id', Integer, nullable=False),
     Column('coursename',VARCHAR(30), nullable=False),
     Column('file',LONGBLOB, nullable=False),
     Column('description',VARCHAR(255), nullable=False),
@@ -180,6 +181,7 @@ table_lmsgroup = 'lmsgroup'
 s_table_lmsgroup = Table(
     table_lmsgroup, metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('user_id', Integer, nullable=False),
     Column('groupname', VARCHAR(45), nullable=False),
     Column('groupdesc', VARCHAR(255), nullable=False),
     Column('groupkey', VARCHAR(20)),
